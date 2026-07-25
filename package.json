@@ -6,7 +6,9 @@
     "dev:web": "pnpm --filter @autosouq/web dev",
     "dev:cms": "pnpm --filter @autosouq/cms develop",
     "build": "pnpm --filter @autosouq/web --filter @autosouq/cms build",
-    "lint": "pnpm --filter @autosouq/web lint"
+    "lint": "pnpm --filter @autosouq/web lint",
+    "check:band": "node scripts/check-price-band.mjs",
+    "check": "pnpm check:band && pnpm lint"
   },
   "engines": {
     "node": ">=20"

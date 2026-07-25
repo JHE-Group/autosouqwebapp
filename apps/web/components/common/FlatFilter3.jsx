@@ -1,7 +1,7 @@
 "use client";
 
 import { formatPrice } from "@/lib/format";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import DropdownSelect from "./DropDownSelect";
 import Pricing from "./Pricing";
 
@@ -15,37 +15,59 @@ export default function FlatFilter3({
   allProps,
   clearFilter,
   filterOptions = DEMO_OPTIONS,
+  // Where "Find cars" sends the reader. The filters below apply as they are
+  // changed, so the button's honest job is to get out of the way and show the
+  // results — not to run a search that already ran.
+  resultsId = "browse-results",
 }) {
-  const toggleBtn = useRef();
-  const advanceSearch = useRef();
+  const toggleBtn = useRef(null);
+  const advanceSearch = useRef(null);
+  const panelId = useId();
 
-  const toggleSearchOpen = () => {
-    toggleBtn.current.classList.toggle("active");
-    advanceSearch.current.classList.toggle("show");
-  };
+  // Was `classList.toggle` on two refs. React had no idea the panel was open,
+  // nothing announced the state, and the open/closed truth lived in the DOM
+  // where a re-render could silently disagree with it.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
+    if (!advancedOpen) return undefined;
+
     const handleClickOutside = (e) => {
-      // Check if the click was outside the two referenced elements
       if (
         toggleBtn.current &&
         !toggleBtn.current.contains(e.target) &&
         advanceSearch.current &&
         !advanceSearch.current.contains(e.target)
       ) {
-        toggleBtn.current.classList.remove("active");
-        advanceSearch.current.classList.remove("show");
-        // You can handle what happens here when the click is outside
+        setAdvancedOpen(false);
       }
     };
-    // Add the event listener when the component mounts
-    document.addEventListener("click", handleClickOutside);
+    const handleEscape = (e) => {
+      if (e.key === "Escape") setAdvancedOpen(false);
+    };
 
-    // Clean up the event listener when the component unmounts
+    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
     return () => {
       document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
-  }, []);
+  }, [advancedOpen]);
+
+  const showResults = () => {
+    setAdvancedOpen(false);
+    const results = document.getElementById(resultsId);
+    if (!results) return;
+    results.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+      block: "start",
+    });
+    // Move the reading position too, not just the viewport — a scroll alone
+    // leaves a keyboard or screen-reader user still up in the filter panel.
+    results.focus({ preventScroll: true });
+  };
   return (
     <div className={`content-tab ${tabStyle}`}>
       <div className="content-inner tab-content">
@@ -91,10 +113,14 @@ export default function FlatFilter3({
                 </div>
               </div>
               <div className="form-group-2 form-style">
-                <a
-                  className="icon-filter pull-right"
+                <button
+                  type="button"
+                  className={`icon-filter pull-right${advancedOpen ? " active" : ""}`}
                   ref={toggleBtn}
-                  onClick={toggleSearchOpen}
+                  onClick={() => setAdvancedOpen((open) => !open)}
+                  aria-expanded={advancedOpen}
+                  aria-controls={panelId}
+                  aria-label="More filters"
                 >
                   <svg
                     width={20}
@@ -108,11 +134,16 @@ export default function FlatFilter3({
                       fill="CurrentColor"
                     />
                   </svg>
-                  <i className="icon-autodeal-plus search-icon fs-20" />
-                </a>
+                  <i className="icon-autodeal-plus search-icon fs-20" aria-hidden="true" />
+                </button>
               </div>
               <div className="button-search sc-btn-top">
-                <a className="sc-button" href="#">
+                {/* Was `<a href="#">`, which on a trust-led site is the worst
+                    kind of control: it looks like the primary action and only
+                    jumps the page to the top. The filters above apply as they
+                    change, so there is no search left to run — this closes the
+                    panel and takes the reader to what already matched. */}
+                <button type="submit" className="sc-button" onClick={showResults}>
                   <span>Find cars</span>
                   {/* Inline, not `far fa-search`: font-awesome.css is never
                       imported, so that class drew a blank box inside the CTA. */}
@@ -139,10 +170,14 @@ export default function FlatFilter3({
                       strokeLinecap="round"
                     />
                   </svg>
-                </a>
+                </button>
               </div>
             </div>
-            <div className="wd-find-select wd-search-form" ref={advanceSearch}>
+            <div
+              id={panelId}
+              className={`wd-find-select wd-search-form${advancedOpen ? " show" : ""}`}
+              ref={advanceSearch}
+            >
               <div className="box1 grid-4">
                 <div className="form-group wg-box3">
                   <div className="group-select">

@@ -322,6 +322,7 @@ function formatPosted(listing) {
  * listing actually carries the field.
  */
 function ListingLabels({ listing }) {
+  const tCommon = useTranslations("common");
   const hasSpec = "importOrigin" in listing;
   if (!listing.soldAsIs && !hasSpec) return null;
   const spec = hasSpec ? importOriginLabel(listing.importOrigin, "en") : null;

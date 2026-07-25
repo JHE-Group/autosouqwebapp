@@ -74,7 +74,10 @@ export default function Cars2({ listings }) {
                 className="mb-4"
               />
             </div>
-            <div className="col-lg-12">
+            {/* The target FlatFilter3's "Find cars" scrolls to. tabIndex={-1}
+                makes it programmatically focusable without adding a tab stop,
+                so focus lands here rather than staying in the filter panel. */}
+            <div className="col-lg-12" id="browse-results" tabIndex={-1}>
               {sorted.length ? (
                 <div className="asq-results asq-results--grid list-car-grid-4 gap-30">
                   {pageItems.map((car) => (

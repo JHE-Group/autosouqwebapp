@@ -148,6 +148,7 @@ export default function MyFavourite() {
  * honestly"). Rendered only when the listing carries the field.
  */
 function Labels({ car }) {
+  const tCommon = useTranslations("common");
   const hasSpec = "importOrigin" in car;
   if (!car.soldAsIs && !hasSpec) return null;
   const spec = hasSpec ? importOriginLabel(car.importOrigin, "en") : null;

@@ -2,41 +2,57 @@
 import React, { useRef, useState } from "react";
 
 import emailjs from "@emailjs/browser";
+/**
+ * Is the mail transport actually configured?
+ *
+ * All three EmailJS variables ship empty. The form still rendered, still
+ * submitted, and `sendForm("", "", …)` rejected into a `.catch` that only
+ * called console.log — so a visitor filled in five fields, pressed Send, and
+ * their message was silently discarded with no error and no confirmation.
+ * `success` was also initialised to `true`, so the only banner it could ever
+ * show said the message had been sent.
+ *
+ * On a site whose whole proposition is being the trustworthy end of this
+ * market, a contact form that eats the message is the same failure as the
+ * login modal that ate the password. The form is now only rendered when it can
+ * actually deliver.
+ */
+const MAIL_CONFIGURED = Boolean(
+  process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID &&
+    process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID &&
+    process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
+);
+
+const OPS_WHATSAPP = process.env.NEXT_PUBLIC_AUTOSOUQ_WHATSAPP;
+
 export default function Contact() {
   const formRef = useRef();
-  const [success, setSuccess] = useState(true);
-  const [showMessage, setShowMessage] = useState(false);
-
-  const handleShowMessage = () => {
-    setShowMessage(true);
-    setTimeout(() => {
-      setShowMessage(false);
-    }, 2000);
-  };
+  // null = nothing attempted yet. It was `true`, which pre-loaded a success
+  // state before the reader had done anything.
+  const [success, setSuccess] = useState(null);
+  const [sending, setSending] = useState(false);
 
   const sendMail = (e) => {
     e.preventDefault();
+    if (!MAIL_CONFIGURED || sending) return;
+
+    setSending(true);
     emailjs
       .sendForm(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID ?? "",
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID ?? "",
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
         formRef.current,
-        { publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY ?? "" }
+        { publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY },
       )
       .then((res) => {
-        if (res.status === 200) {
-          setSuccess(true);
-          handleShowMessage();
-
-          formRef.current.reset();
-        } else {
-          setSuccess(false);
-          handleShowMessage();
-        }
+        const ok = res.status === 200;
+        setSuccess(ok);
+        if (ok) formRef.current.reset();
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      // A rejected send is the case that matters: it now tells the reader,
+      // rather than logging to a console they will never open.
+      .catch(() => setSuccess(false))
+      .finally(() => setSending(false));
   };
   return (
     <>
@@ -46,23 +62,6 @@ export default function Contact() {
             <div className="col-lg-12">
               <div className="inner-heading flex-two flex-wrap">
                 <h1 className="heading-listing">Contact us</h1>
-                <div className="social-listing flex-six flex-wrap">
-                  <p>Share this page:</p>
-                  <div className="icon-social style1">
-                    <a href="#">
-                      <i className="icon-autodeal-facebook" />
-                    </a>
-                    <a href="#">
-                      <i className="icon-autodeal-linkedin" />
-                    </a>
-                    <a href="#">
-                      <i className="icon-autodeal-twitter" />
-                    </a>
-                    <a href="#">
-                      <i className="icon-autodeal-instagram" />
-                    </a>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -82,7 +81,27 @@ export default function Contact() {
                   not look right? Tell us and we will look into it.
                 </p>
               </div>
-              <div id="comments" className="comments">
+              {!MAIL_CONFIGURED && (
+                <div className="tfcl-notice" role="note">
+                  The message form is not switched on yet — there is no mail
+                  service configured, so anything typed into it would go
+                  nowhere. It is hidden rather than left looking usable.
+                  {OPS_WHATSAPP ? (
+                    <>
+                      {" "}
+                      <a
+                        href={`https://wa.me/${OPS_WHATSAPP}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Message us on WhatsApp
+                      </a>{" "}
+                      instead.
+                    </>
+                  ) : null}
+                </div>
+              )}
+              <div id="comments" className="comments" hidden={!MAIL_CONFIGURED}>
                 <div className="respond-comment">
                   <form
                     onSubmit={sendMail}
@@ -152,22 +171,31 @@ export default function Contact() {
                         defaultValue={""}
                       />
                     </fieldset>
-                    <div
-                      className={`tfSubscribeMsg  footer-sub-element ${
-                        showMessage ? "active" : ""
-                      }`}
-                    >
-                      {success ? (
+                    {/* aria-live so the outcome is announced, not just drawn.
+                        Renders nothing until something has actually been sent. */}
+                    <div className="tfSubscribeMsg footer-sub-element active" aria-live="polite">
+                      {success === true && (
                         <p style={{ color: "#15803D" }}>
-                          Message has been sent successfully
+                          Thanks — your message has been sent. We reply on
+                          WhatsApp or by email, usually within a day.
                         </p>
-                      ) : (
-                        <p style={{ color: "#B42318" }}>Something went wrong</p>
+                      )}
+                      {success === false && (
+                        <p style={{ color: "#B42318" }}>
+                          That did not send. Nothing has reached us, so please
+                          do not assume we have your message — try again, or
+                          contact us another way.
+                        </p>
                       )}
                     </div>
                     <div className="button-boxs">
-                      <button className="sc-button" name="submit" type="submit">
-                        <span>Send Message</span>
+                      <button
+                        className="sc-button"
+                        name="submit"
+                        type="submit"
+                        disabled={sending}
+                      >
+                        <span>{sending ? "Sending…" : "Send Message"}</span>
                       </button>
                     </div>
                   </form>
@@ -185,38 +213,18 @@ export default function Contact() {
                 <div className="wrap-info">
                   <div className="box-info">
                     <h5>Where we are</h5>
-                    <p>
-                      Autosouq is based in Oman. <br />
-                      [PLACEHOLDER — business address to be supplied]
-                    </p>
+                    <p>Autosouq is an Omani business, operating across Oman.</p>
                   </div>
-                  <div className="box-info">
-                    <h5>Get in touch</h5>
-                    <p>[PLACEHOLDER — WhatsApp number to be supplied]</p>
-                    <p>[PLACEHOLDER — support email to be supplied]</p>
-                    <p>Until then, the form on this page reaches us.</p>
-                  </div>
-                  <div className="box-info">
-                    <h5>When we reply</h5>
-                    <p>[PLACEHOLDER — support hours to be supplied]</p>
-                  </div>
-                  <div className="box-info">
-                    <h5>Follow Us:</h5>
-                    <div className="icon-social style2">
-                      <a href="#">
-                        <i className="icon-autodeal-facebook" />
-                      </a>
-                      <a href="#">
-                        <i className="icon-autodeal-linkedin" />
-                      </a>
-                      <a href="#">
-                        <i className="icon-autodeal-twitter" />
-                      </a>
-                      <a href="#">
-                        <i className="icon-autodeal-instagram" />
-                      </a>
+                  {OPS_WHATSAPP ? (
+                    <div className="box-info">
+                      <h5>Get in touch</h5>
+                      <p>
+                        <a href={`https://wa.me/${OPS_WHATSAPP}`} rel="noopener noreferrer" target="_blank">
+                          Message us on WhatsApp
+                        </a>
+                      </p>
                     </div>
-                  </div>
+                  ) : null}
                 </div>
               </div>
             </div>

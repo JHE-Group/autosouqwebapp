@@ -10,23 +10,6 @@ export default function Faqs() {
           <div className="col-lg-12">
             <div className="inner-heading flex-two flex-wrap gap-20">
               <h1 className="heading-listing">Frequently asked questions</h1>
-              <div className="social-listing flex-six flex-wrap">
-                <p>Share this page:</p>
-                <div className="icon-social style1">
-                  <a href="#">
-                    <i className="icon-autodeal-facebook" />
-                  </a>
-                  <a href="#">
-                    <i className="icon-autodeal-linkedin" />
-                  </a>
-                  <a href="#">
-                    <i className="icon-autodeal-twitter" />
-                  </a>
-                  <a href="#">
-                    <i className="icon-autodeal-instagram" />
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
           <div className="col-lg-12 mb-50">
