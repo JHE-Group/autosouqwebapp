@@ -80,7 +80,39 @@ async function findOrCreate(
   return created.documentId;
 }
 
+/**
+ * Should this boot seed the demo catalogue?
+ *
+ * The only guard used to be "does a listing already exist", which is the right
+ * question for a local dev database and the wrong one for a hosted deployment:
+ * a managed database starts empty, so the first production boot passed that
+ * check and populated the site with demo rows. Every one of those listings has
+ * `hasPlaceholderImage` set — stand-in photography — and publishing stand-ins
+ * as real listings is the exact thing NICHE.md exists to prevent.
+ *
+ * Rules, in order:
+ *   SEED_DEMO_DATA=true   seed, even in production (useful right after a
+ *                         deploy, to confirm the API and content types work)
+ *   SEED_DEMO_DATA=false  never seed, even locally
+ *   unset                 seed outside production only — so `pnpm dev:cms` on
+ *                         a fresh machine still comes up with a catalogue and
+ *                         nobody has to remember a flag
+ */
+function demoSeedingEnabled(): boolean {
+  const flag = process.env.SEED_DEMO_DATA;
+  if (flag === "true") return true;
+  if (flag === "false") return false;
+  return process.env.NODE_ENV !== "production";
+}
+
 async function seedDemoData(strapi: Core.Strapi) {
+  if (!demoSeedingEnabled()) {
+    strapi.log.info(
+      "Autosouq: demo seeding skipped (production). Set SEED_DEMO_DATA=true to force it.",
+    );
+    return;
+  }
+
   const existing = await strapi.documents("api::listing.listing").findMany({
     limit: 1,
   });
