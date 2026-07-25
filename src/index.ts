@@ -1,3 +1,9 @@
+/**
+ * Seed language rule: `title`/`description` hold ENGLISH, `titleAr`/`descriptionAr`
+ * hold ARABIC. The first seed put Arabic in the base fields and left the *Ar ones
+ * null, so `pick("en", …)` in apps/web/lib/strapi.js fell back to Arabic and every
+ * English page rendered Arabic headings, <title> tags and WhatsApp messages.
+ */
 import type { Core } from "@strapi/strapi";
 
 const PUBLIC_ACTIONS = [
@@ -195,7 +201,8 @@ async function seedDemoData(strapi: Core.Strapi) {
   // and silver, and prices are round-ish but never perfectly round.
   const listings = [
     {
-      title: "تويوتا كورولا 2015 — XLI",
+      title: "Toyota Corolla 2015 XLI",
+      titleAr: "تويوتا كورولا 2015 — XLI",
       slug: "toyota-corolla-2015-xli",
       cylinders: 4,
       doors: 4,
@@ -214,10 +221,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 2700, year: 2015, mileage: 216000,
       whatsapp: "96890000001", city: "muscat", make: "toyota", model: "corolla",
       featured: true, verified: true, address: "الخوير، مسقط",
-      description: "كورولا XLI بحالة جيدة، صيانة دورية، صبغ وكالة. السيارة في الخوير وجاهزة للفحص.",
+      description: "Corolla XLI in good condition, serviced regularly, agency paint. The car is in Al Khuwair and ready for inspection.",
+      descriptionAr: "كورولا XLI بحالة جيدة، صيانة دورية، صبغ وكالة. السيارة في الخوير وجاهزة للفحص.",
     },
     {
-      title: "تويوتا يارس 2016",
+      title: "Toyota Yaris 2016",
+      titleAr: "تويوتا يارس 2016",
       slug: "toyota-yaris-2016",
       cylinders: 4,
       doors: 5,
@@ -236,10 +245,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 2300, year: 2016, mileage: 228000,
       whatsapp: "96890000002", city: "muscat", make: "toyota", model: "yaris",
       featured: false, verified: true, address: "العذيبة، مسقط",
-      description: "يارس اقتصادية في البنزين، مكيف بارد، الممشى عالي لكن الميكانيك ممتاز. شرط الفحص.",
+      description: "Economical on fuel with cold A/C. High mileage, but mechanically excellent. Sold subject to inspection.",
+      descriptionAr: "يارس اقتصادية في البنزين، مكيف بارد، الممشى عالي لكن الميكانيك ممتاز. شرط الفحص.",
     },
     {
-      title: "تويوتا كامري 2013 — GL",
+      title: "Toyota Camry 2013 GL",
+      titleAr: "تويوتا كامري 2013 — GL",
       slug: "toyota-camry-2013-gl",
       cylinders: 4,
       doors: 4,
@@ -258,10 +269,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 2450, year: 2013, mileage: 167000,
       whatsapp: "96890000003", city: "muscat", make: "toyota", model: "camry",
       featured: false, verified: true, address: "السيب، مسقط",
-      description: "كامري GL بيضاء، وارد الوكالة، بدون حوادث. الملكية سارية والفحص جديد.",
+      description: "White Camry GL, agency import, no accident history. Mulkiya valid and recently inspected.",
+      descriptionAr: "كامري GL بيضاء، وارد الوكالة، بدون حوادث. الملكية سارية والفحص جديد.",
     },
     {
-      title: "نيسان صني 2019",
+      title: "Nissan Sunny 2019",
+      titleAr: "نيسان صني 2019",
       slug: "nissan-sunny-2019",
       cylinders: 4,
       doors: 4,
@@ -280,10 +293,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 1950, year: 2019, mileage: 141000,
       whatsapp: "96890000004", city: "muscat", make: "nissan", model: "sunny",
       featured: true, verified: true, address: "الوادي الكبير، مسقط",
-      description: "صني موديل حديث نسبياً بسعر مناسب، مناسبة كأول سيارة. أوتوماتيك، بنزين.",
+      description: "A relatively recent Sunny at a fair price — a sensible first car. Automatic, petrol.",
+      descriptionAr: "صني موديل حديث نسبياً بسعر مناسب، مناسبة كأول سيارة. أوتوماتيك، بنزين.",
     },
     {
-      title: "هوندا سيفيك 2013",
+      title: "Honda Civic 2013",
+      titleAr: "هوندا سيفيك 2013",
       slug: "honda-civic-2013",
       cylinders: 4,
       doors: 4,
@@ -302,10 +317,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 2200, year: 2013, mileage: 297000,
       whatsapp: "96890000005", city: "sur", make: "honda", model: "civic",
       featured: false, verified: false, address: "صور",
-      description: "سيفيك فضية، الممشى عالي — رش قطعتين. السعر قابل للتفاوض على الفحص.",
+      description: "Silver Civic, high mileage — two panels have been resprayed. Price negotiable after inspection.",
+      descriptionAr: "سيفيك فضية، الممشى عالي — رش قطعتين. السعر قابل للتفاوض على الفحص.",
     },
     {
-      title: "هيونداي توسان 2018",
+      title: "Hyundai Tucson 2018",
+      titleAr: "هيونداي توسان 2018",
       slug: "hyundai-tucson-2018",
       cylinders: 4,
       doors: 5,
@@ -324,10 +341,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 4300, year: 2018, mileage: 222000,
       whatsapp: "96890000006", city: "muscat", make: "hyundai", model: "tucson",
       featured: true, verified: true, address: "العذيبة، مسقط",
-      description: "توسان عائلية، مساحة ممتازة، صيانة في الوكالة. بدون حوادث.",
+      description: "A family Tucson with plenty of room, serviced at the agency. No accident history.",
+      descriptionAr: "توسان عائلية، مساحة ممتازة، صيانة في الوكالة. بدون حوادث.",
     },
     {
-      title: "ميتسوبيشي باجيرو 2014 — 3.5",
+      title: "Mitsubishi Pajero 2014 3.5",
+      titleAr: "ميتسوبيشي باجيرو 2014 — 3.5",
       slug: "mitsubishi-pajero-2014",
       cylinders: 6,
       doors: 5,
@@ -346,10 +365,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 3650, year: 2014, mileage: 230000,
       whatsapp: "96890000007", city: "barka", make: "mitsubishi", model: "pajero",
       featured: false, verified: true, address: "المعبيلة، بركاء",
-      description: "باجيرو دفع رباعي، مناسبة للطلعات البرية. إطارات جديدة، مكيف بارد.",
+      description: "Four-wheel-drive Pajero, suited to weekend trips off the tarmac. New tyres, cold A/C.",
+      descriptionAr: "باجيرو دفع رباعي، مناسبة للطلعات البرية. إطارات جديدة، مكيف بارد.",
     },
     {
-      title: "تويوتا برادو 2008 — VX",
+      title: "Toyota Prado 2008 VX",
+      titleAr: "تويوتا برادو 2008 — VX",
       slug: "toyota-prado-2008-vx",
       cylinders: 6,
       doors: 5,
@@ -368,10 +389,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 5200, year: 2008, mileage: 310000,
       whatsapp: "96890000008", city: "sohar", make: "toyota", model: "prado",
       featured: false, verified: true, address: "صحار",
-      description: "برادو VX خليجي، الممشى عالي لكن المحرك والقير ممتازين. شرط الفحص.",
+      description: "GCC-spec Prado VX. High mileage, but the engine and gearbox are both excellent. Sold subject to inspection.",
+      descriptionAr: "برادو VX خليجي، الممشى عالي لكن المحرك والقير ممتازين. شرط الفحص.",
     },
     {
-      title: "كيا بيكانتو 2016",
+      title: "Kia Picanto 2016",
+      titleAr: "كيا بيكانتو 2016",
       slug: "kia-picanto-2016",
       cylinders: 4,
       doors: 5,
@@ -390,10 +413,12 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 1250, year: 2016, mileage: 378000,
       whatsapp: "96890000009", city: "muscat", make: "kia", model: "picanto",
       featured: false, verified: false, address: "روي، مسقط",
-      description: "بيكانتو صغيرة واقتصادية جداً. الممشى عالي — تُباع كما هي، والسعر يعكس ذلك.",
+      description: "A small, very economical Picanto. High mileage — sold as-is, and the price reflects that.",
+      descriptionAr: "بيكانتو صغيرة واقتصادية جداً. الممشى عالي — تُباع كما هي، والسعر يعكس ذلك.",
     },
     {
-      title: "سوزوكي سويفت ديزاير 2016",
+      title: "Suzuki Swift Dzire 2016",
+      titleAr: "سوزوكي سويفت ديزاير 2016",
       slug: "suzuki-swift-dzire-2016",
       cylinders: 4,
       doors: 4,
@@ -412,7 +437,8 @@ async function seedDemoData(strapi: Core.Strapi) {
       price: 1175, year: 2016, mileage: 224000,
       whatsapp: "96890000010", city: "muscat", make: "suzuki", model: "swift-dzire",
       featured: false, verified: false, address: "الخوض، مسقط",
-      description: "سويفت ديزاير اقتصادية في البنزين. تحتاج صيانة بسيطة — تُباع كما هي.",
+      description: "Swift Dzire, economical on fuel. Needs minor servicing — sold as-is.",
+      descriptionAr: "سويفت ديزاير اقتصادية في البنزين. تحتاج صيانة بسيطة — تُباع كما هي.",
     },
   ];
 
@@ -434,6 +460,104 @@ async function seedDemoData(strapi: Core.Strapi) {
   strapi.log.info(`Autosouq: seeded ${listings.length} in-band demo listings`);
 }
 
+
+/**
+ * One-time repair for rows seeded before the language rule above existed.
+ *
+ * The first seed put Arabic in `title`/`description` and left `titleAr`/
+ * `descriptionAr` null. `pick("en", …)` in apps/web/lib/strapi.js therefore fell
+ * back to Arabic, so every English page rendered Arabic headings, <title> tags
+ * and WhatsApp messages. Fixing the seed only helps a fresh database, so patch
+ * existing rows too.
+ *
+ * Idempotent: it only touches rows where `titleAr` is empty AND `title` contains
+ * Arabic script, so re-running it — or running it against a correctly seeded
+ * database — does nothing.
+ */
+const ARABIC = /[\u0600-\u06FF]/;
+
+// Trim and drivetrain codes are initialisms, not words — slug-casing turns
+// "xli" into "Xli". Anything not listed here just gets normal title case.
+const UPPERCASE_TOKENS = new Set([
+  "xli", "gl", "vx", "gli", "se", "le", "sv", "ex", "lx", "dx", "gt",
+  "4wd", "awd", "gcc", "abs", "ac",
+]);
+
+const DESCRIPTION_EN: Record<string, string> = {
+  "كورولا XLI بحالة جيدة، صيانة دورية، صبغ وكالة. السيارة في الخوير وجاهزة للفحص.": "Corolla XLI in good condition, serviced regularly, agency paint. The car is in Al Khuwair and ready for inspection.",
+  "يارس اقتصادية في البنزين، مكيف بارد، الممشى عالي لكن الميكانيك ممتاز. شرط الفحص.": "Economical on fuel with cold A/C. High mileage, but mechanically excellent. Sold subject to inspection.",
+  "كامري GL بيضاء، وارد الوكالة، بدون حوادث. الملكية سارية والفحص جديد.": "White Camry GL, agency import, no accident history. Mulkiya valid and recently inspected.",
+  "صني موديل حديث نسبياً بسعر مناسب، مناسبة كأول سيارة. أوتوماتيك، بنزين.": "A relatively recent Sunny at a fair price — a sensible first car. Automatic, petrol.",
+  "سيفيك فضية، الممشى عالي — رش قطعتين. السعر قابل للتفاوض على الفحص.": "Silver Civic, high mileage — two panels have been resprayed. Price negotiable after inspection.",
+  "توسان عائلية، مساحة ممتازة، صيانة في الوكالة. بدون حوادث.": "A family Tucson with plenty of room, serviced at the agency. No accident history.",
+  "باجيرو دفع رباعي، مناسبة للطلعات البرية. إطارات جديدة، مكيف بارد.": "Four-wheel-drive Pajero, suited to weekend trips off the tarmac. New tyres, cold A/C.",
+  "برادو VX خليجي، الممشى عالي لكن المحرك والقير ممتازين. شرط الفحص.": "GCC-spec Prado VX. High mileage, but the engine and gearbox are both excellent. Sold subject to inspection.",
+  "بيكانتو صغيرة واقتصادية جداً. الممشى عالي — تُباع كما هي، والسعر يعكس ذلك.": "A small, very economical Picanto. High mileage — sold as-is, and the price reflects that.",
+  "سويفت ديزاير اقتصادية في البنزين. تحتاج صيانة بسيطة — تُباع كما هي.": "Swift Dzire, economical on fuel. Needs minor servicing — sold as-is.",
+};
+
+async function repairListingLanguageFields(strapi: Core.Strapi) {
+  const listings = await strapi.documents("api::listing.listing").findMany({
+    fields: ["title", "titleAr", "slug", "description", "descriptionAr"] as never,
+    limit: 500,
+    status: "published",
+  });
+
+  let patched = 0;
+  for (const listing of listings) {
+    const title = (listing as { title?: string }).title ?? "";
+    const titleAr = (listing as { titleAr?: string }).titleAr ?? "";
+    // Run when the Arabic still sits in `title` (first pass), or when a
+    // previous pass produced a slug-cased trim code like "Xli" (casing pass).
+    const needsSplit = !titleAr && ARABIC.test(title);
+    const needsRecase = Boolean(titleAr) && !ARABIC.test(title);
+    // Descriptions have the same shape of problem as the titles did: the first
+    // seed wrote Arabic into `description` and left `descriptionAr` null. So the
+    // Arabic to move is in the BASE field, not the *Ar one.
+    const descBase = (listing as { description?: string }).description ?? "";
+    const descArField = (listing as { descriptionAr?: string }).descriptionAr ?? "";
+    const descNeedsSplit =
+      !descArField && ARABIC.test(descBase) && Boolean(DESCRIPTION_EN[descBase]);
+
+    if (!needsSplit && !needsRecase && !descNeedsSplit) continue;
+
+    // The slug is already the English form ("toyota-corolla-2015-xli"), so the
+    // English title is recovered from it rather than invented.
+    const english = String((listing as { slug?: string }).slug ?? "")
+      .split("-")
+      .map((w) => {
+        if (/^\d+$/.test(w)) return w;
+        if (UPPERCASE_TOKENS.has(w)) return w.toUpperCase();
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      })
+      .join(" ");
+
+    // Titles may already be right while descriptions still need splitting —
+    // only skip when there is genuinely nothing left to do for this row.
+    const titleFix = needsSplit || (needsRecase && english !== title);
+    if (!titleFix && !descNeedsSplit) continue;
+
+    await strapi.documents("api::listing.listing").update({
+      documentId: (listing as { documentId: string }).documentId,
+      data: {
+        ...(needsSplit ? { title: english, titleAr: title } : {}),
+        ...(needsRecase && english !== title ? { title: english } : {}),
+        ...(descNeedsSplit
+          ? { description: DESCRIPTION_EN[descBase], descriptionAr: descBase }
+          : {}),
+      } as never,
+      status: "published",
+    });
+    patched += 1;
+  }
+
+  if (patched) {
+    strapi.log.info(
+      `Autosouq: moved Arabic titles to titleAr on ${patched} listing(s)`
+    );
+  }
+}
+
 export default {
   register() {},
 
@@ -451,6 +575,12 @@ export default {
       await seedDemoData(strapi);
     } catch (err) {
       strapi.log.error(`Autosouq: demo seeding failed — ${err}`);
+    }
+
+    try {
+      await repairListingLanguageFields(strapi);
+    } catch (err) {
+      strapi.log.error(`Autosouq: language repair failed — ${err}`);
     }
   },
 };
