@@ -1,831 +1,553 @@
 @use "../abstracts/" as *;
 
 /* Header
--------------------------------------------------------------- */
+--------------------------------------------------------------------------
+ * Styles for components/headers/SiteHeader.jsx — one component with three
+ * variants (hero / solid / account), replacing the four near-identical
+ * Header1–Header4 files this used to serve.
+ *
+ * Two things to know before editing:
+ *
+ * 1. **Font Awesome is not loaded.** public/assets/css/font-awesome.css exists
+ *    but nothing imports it — style.scss pulls in bootstrap.css and the
+ *    `autodeal` icon font and nothing else. Every
+ *    `font-family: "Font Awesome 5 Pro"; content: "\f078"` in this file was
+ *    therefore drawing a private-use codepoint in Inter, i.e. a blank box:
+ *    the dropdown chevrons, the mobile disclosure arrows and the offcanvas
+ *    close button were all invisible. They are CSS-drawn now. Do not
+ *    reintroduce a glyph-font arrow without first importing the font.
+ *
+ * 2. **RTL is live** — /ar renders `dir="rtl"`. Use logical properties
+ *    (`margin-inline`, `inset-inline-start`, `padding-block`) throughout.
+ *    `transform` has no logical form, so the one place that needs to mirror —
+ *    the offcanvas slide — reads a custom property that is redefined under
+ *    `[dir="rtl"]`. Chevron glyphs drawn from borders stay physical on
+ *    purpose: a downward chevron points downward in both directions.
+ *
+ * A third: responsive.scss loads *after* this file and still carries physical
+ * `margin-left` / `margin-right` rules for a few header elements. Where that
+ * matters, the rules below win on specificity and zero the physical property
+ * before setting the logical one.
+ * ------------------------------------------------------------------------ */
 
-.header-account {
-  gap: 30px;
+// Where the desktop nav gives way to the offcanvas. Matches responsive.scss,
+// which hides .nav-outer at the same width.
+$nav-collapse: 1200px;
 
-  ul {
-    li {
-      margin-right: 3px;
-      font-weight: 400;
-      font-size: 16px;
+// Offcanvas panel. 88vw rather than a flat 320px so a strip of backdrop stays
+// visible on a 360px screen — without it the panel reads as a new page and
+// people look for a back button instead of tapping out.
+$offcanvas-width: min(320px, 88vw);
 
-      &:first-child {
-        margin-right: 9px;
-        margin-left: 6px;
-      }
+$header-height: 88px;
+$header-height-stuck: 70px;
 
-      a {
-        &:hover {
-          color: $color-3;
-        }
-      }
-    }
-  }
-
-  .flat-bt-top {
-    .sc-button {
-      background-color: transparent;
-      border: 1px solid $color-3;
-      padding: 14px 27px;
-      border-radius: 14px;
-
-      span,
-      svg {
-        color: $color-3;
-      }
-
-      svg {
-        margin-right: 9px;
-      }
-    }
-  }
-
-  .header-search-icon,
-  .header-favorite {
-    position: relative;
-
-    &::after {
-      content: "";
-      position: absolute;
-      height: 18px;
-      width: 1px;
-      background-color: $color-6;
-      left: 37px;
-    }
-  }
-
-  .search-mobie {
-    position: relative;
-
-    .header-search-icon {
-      .icon-autodeal-plus {
-        display: none;
-        rotate: 45deg;
-      }
-
-      &.opened {
-        .icon-autodeal-search {
-          display: none;
-        }
-
-        .icon-autodeal-plus {
-          display: block;
-        }
-      }
-    }
-
-    & > .wd-find-select {
-      position: absolute;
-      width: 250px;
-      right: 0;
-      margin-top: 39px;
-      display: none;
-      @include transition3;
-
-      &.opened {
-        display: block;
-      }
-
-      i {
-        position: absolute;
-        top: 50%;
-        right: 15px;
-        transform: translateY(-50%);
-      }
-    }
-  }
-}
+/* --------------------------------------------------------------------------
+ * Shell
+ * ------------------------------------------------------------------------ */
 
 .main-header {
+  position: relative;
   z-index: 99;
   width: 100%;
-  // height: 98px;
-  position: relative;
-  box-shadow: 0px 4px 18px 0px #00000014;
   background-color: $color-1;
+  box-shadow: $shadow-md;
 
+  // `hero`: transparent, over the home page's hero photograph.
   &.style2 {
     position: absolute;
+    inset-inline: 0;
     background-color: transparent;
-    box-shadow: unset;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-
-    .main-menu .navigation > li > a {
-      color: $color-1;
-    }
-
-    .header-account {
-      color: $color-1;
-
-      .header-search-icon::after,
-      .header-favorite::after {
-        background-color: rgba(255, 255, 255, 0.2);
-      }
-
-      .flat-bt-top .sc-button {
-        border: 1px solid $color-1;
-      }
-
-      .flat-bt-top .sc-button span,
-      .flat-bt-top .sc-button svg {
-        color: $color-1;
-      }
-    }
+    box-shadow: none;
+    border-bottom: 1px solid rgba($brand-white, 0.2);
   }
 
-  &.style3 {
-    margin: 10px 10px 0px 10px;
-    border-radius: 16px;
-    position: absolute;
-    width: auto;
-    left: 0;
-    right: 0;
-
-    .mobile-button {
-      top: 45%;
-      right: 3px;
-    }
+  .inner-container {
+    gap: $space-6;
+    min-height: $header-height;
+    transition: min-height $dur-base $ease-standard;
   }
 }
 
-#showlogo {
-  display: none;
-}
-
-/* Header top */
-.tf-top-bar {
-  padding: 13px 0px;
-
-  .tf-top-bar-left {
-    ul {
-      gap: 33px;
-
-      li {
-        gap: 8px;
-      }
-    }
-  }
-
-  .tf-top-bar-right {
-    gap: 15px;
-
-    ul {
-      gap: 20px;
-
-      li {
-        a {
-          font-size: 14px;
-          display: flex;
-        }
-      }
-    }
-  }
-
-  &.style-1 {
-    background-color: $color-2;
-
-    .tf-top-bar-left {
-      ul {
-        li {
-          .icon {
-            color: $color-1;
-          }
-        }
-      }
-    }
-
-    .tf-top-bar-right {
-      ul {
-        li {
-          a {
-            color: $color-1;
-          }
-        }
-      }
-    }
-  }
-
-  &.style-2 {
-    border-bottom: 1px solid $color-6;
-  }
-}
-
-.header-lower.is-fixed {
-  -webkit-animation: 900ms ease-in-out 0s normal none 1 running fadeInDown;
-  animation: 900ms ease-in-out 0s normal none 1 running fadeInDown;
-  z-index: 999;
-  opacity: 0;
-  position: fixed;
-  top: -150px;
-  left: 0;
-  width: 100%;
-}
-
-.main-header .logo-box .logo .img-is-fixed {
-  display: none;
-}
-.main-header .is-fixed.is-small .logo-box .logo .img-is-fixed {
-  display: block;
-}
-.main-header .is-fixed.is-small .logo-box .logo .img-none {
-  display: none;
-}
-
-.main-header .is-fixed.is-small .main-menu .navigation > li > a {
-  color: #24272c;
-}
-
-.main-header .is-fixed.is-small .header-account a,
-.main-header .is-fixed.is-small .header-account span {
-  color: #696665;
-}
-.main-header .is-fixed.is-small .header-account .flat-bt-top .sc-button span,
-.main-header .is-fixed.is-small .header-account .flat-bt-top .sc-button svg {
-  color: $color-3;
-}
-
-.main-header .is-fixed.is-small .header-account .flat-bt-top .sc-button {
-  border: 1px solid $color-3;
-}
-
-.main-header .is-fixed.is-small .header-account .header-search-icon::after,
-.main-header .is-fixed.is-small .header-account .header-favorite::after {
-  background-color: #ededed;
-}
-
-.header-lower.is-fixed.is-small {
-  top: 0px;
-  opacity: 1;
-  visibility: visible;
-  box-shadow: 0px 4px 18px 0px #00000014;
-  background-color: $color-1;
-}
-
-.main-header .header-upper {
-  position: relative;
-}
-
-.main-header .main-box {
-  position: relative;
-  padding: 0px 0px;
-  left: 0px;
-  top: 0px;
-  width: 100%;
-  background: none;
-  -webkit-transition: all 300ms ease;
-  -ms-transition: all 300ms ease;
-  -o-transition: all 300ms ease;
-  -moz-transition: all 300ms ease;
-  transition: all 300ms ease;
-}
-
-.main-header .main-box .outer-container {
-  position: relative;
-}
+/* --------------------------------------------------------------------------
+ * Logo
+ *
+ * The hero variant carries two lockups — cream over the photo, indigo over the
+ * white sticky bar. The template swapped them with `display: none`, which is a
+ * hard cut in the middle of a scroll. They are stacked and cross-faded here,
+ * which is only possible because both files are the same 2.89:1 lockup at the
+ * same size, so nothing shifts as one replaces the other.
+ * ------------------------------------------------------------------------ */
 
 .main-header .logo-box {
   position: relative;
   z-index: 10;
+  flex: 0 0 auto;
+}
+
+.main-header .logo-box .logo a {
+  position: relative;
+  display: block;
+  @include focusable;
 }
 
 .main-header .logo-box .logo img {
-  display: inline-block;
-  max-width: 100%;
-  -webkit-transition: all 300ms ease;
-  -ms-transition: all 300ms ease;
-  -o-transition: all 300ms ease;
-  -moz-transition: all 300ms ease;
-  transition: all 300ms ease;
+  display: block;
+  width: 200px;
+  height: auto;
+  transition: opacity $dur-base $ease-standard, width $dur-base $ease-standard;
 }
 
-.main-header .logo-box .logo {
+.main-header .logo-box .logo .img-is-fixed {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  opacity: 0;
+}
+
+.main-header .header-lower.is-fixed .logo-box .logo {
+  .img-none {
+    opacity: 0;
+  }
+
+  .img-is-fixed {
+    opacity: 1;
+  }
+}
+
+.main-header .header-lower.is-fixed .logo-box .logo img {
+  width: 172px;
+}
+
+.main-header.style2 .logo-box .logo a {
+  @include focusable-inverse;
+}
+
+/* --------------------------------------------------------------------------
+ * Desktop navigation
+ * ------------------------------------------------------------------------ */
+
+.main-header .nav-outer {
   position: relative;
+  min-width: 0;
 }
-
-.main-header .header-lower {
-  // position: relative;
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
-}
-
-.main-header .header-lower .nav-outer {
-  position: relative;
-}
-
-.main-header .header-upper .logo-box {
-  position: relative;
-  padding: 10px 0px 10px;
-}
-
-.main-header .header-upper .logo-box .logo {
-  position: relative;
-}
-
-/* Main Menu */
 
 .main-header .main-menu {
   position: relative;
-  margin-left: 151px;
-  -webkit-transition: all 300ms ease;
-  -ms-transition: all 300ms ease;
-  -o-transition: all 300ms ease;
-  -moz-transition: all 300ms ease;
-  transition: all 300ms ease;
+  // The template pushed the menu 151px off the logo and then fought that with
+  // four `margin-left` overrides down the breakpoints. `.inner-container` is
+  // already `justify-content: space-between`; let it do the work, and RTL gets
+  // the mirrored result for free.
+  margin-inline: 0;
 }
 
 .main-header .main-menu .navbar-collapse {
-  padding: 0px;
   display: block;
+  padding: 0;
 }
 
-.main-header .header-lower .main-menu .navigation {
-  position: relative;
-}
-
-.main-header .main-menu .navigation > li {
-  position: relative;
-  display: inline-block;
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
-  margin-right: 27px;
-}
-
-.main-header .main-menu .navigation > li.tf-megamenu > ul {
+.main-header .main-menu .navigation {
   display: flex;
-  flex-wrap: wrap;
-  width: 400px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul {
-  display: flex;
-  flex-wrap: wrap;
-  min-width: 750px;
-  overflow: hidden;
-  padding: 30px;
-}
-
-.main-header .main-menu .navigation > li.tf-megamenu > ul li {
-  width: 50%;
-}
-
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul li {
-  width: 25%;
-}
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul > li {
-  opacity: 1;
-  transform: translateY(11px);
-}
-.main-header
-  .main-menu
-  .navigation
-  > li.tfcl-mega-menu
-  > ul
-  > li.dropdown2
-  > a:after {
-  content: unset;
-}
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul > li:hover a {
-  background-color: transparent;
-}
-
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul > li > ul > li {
-  width: 100%;
-  opacity: 1 !important;
-  transform: translateY(0px);
-  margin-bottom: 10px;
-}
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul > li > a {
-  font-weight: 600;
-  font-size: 18px;
-  margin-bottom: 15px;
-}
-.main-header
-  .main-menu
-  .navigation
-  > li.tfcl-mega-menu
-  > ul
-  > li
-  > ul
-  > li
-  > a {
-  font-weight: 400;
-}
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul > li > ul {
+.main-header .header-lower .main-menu .navigation > li {
   position: relative;
-  width: 100%;
-  left: 0;
-  border-top: 2px solid transparent;
-  opacity: 1;
-  border-radius: unset;
-  box-shadow: unset;
-}
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul > li > ul > li > a,
-.main-header .main-menu .navigation > li.tfcl-mega-menu > ul > li > a {
-  padding: 0px;
-}
-.main-header .main-menu .navigation li.tfcl-mega-menu > ul > li > ul {
-  -webkit-transform: scaleY(1);
-  -ms-transform: scaleY(1);
-  -o-transform: scaleY(1);
-  transform: scaleY(1);
-  opacity: 1;
-  visibility: visible;
+  display: block;
+  // Zero the physical property first: responsive.scss sets `margin-right` on
+  // this selector at ≤1470, which would sit on the wrong side under RTL.
+  margin-right: 0;
+  margin-inline-end: $space-7;
+
+  &:last-child {
+    margin-inline-end: 0;
+  }
 }
 
-.main-header .sticky-header .nav-outer .options-box {
-  margin-top: 40px;
-}
-
-/*Sticky Header*/
-
-.main-header .sticky-header {
-  position: fixed;
-  opacity: 0;
-  visibility: hidden;
-  left: 0px;
-  top: 0px;
-  width: 100%;
-  padding: 0px 0px;
-  z-index: 0;
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-}
-
-.main-header .sticky-header .mobile-nav-toggler {
-  display: none;
-  cursor: pointer;
-}
-
-.main-header .sticky-header .logo {
-  position: relative;
-  padding: 7px 0px;
-}
-
-.main-header.fixed-header .sticky-header {
-  z-index: 999;
-  opacity: 1;
-  visibility: visible;
-  -ms-animation-name: fadeInDown;
-  -moz-animation-name: fadeInDown;
-  -op-animation-name: fadeInDown;
-  -webkit-animation-name: fadeInDown;
-  animation-name: fadeInDown;
-  -ms-animation-duration: 500ms;
-  -moz-animation-duration: 500ms;
-  -op-animation-duration: 500ms;
-  -webkit-animation-duration: 500ms;
-  animation-duration: 500ms;
-  -ms-animation-timing-function: linear;
-  -moz-animation-timing-function: linear;
-  -op-animation-timing-function: linear;
-  -webkit-animation-timing-function: linear;
-  animation-timing-function: linear;
-  -ms-animation-iteration-count: 1;
-  -moz-animation-iteration-count: 1;
-  -op-animation-iteration-count: 1;
-  -webkit-animation-iteration-count: 1;
-  animation-iteration-count: 1;
+@media only screen and (max-width: 1470px) {
+  .main-header .header-lower .main-menu .navigation > li {
+    margin-inline-end: $space-4;
+  }
 }
 
 .main-header .main-menu .navigation > li > a {
   position: relative;
   display: block;
-  text-align: center;
-  line-height: 24px;
-  font-weight: 500;
-  padding: 37px 0px;
-  letter-spacing: 0px;
-  color: $color-2;
+  padding-block: 32px;
+  font-family: $font-1;
   font-size: 16px;
-  text-transform: capitalize;
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
-}
-
-.main-header .main-menu .navigation > li:last-child {
-  margin-right: 0;
-}
-
-.main-header .main-menu .navigation > li:last-child > a {
-  padding-right: 0px;
-}
-
-.main-header .sticky-header .main-menu .navigation > li {
-  position: relative;
-}
-
-.main-header .sticky-header .main-menu .navigation > li:last-child {
-  margin-right: 0;
-}
-
-.main-header .main-menu .navigation > li:last-child ul {
-  right: 0px;
-}
-
-.main-header .sticky-header .main-menu .navigation > li > a:after {
-  top: 22px;
-}
-
-.main-header .sticky-header .main-menu .navigation > li > a > span {
-  top: 10px;
+  font-weight: 500;
+  line-height: 24px;
+  color: $color-2;
+  transition: color $dur-fast $ease-standard;
+  @include focusable(-4px);
 }
 
 .main-header .main-menu .navigation > li:hover > a,
 .main-header .main-menu .navigation > li.current > a {
-  opacity: 1;
-  color: $color-3 !important;
+  // #BD4B2B on white = 4.99:1.
+  color: $color-3-text;
 }
 
+// Underline for the current section. Reads at a glance where a colour shift
+// alone does not, and is the only "you are here" signal a colour-blind visitor
+// gets from this bar.
+.main-header .main-menu .navigation > li.current > a::before {
+  content: "";
+  position: absolute;
+  inset-block-end: 26px;
+  inset-inline: 0;
+  height: 2px;
+  border-radius: 2px;
+  background-color: currentColor;
+}
+
+/* Dropdown parent chevron — drawn, not a font glyph. */
+.main-header .main-menu .navigation > li.dropdown2 > a::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-inline-start: $space-2;
+  // Physical on purpose: this is a glyph, and "down" is down in both scripts.
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform $dur-fast $ease-standard;
+}
+
+.main-header .main-menu .navigation > li.dropdown2:hover > a::after,
+.main-header .main-menu .navigation > li.dropdown2:focus-within > a::after {
+  transform: translateY(1px) rotate(225deg);
+}
+
+/* Dropdown panel */
 .main-header .main-menu .navigation > li > ul {
   position: absolute;
-  width: 280px;
-  z-index: 1;
+  inset-block-start: 100%;
+  inset-inline-start: -#{$space-6};
+  z-index: 20;
+  width: 260px;
+  margin: 0;
+  padding: $space-2 0;
+  list-style: none;
   border-top: 2px solid $color-3;
-  // padding: 25px 30px 30px 30px;
-  -webkit-transform: scaleY(0);
-  -ms-transform: scaleY(0);
-  -o-transform: scaleY(0);
-  transform: scaleY(0);
-  -webkit-transform-origin: top;
-  -ms-transform-origin: top;
-  -o-transform-origin: top;
-  transform-origin: top;
-  opacity: 0;
-  visibility: hidden;
-  visibility: hidden;
-  transition: all 300ms ease;
-  -moz-transition: all 300ms ease;
-  -webkit-transition: all 300ms ease;
-  -ms-transition: all 300ms ease;
-  -o-transition: all 300ms ease;
-  border-radius: 0px 0px 16px 16px;
+  border-radius: 0 0 $radius-card $radius-card;
   background-color: $color-1;
-  box-shadow: 0px 30px 60px 0px rgba(0, 0, 0, 0.1);
-}
-
-.main-header .main-menu .navigation > li > ul.from-right {
-  left: auto;
-  right: 0px;
-}
-
-.main-header .main-menu .navigation > li > ul > li {
-  position: relative;
-  width: 100%;
+  box-shadow: $shadow-xl;
   opacity: 0;
-  text-align: left;
-  transform: translateY(11px);
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity $dur-base $ease-standard,
+    transform $dur-base $ease-standard, visibility $dur-base $ease-standard;
 }
 
-.main-header .main-menu .navigation > li > ul > li:last-child {
-  margin-bottom: 0;
-}
-
-.main-header .main-menu .navigation > li:hover > ul > li {
+// `:focus-within` as well as `:hover`, so the submenu opens for a keyboard
+// user tabbing into it. The template's parent was `href="#"` and the panel was
+// hover-only, which made these links unreachable without a mouse.
+.main-header .main-menu .navigation > li.dropdown2:hover > ul,
+.main-header .main-menu .navigation > li.dropdown2:focus-within > ul {
   opacity: 1;
-  transform: translateY(0px);
-}
-
-.main-header .main-menu .navigation > li > ul > li:last-child {
-  border-bottom: none;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .main-header .main-menu .navigation > li > ul > li > a {
-  position: relative;
   display: block;
-  line-height: 22.4px;
+  padding: 12px $space-6;
+  font-family: $font-1;
+  font-size: 15px;
   font-weight: 500;
-  font-size: 16px;
-  text-transform: capitalize;
+  line-height: 22px;
   color: $color-2;
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
-  padding: 16px 24px;
+  transition: color $dur-fast $ease-standard,
+    background-color $dur-fast $ease-standard;
+  @include focusable(-3px);
 }
 
-.main-header .main-menu .navigation > li > ul > li:hover > a {
-  color: $color-3;
+.main-header .main-menu .navigation > li > ul > li:hover > a,
+.main-header .main-menu .navigation > li > ul > li.current > a {
+  // #BD4B2B on the 6% terracotta wash (#FEF7F5) = 4.72:1.
+  color: $color-3-text;
   background-color: $bg-color4;
 }
 
-.main-header .main-menu .navigation > li > ul > li.dropdown2 > a:after {
-  color: $color-2;
-  font-family: "Font Awesome 5 Pro";
-  content: "\f105";
-  position: absolute;
-  right: 13px;
-  top: 1px;
-  width: 10px;
-  height: 20px;
-  display: block;
-  line-height: 50px;
-  font-size: 16px;
-  font-weight: normal;
-  text-align: center;
-  z-index: 5;
+/* --------------------------------------------------------------------------
+ * Hero variant: light type on the photograph
+ * ------------------------------------------------------------------------ */
+
+.main-header.style2 {
+  .main-menu .navigation > li > a {
+    color: $color-1;
+    @include focusable-inverse(-4px);
+  }
+
+  // Not $color-3-text — #BD4B2B over a photograph is unreadable. Cream against
+  // the same photo reads for the same reason the cream lockup does.
+  .main-menu .navigation > li:hover > a,
+  .main-menu .navigation > li.current > a {
+    color: $brand-cream;
+  }
 }
 
-.main-header .main-menu .navigation > li > ul > li.dropdown2:hover > a:after {
-  color: $color-3;
+/* --------------------------------------------------------------------------
+ * The account cluster: language toggle + primary CTA (+ dashboard menu)
+ * ------------------------------------------------------------------------ */
+
+.main-header .header-account {
+  gap: $space-3;
+  flex: 0 0 auto;
+  // responsive.scss puts a physical 40px/20px margin here at ≤1200 to clear
+  // the absolutely-positioned burger the template used. The burger is a flex
+  // item now, so neither is needed — and neither was direction-aware.
+  margin: 0;
 }
 
-.main-header .main-menu .navigation > li > ul > li > ul {
-  position: absolute;
-  left: 100%;
-  top: 0px;
-  width: 280px;
-  border-top: 2px solid #ff7101;
-  -webkit-transform: scaleY(0);
-  -ms-transform: scaleY(0);
-  -o-transform: scaleY(0);
-  transform: scaleY(0);
-  -webkit-transform-origin: top;
-  -ms-transform-origin: top;
-  -o-transform-origin: top;
-  transform-origin: top;
-  opacity: 0;
-  visibility: hidden;
-  visibility: hidden;
-  transition: all 300ms ease;
-  -moz-transition: all 300ms ease;
-  -webkit-transition: all 300ms ease;
-  -ms-transition: all 300ms ease;
-  -o-transition: all 300ms ease;
-  border-radius: 0px 0px 16px 16px;
-  background-color: $color-1;
-  box-shadow: 0px 30px 60px 0px rgba(0, 0, 0, 0.1);
+.main-header .header-account .flat-bt-top .sc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  padding: 13px 22px;
+  white-space: nowrap;
+
+  // The template turned the CTA into a transparent outline here, which put the
+  // site's only primary action at the same visual weight as the language
+  // toggle beside it. Filled terracotta with the ink label is 5.50:1 and
+  // unmistakably the primary control; on hover $btn takes it to indigo/white
+  // at 14.12:1.
+  svg {
+    flex: 0 0 auto;
+    color: $color-on-accent;
+    transition: color $dur-base $ease-standard;
+  }
+
+  &:hover svg,
+  &:focus-visible svg {
+    color: $color-1;
+  }
+
+  @include focusable;
 }
 
-.main-header .main-menu .navigation > li > ul > li > ul.from-right {
-  left: auto;
-  right: 0px;
+.main-header.style2 .header-account .flat-bt-top .sc-button {
+  @include focusable-inverse;
 }
 
-.main-header .main-menu .navigation > li > ul > li > ul > li {
+/* Dashboard account menu.
+   No avatar and no name: there is no session, so there is no one to name. */
+.header-account-menu {
   position: relative;
-  width: 100%;
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
 }
 
-.main-header .main-menu .navigation > li > ul > li > ul > li:last-child {
-  margin-bottom: 0;
-}
-
-.main-header .main-menu .navigation > li > ul > li.dropdown2:hover > ul > li {
-  opacity: 1;
-  transform: translateY(0px);
-}
-
-.main-header .main-menu .navigation > li > ul > li > ul > li:last-child {
-  border-bottom: none;
-}
-
-.main-header .main-menu .navigation > li > ul > li > ul > li > a {
-  position: relative;
-  display: block;
-  line-height: 22.4px;
-  font-weight: 500;
-  font-size: 16px;
-  text-transform: capitalize;
-  color: $color-2;
-  padding: 16px 24px;
-  transition: all 500ms ease;
-  -moz-transition: all 500ms ease;
-  -webkit-transition: all 500ms ease;
-  -ms-transition: all 500ms ease;
-  -o-transition: all 500ms ease;
-}
-
-.main-header .main-menu .navigation > li > ul > li > ul > li > a:hover::before {
-  opacity: 1;
-}
-
-.main-header .main-menu .navigation > li > ul > .current > a {
-  color: $color-3;
-}
-
-.main-header .main-menu .navigation > li > ul > li > ul > .current > a {
-  color: $color-3;
-}
-
-.main-header .main-menu .navigation > li > ul > li > ul > li:hover > a {
-  color: $color-3;
-  background-color: $color-1;
-}
-
-.main-header .main-menu .navigation > li > ul > li > ul > li:hover > a {
-  color: $color-3;
-
-  background-color: rgba(255, 113, 1, 0.06);
-}
-
-.main-header .main-menu .navigation > li.dropdown2:hover > ul {
-  -webkit-transform: scaleY(1);
-  -ms-transform: scaleY(1);
-  -o-transform: scaleY(1);
-  transform: scaleY(1);
-  opacity: 1;
-  visibility: visible;
-}
-
-.main-header .main-menu .navigation li > ul > li.dropdown2:hover > ul {
-  -webkit-transform: scaleY(1);
-  -ms-transform: scaleY(1);
-  -o-transform: scaleY(1);
-  transform: scaleY(1);
-  opacity: 1;
-  visibility: visible;
-}
-
-.main-header .main-menu .navigation > li.dropdown2 > a::after {
-  content: "\f078";
-  font-family: "Font Awesome 5 Pro";
-  font-weight: 900;
-  font-size: 11px;
-  margin-left: 8px;
-  vertical-align: bottom;
-}
-
-.main-header .main-menu .navbar-collapse > ul li.dropdown2 .dropdown2-btn {
-  position: absolute;
-  right: 10px;
-  top: 6px;
-  width: 30px;
-  height: 30px;
-  text-align: center;
-  color: $color-1;
-  line-height: 28px;
-  border: 1px solid var(--white-color-opicity-two);
-  background-size: 20px;
+.box-avatar.dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: 9px $space-4 9px $space-3;
+  border: 1px solid $color-6;
+  border-radius: $radius-control;
+  background-color: transparent;
   cursor: pointer;
-  z-index: 5;
-  display: none;
+  transition: border-color $dur-fast $ease-standard;
+  @include focusable;
+
+  &::after {
+    display: none;
+  }
+
+  .box-avatar__icon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: $radius-circle;
+    background-color: $bg-color4;
+    color: $color-3-text;
+  }
+
+  .name {
+    font-family: $font-1;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 150%;
+    color: $color-2;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    border-color: $color-5;
+  }
 }
 
-/*** 
+.dropdown-menu.dashboard-menu {
+  min-width: 240px;
+  border: none;
+  border-top: 2px solid $color-3;
+  border-radius: 0 0 $radius-card $radius-card;
+  background: $color-1;
+  box-shadow: $shadow-xl;
+  // Bootstrap's own `right: auto` positioning is physical; this keeps the
+  // panel hanging off the same edge of its trigger in both directions.
+  inset-inline-end: 0;
 
-====================================================================
-	Mobile Menu
-====================================================================
-
-***/
-
-.mobile-menu {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 300px;
-  padding-right: 30px;
-  max-width: 100%;
-  height: 100%;
-  visibility: hidden;
-  z-index: 999999;
-
-  .nav-logo {
+  a {
+    display: block;
     position: relative;
-    background: $color-1;
-    box-shadow: 0px 4px 26px 0px rgba(66, 71, 76, 0.08);
-    padding: 24px 20px;
+    padding: 14px $space-6;
+    font-family: $font-1;
+    font-size: 15px;
+    font-weight: 500;
+    color: $color-2;
+    transition: color $dur-fast $ease-standard,
+      background-color $dur-fast $ease-standard;
+    @include focusable(-3px);
 
-    img {
-      max-width: 200px;
+    &:hover {
+      color: $color-3-text;
+      background-color: $bg-color4;
     }
   }
+}
 
-  .bottom-canvas {
-    padding: 30px 20px 30px;
+/* --------------------------------------------------------------------------
+ * Sticky header
+ *
+ * The template had two thresholds and parked the first one off-screen:
+ * `.is-fixed` (scrollY > 200) set `top: -150px; opacity: 0` and only
+ * `.is-fixed.is-small` (scrollY > 300) brought it back — so the header
+ * disappeared entirely for 100px of scrolling while its placeholder held the
+ * gap open. One state now, keyed on `.is-fixed` alone; ClientShell still sets
+ * `is-small` alongside it, and nothing here reads it.
+ * ------------------------------------------------------------------------ */
+
+.main-header .header-lower {
+  transition: background-color $dur-base $ease-standard,
+    box-shadow $dur-base $ease-standard;
+}
+
+.header-lower.is-fixed {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 999;
+  background-color: $color-1;
+  box-shadow: $shadow-md;
+  animation: as-header-slide-down $dur-slow $ease-out both;
+
+  .inner-container {
+    min-height: $header-height-stuck;
   }
+
+  .main-menu .navigation > li > a {
+    padding-block: 23px;
+  }
+
+  .main-menu .navigation > li.current > a::before {
+    inset-block-end: 17px;
+  }
+}
+
+@keyframes as-header-slide-down {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* The hero header resolves to the solid treatment once it sticks: the surface
+   is white, so the light type it uses over the photo has to flip back. */
+.main-header.style2 .header-lower.is-fixed {
+  border-bottom: none;
+
+  .main-menu .navigation > li > a {
+    color: $color-2;
+    @include focusable(-4px);
+  }
+
+  .main-menu .navigation > li:hover > a,
+  .main-menu .navigation > li.current > a {
+    color: $color-3-text;
+  }
+
+  .logo-box .logo a,
+  .header-account .flat-bt-top .sc-button {
+    @include focusable;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-lower.is-fixed {
+    animation: none;
+  }
+
+  .main-header .logo-box .logo img,
+  .main-header .inner-container,
+  .main-header .header-lower {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Offcanvas navigation
+ *
+ * Sized for a 360px budget Android screen (NICHE.md): 52px top-level rows,
+ * 48px submenu rows, a 48px disclosure target that is beside the link rather
+ * than laid over it — the template's `.dropdown2-btn` was `width: 100%` and
+ * covered the whole row, so tapping "Browse" expanded the section instead of
+ * opening the page.
+ * ------------------------------------------------------------------------ */
+
+.mobile-menu {
+  // The panel is anchored with inset-inline-start, so it hangs off the left
+  // edge in English and the right edge in Arabic. `transform` has no logical
+  // form, hence the custom property — redefined for RTL immediately below.
+  --as-offcanvas-slide: -100%;
+
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  visibility: hidden;
+  z-index: 999999;
+}
+
+[dir="rtl"] .mobile-menu {
+  --as-offcanvas-slide: 100%;
+}
+
+.mobile-menu .menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: rgba($brand-ink, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity $dur-base $ease-standard,
+    visibility $dur-base $ease-standard;
+}
+
+.mobile-menu .menu-box {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  width: $offcanvas-width;
+  max-width: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background-color: $color-1;
+  transform: translateX(var(--as-offcanvas-slide));
+  transition: transform $dur-slow $ease-standard;
 }
 
 .mobile-menu-visible {
@@ -833,418 +555,497 @@
 
   .mobile-menu {
     visibility: visible;
+  }
 
-    .menu-backdrop {
-      opacity: 1;
+  .mobile-menu .menu-backdrop {
+    opacity: 1;
+    visibility: visible;
+  }
 
-      visibility: visible;
-      @include transition3;
-    }
-
-    .menu-box {
-      left: 0px;
-      // @include transition5;
-      -webkit-overflow-scrolling: touch;
-      -webkit-transition-duration: 0.5s;
-      transition-duration: 0.5s;
-      -webkit-transition-timing-function: ease;
-      transition-timing-function: ease;
-    }
+  .mobile-menu .menu-box {
+    transform: translateX(0);
   }
 }
 
-.mobile-menu {
-  .menu-backdrop {
-    position: fixed;
-    right: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    background: rgba(0, 0, 0, 0.5);
-    transition: all 0.3s ease 0s;
-    visibility: hidden;
-    opacity: 0;
-    // @include transition3;
-    // transition: all 0.3s ease 0s;
-  }
-
-  .menu-box {
-    position: absolute;
-    left: -300px;
-    top: 0px;
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
-    overflow-y: auto;
-    background-color: $color-1;
-    z-index: 5;
-    border-radius: 0px;
-    // @include transition5;
-    -webkit-overflow-scrolling: touch;
-    -webkit-transition-duration: 0.5s;
-    transition-duration: 0.5s;
-    -webkit-transition-timing-function: ease;
-    transition-timing-function: ease;
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu .menu-box,
+  .mobile-menu .menu-backdrop {
+    transition: none;
   }
 }
 
-.close-btn {
-  position: fixed;
-  right: 16px;
-  top: 25px;
-  line-height: 30px;
-  width: 30px;
-  text-align: center;
-  font-size: 16px;
-  color: $color-1;
+/* Panel header: logo and close, pinned while the list scrolls under them. */
+.mobile-menu .nav-logo {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-3 $space-4 $space-3 $space-5;
+  background: $color-1;
+  border-block-end: 1px solid $color-6;
+
+  a {
+    display: block;
+    @include focusable;
+  }
+
+  img {
+    display: block;
+    width: 150px;
+    height: auto;
+  }
+}
+
+.mobile-menu .close-btn {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: $radius-circle;
+  background-color: $bg-color4;
+  color: $color-2;
   cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 9999999999;
-  opacity: 0;
-  visibility: hidden;
+  transition: background-color $dur-fast $ease-standard;
+  @include focusable;
 
-  &::before {
-    content: "\f00d";
-    font-family: "Font Awesome 5 Pro";
-    font-size: 33px;
-    font-weight: 100;
+  &:hover {
+    background-color: $bg-color3;
+  }
+
+  // Drawn, because Font Awesome is not loaded — see the file header. The
+  // template's "\f00d" was a blank box on every screen this shipped to.
+  span {
+    position: relative;
+    display: block;
+    width: 18px;
+    height: 18px;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 0;
+      width: 100%;
+      height: 2px;
+      border-radius: 2px;
+      background-color: currentColor;
+    }
+
+    &::before {
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    &::after {
+      transform: translateY(-50%) rotate(-45deg);
+    }
   }
 }
 
-.mobile-menu-visible .close-btn {
-  visibility: visible;
-  opacity: 1;
+.mobile-menu .bottom-canvas {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: $space-5;
+  padding: $space-5;
 }
 
-.mobile-menu .close-btn:hover {
-  opacity: 0.5;
+.mobile-menu-locale .locale-switcher {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  padding-block: 13px;
+}
+
+.mobile-menu .menu-outer {
+  flex: 0 1 auto;
 }
 
 .mobile-menu .navigation {
-  position: relative;
   display: block;
   width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
-  li {
-    position: relative;
-    display: block;
+.mobile-menu .navigation > li {
+  display: block;
+
+  &:not(:last-child) {
+    border-block-end: 1px solid $color-6;
   }
 }
 
-.mobile-menu .navigation li {
-  position: relative;
-  display: block;
+.mobile-nav-row {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
 
-  > ul > li:last-child {
-    border-bottom: none;
+  > a {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-height: 52px;
+    padding-block: $space-3;
+    font-family: $font-1;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: $color-2;
+    transition: color $dur-fast $ease-standard;
+    @include focusable(-3px);
+  }
+}
+
+.mobile-menu .navigation > li.current > .mobile-nav-row > a {
+  color: $color-3-text;
+}
+
+.mobile-menu .navigation .dropdown2-btn {
+  position: relative;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: $radius-sm;
+  background-color: transparent;
+  cursor: pointer;
+  @include focusable(-3px);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    width: 9px;
+    height: 9px;
+    margin-block-start: -7px;
+    margin-inline-start: -5px;
+    // Physical borders: a downward chevron is downward in both directions.
+    border-right: 2px solid $color-2;
+    border-bottom: 2px solid $color-2;
+    transform: rotate(45deg);
+    transition: transform $dur-base $ease-standard,
+      margin-block-start $dur-base $ease-standard;
   }
 
-  &.dropdown2 .dropdown2-btn {
-    position: absolute;
-    right: 0px;
-    top: 0px;
-    width: 100%;
-    text-align: end;
-    line-height: 44px;
-    cursor: pointer;
-    z-index: 5;
+  &:hover::before {
+    border-color: $color-3-text;
+  }
+}
 
-    &::before {
-      content: "\f078";
-      font-family: "Font Awesome 5 Pro";
-      font-size: 12px;
-      font-weight: 600;
-      color: $color-2;
+.mobile-menu .navigation > li.open > .mobile-nav-row .dropdown2-btn::before {
+  margin-block-start: -2px;
+  transform: rotate(225deg);
+}
+
+.mobile-menu .navigation > li > ul {
+  display: block;
+  margin: 0 0 $space-3;
+  padding: $space-2 $space-3;
+  list-style: none;
+  border-radius: $radius-md;
+  background-color: $bg-color4;
+
+  > li > a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    font-family: $font-1;
+    font-size: 15px;
+    font-weight: 500;
+    color: $color-2;
+    transition: color $dur-fast $ease-standard;
+    @include focusable(-3px);
+  }
+
+  > li.current > a,
+  > li > a:hover {
+    color: $color-3-text;
+  }
+}
+
+.mobile-menu .navigation > li > ul[hidden] {
+  display: none;
+}
+
+/* The primary action sits at the bottom of the panel and is pushed there by
+   `margin-block-start: auto`, so on a short list it still lands where a thumb
+   rests rather than floating under the last link. */
+.mobile-menu-cta {
+  margin-block-start: auto;
+  padding-block-start: $space-5;
+  border-block-start: 1px solid $color-6;
+
+  .sc-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    width: 100%;
+    min-height: 52px;
+    padding-inline: $space-4;
+
+    svg {
+      flex: 0 0 auto;
+      color: $color-on-accent;
+      transition: color $dur-base $ease-standard;
+    }
+
+    &:hover svg,
+    &:focus-visible svg {
+      color: $color-1;
     }
   }
 }
 
-.mobile-menu .navigation li.dropdown2 > {
-  // a {
-  // 	border-bottom: 1px solid $color-5;
-  // }
-  ul li a {
-    border-bottom: unset;
-  }
-}
-
-.mobile-menu .navigation li.dropdown2 .dropdown2-btn span {
-  opacity: 0;
-}
-
-.mobile-menu .navigation li > ul,
-.mobile-menu .navigation li > ul > li > ul {
-  display: none;
-  background: $bg-color4;
-  padding: 15px 20px;
-  border-radius: 10px;
-}
-
-.mobile-menu .navigation li > ul > li,
-.mobile-menu .navigation li > ul > li > ul > li {
-  margin-bottom: 0;
-}
-
-.mobile-menu .navigation li > ul > li > a,
-.mobile-menu .navigation li > ul > li > ul > li > a {
-  padding: 7px 0px !important;
-  font-size: 14px !important;
-  font-weight: 500;
-}
-
-.mobile-menu .navigation li > ul > li > ul {
-  padding-left: 15px;
-}
-
-.mobile-menu .navigation li > ul > li > ul > li > a {
-  padding-left: 40px;
-}
-
-.mobile-menu .close-btn:hover {
-  opacity: 0.5;
-}
-
-.mobile-menu .navigation li > ul > li:last-child {
-  border-bottom: none;
-}
-
-.mobile-menu .navigation li > a {
-  position: relative;
-  display: block;
-  font-weight: 600;
-  line-height: 24px;
-  padding: 10px 0px;
-  font-size: 15px;
-  color: $color-2;
-  text-transform: capitalize;
-}
-
-.mobile-menu .navigation li:hover > a,
-.mobile-menu .navigation li.current > a {
-  color: $color-3;
-}
-
-//
-.main-header .sticky-header .navbar-header {
-  display: none;
-}
-
-.main-header .outer-box {
-  position: relative;
-}
-
-.main-header .sticky-header .main-menu .navigation > li > a {
-  padding: 22px 0px;
-}
+/* --------------------------------------------------------------------------
+ * Menu button
+ *
+ * Was a `<div>` with an `onClick` — unreachable by keyboard, and announced as
+ * nothing. Now a `<button>` carrying aria-expanded/aria-controls and a 44×44
+ * target. Its bars are ink, not terracotta: terracotta on white is 2.97:1 and
+ * fails WCAG 1.4.11's 3:1 for a non-text control, ink is 16.30:1.
+ * ------------------------------------------------------------------------ */
 
 .mobile-button {
   display: none;
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  float: right;
-  top: 50%;
-  right: 15px;
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: $radius-sm;
   background-color: transparent;
   cursor: pointer;
-  // @include transition3;
-  transition: all 0s ease;
-  @include transitionY;
-
-  &::before,
-  &::after,
-  span {
-    background-color: $color-3;
-    -webkit-transition: all ease 0.3s;
-    -moz-transition: all ease 0.3s;
-    transition: all ease 0.3s;
-  }
+  @include focusable;
 
   &::before,
   &::after {
     content: "";
     position: absolute;
-    top: 0;
+    inset-inline: 11px;
     height: 2px;
-    width: 100%;
-    left: 0;
-    top: 50%;
-    -webkit-transform-origin: 50% 50%;
-    -ms-transform-origin: 50% 50%;
-    transform-origin: 50% 50%;
-  }
-
-  span {
-    position: absolute;
-    width: 100%;
-    height: 2px;
-    left: 0;
-    top: 50%;
-    overflow: hidden;
-    text-indent: 200%;
+    border-radius: 2px;
+    background-color: $color-2;
+    transition: background-color $dur-fast $ease-standard;
   }
 
   &::before {
-    -webkit-transform: translate3d(0, -9px, 0);
-    -moz-transform: translate3d(0, -9px, 0);
-    transform: translate3d(0, -9px, 0);
+    inset-block-start: 14px;
+    // The middle bar, drawn as a shadow of the top one.
+    box-shadow: 0 7px 0 $color-2;
   }
 
   &::after {
-    -webkit-transform: translate3d(0, 9px, 0);
-    -moz-transform: translate3d(0, 9px, 0);
-    transform: translate3d(0, 9px, 0);
-  }
-
-  &.active {
-    span {
-      opacity: 0;
-    }
-
-    &::before {
-      -webkit-transform: rotate3d(0, 0, 1, 45deg);
-      -moz-transform: rotate3d(0, 0, 1, 45deg);
-      transform: rotate3d(0, 0, 1, 45deg);
-    }
-
-    &::after {
-      -webkit-transform: rotate3d(0, 0, 1, -45deg);
-      -moz-transform: rotate3d(0, 0, 1, -45deg);
-      transform: rotate3d(0, 0, 1, -45deg);
-    }
-  }
-
-  &.mobi-style {
-    &::before,
-    &::after,
-    span {
-      background-color: $color-1;
-    }
+    inset-block-start: 28px;
   }
 }
 
-.mobile-menu {
-  .login-box {
-    border-bottom: 1px solid $color-6;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-
-    i {
-      margin-right: 5px;
-    }
-  }
-
-  .menu-outer {
-    border-bottom: 1px solid $color-6;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-  }
-
-  .button-mobi-sell {
-    border-bottom: 1px solid $color-6;
-    padding-bottom: 20px;
-
-    a {
-      width: 100%;
-    }
-  }
-}
-
-.main-header .mobile-menu .menu-box .mCSB_scrollTools {
-  width: 3px;
-}
-
-// dashboard top
-.dashboard {
-  background-color: #f7f7f7;
-
-  .main-header .main-menu {
-    margin-left: 780px;
-  }
-
-  .avatars-box {
-    margin-right: 31px;
-
-    .images {
-      margin-right: 11px;
-      height: 34px;
-      width: 34px;
-      overflow: hidden;
-      border-radius: 50%;
-    }
-
-    .title-avatar a {
-      &::after {
-        content: "\f078";
-        font-family: "Font Awesome 5 Pro";
-        font-weight: 900;
-        font-size: 11px;
-        margin-left: 8px;
-        vertical-align: bottom;
-      }
-    }
-  }
-}
-
-.box-avatar.dropdown-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
+.main-header.style2 .mobile-button {
+  &::before,
   &::after {
+    background-color: $color-1;
+  }
+
+  &::before {
+    box-shadow: 0 7px 0 $color-1;
+  }
+
+  @include focusable-inverse;
+}
+
+.main-header.style2 .header-lower.is-fixed .mobile-button {
+  &::before,
+  &::after {
+    background-color: $color-2;
+  }
+
+  &::before {
+    box-shadow: 0 7px 0 $color-2;
+  }
+
+  @include focusable;
+}
+
+/* Label for the menu button, and anything else that needs a name without a
+   visible one. */
+.sr-only-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip-path: inset(50%);
+}
+
+/* --------------------------------------------------------------------------
+ * Breakpoints
+ *
+ * Below 1201px the desktop nav is replaced by the offcanvas (responsive.scss
+ * hides `.nav-outer` there). Below 768px the language pill leaves the bar and
+ * below 576px the whole account cluster does: at 360px the logo, a language
+ * pill and a CTA cannot share a row without one of them being squeezed to
+ * illegibility, and both are the first two things in the panel instead.
+ * ------------------------------------------------------------------------ */
+
+@media only screen and (max-width: #{$nav-collapse}) {
+  .main-header .inner-container {
+    min-height: 72px;
+  }
+
+  // With `.nav-outer` hidden, space-between would leave the account cluster
+  // stranded in the middle of the bar; keep it against the menu button.
+  .main-header .header-account {
+    margin-inline-start: auto;
+  }
+
+  // responsive.scss hides the CTA outright at this width. It is the site's
+  // primary action and there is room for it down to 576px.
+  .main-header .header-account .flat-bt-top {
+    display: block;
+  }
+
+  .main-header .header-account .flat-bt-top .sc-button {
+    padding: 11px 18px;
+
+    span {
+      font-size: 15px;
+    }
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .main-header .logo-box .logo img,
+  .main-header .header-lower.is-fixed .logo-box .logo img {
+    width: 168px;
+  }
+
+  .main-header .header-account .header-locale {
+    display: none;
+  }
+}
+
+@media only screen and (max-width: 575px) {
+  .main-header .header-account {
     display: none;
   }
 
-  & img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.14);
+  .main-header .inner-container {
+    gap: $space-3;
+    min-height: 64px;
   }
 
-  & .name {
-    color: #24272c;
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 150%;
-  }
-
-  & i {
-    margin-left: 4px;
+  .main-header .logo-box .logo img,
+  .main-header .header-lower.is-fixed .logo-box .logo img {
+    width: 152px;
   }
 }
 
-.dropdown-menu.dashboard-menu {
-  border: none;
-  border-top: 2px solid #ff7101;
-  min-width: 240px;
-  background: #fff;
-  box-shadow: 0px 30px 60px 0px #24272c1a;
-  border-radius: 0 0 16px 16px;
+/* --------------------------------------------------------------------------
+ * Language toggle (components/common/LocaleSwitcher.jsx)
+ *
+ * Sits beside .sc-button (terracotta fill, 14px radius). The first pass was a
+ * 6px faint-bordered ghost pill, which read as undersized and washed out next
+ * to it. This uses cream — the brand's fourth colour, otherwise unused in the
+ * chrome — so the control is clearly present but clearly secondary to the
+ * terracotta CTA rather than competing with it.
+ *
+ * Contrast, computed: indigo #262262 on cream #F1E4C5 = 11.19:1. The inverse
+ * on hover is the same pair, so both states pass AAA. Terracotta was not an
+ * option for the label — 2.97:1 on white, fails at every size.
+ * ------------------------------------------------------------------------ */
 
-  & a {
-    padding: 15.4px 24px;
-    font-weight: 500;
-    font-size: 16px;
-    color: #24272c;
-    position: relative;
-    display: block;
+.locale-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: 11px 18px;
+  border-radius: $radius-control; // matches the adjacent .sc-button
+  border: 1px solid transparent;
+  background-color: $brand-cream;
+  color: $brand-indigo;
+  font-family: $font-2;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: background-color $dur-base $ease-standard,
+    color $dur-base $ease-standard, border-color $dur-base $ease-standard;
 
-    &:hover {
-      color: #ff7101;
+  &__icon {
+    flex: 0 0 auto;
+    // Slightly quieter than the label so the language name leads.
+    opacity: 0.75;
+    transition: opacity $dur-base $ease-standard;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-color: $brand-indigo;
+    color: $brand-cream;
+
+    .locale-switcher__icon {
+      opacity: 1;
+    }
+  }
+
+  @include focusable;
+
+  // Dark surfaces: the indigo footer, and the transparent header over the hero
+  // photo. A cream fill there would be a bright block competing with the logo,
+  // so invert — outline at rest, cream fill on hover.
+  //
+  // Scoped to `.header-lower`, not to `.main-header.style2` as a whole. The
+  // offcanvas panel is also a descendant of the home page's header, and it has
+  // a white background — the unscoped version painted the toggle cream-on-white
+  // at 1.28:1 in the one place a phone user has to find it.
+  #footer &,
+  .main-header.style2 .header-lower & {
+    background-color: transparent;
+    border-color: rgba($brand-cream, 0.4);
+    color: $brand-cream;
+
+    &:hover,
+    &:focus-visible {
+      background-color: $brand-cream;
+      border-color: $brand-cream;
+      color: $brand-indigo;
     }
 
-    & svg {
-      margin: 0;
-      margin-right: 8px;
-      vertical-align: bottom;
+    @include focusable-inverse;
+  }
 
-      & * {
-        stroke: #24272c;
-        opacity: 1;
-      }
+  // Once the hero header sticks, its surface is white — so the outlined
+  // treatment above has to revert or the label is cream on white at 1.28:1.
+  //
+  // This selector used to read `.header-lower.is-fixed .main-header.style2 &`,
+  // which can never match: `.header-lower` is a *child* of `.main-header`, not
+  // an ancestor of it. The rule had simply never applied, and the toggle was
+  // invisible on the stuck home-page header.
+  .main-header.style2 .header-lower.is-fixed & {
+    background-color: $brand-cream;
+    border-color: transparent;
+    color: $brand-indigo;
+
+    &:hover,
+    &:focus-visible {
+      background-color: $brand-indigo;
+      color: $brand-cream;
     }
+
+    @include focusable;
   }
 }

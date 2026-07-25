@@ -65,9 +65,6 @@ export default function CarBrands2() {
                         <div className="fs-16 fw-6 title text-color-2 font-2">
                           {slide.title}
                         </div>
-                        <span className="sub-title fs-12 fw-4 font-2">
-                          {slide.subTitle}
-                        </span>
                       </div>
                     </a>
                   </SwiperSlide>

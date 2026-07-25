@@ -4,6 +4,7 @@ import Image from "next/image";
 import { carBrands3 } from "@/data/categories";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
+import { Link } from "@/i18n/navigation";
 export default function Trending({ parentClass = "tf-section" }) {
   const swiperOptions = {
     slidesPerView: 5,
@@ -40,17 +41,17 @@ export default function Trending({ parentClass = "tf-section" }) {
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
-                Trending now
+                Browse by brand
               </h2>
-              <a
-                href="#"
+              <Link
+                href="/listing-grid"
                 className="tf-btn-arrow wow fadeInUpSmall"
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
                 View all
                 <i className="icon-autodeal-btn-right" />
-              </a>
+              </Link>
             </div>
           </div>
         </div>

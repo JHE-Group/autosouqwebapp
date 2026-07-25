@@ -1,236 +1,328 @@
-@use '../abstracts/' as *;
+@use "../abstracts/" as *;
 
 /* Footer
--------------------------------------------------------------- */
+--------------------------------------------------------------------------
+ * Styles for components/footers/Footer1.jsx. See that file for what was
+ * removed and why — chiefly the invented "Top 1 Americas / Largest Auto
+ * portal" strip, a newsletter that discarded every address it collected, and
+ * five social links pointing at "#".
+ *
+ * Surface is $brand-indigo throughout. Computed contrast on it:
+ *
+ *   white          14.12:1
+ *   cream          11.19:1
+ *   white @ 78%     9.09:1   <- body copy and links
+ *   terracotta      4.76:1   <- link hover, promise icons
+ *
+ * The template set link text to `rgba(#fff, 0.5)`, which resolves to 4.66:1 —
+ * technically AA, but this is 15px type read one-handed on a phone in Gulf
+ * daylight, so it is 78% here instead.
+ *
+ * RTL: logical properties throughout. responsive.scss still positions the
+ * ≤575px accordion marker with physical `right`, so it is re-anchored below.
+ * ------------------------------------------------------------------------ */
+
+$footer-link: rgba($brand-white, 0.78);
+$footer-rule: rgba($brand-white, 0.12);
 
 #footer {
-    background: $color-2;
-    position: relative;
+  position: relative;
+  background: $brand-indigo;
+  color: $color-1;
+
+  h4 {
+    margin-bottom: $space-6;
+    font-family: $font-1;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 26px;
     color: $color-1;
-
-    h4 {
-        margin-bottom: 24px;
-        color: $color-1;
-    }
-
-    .footer-top {
-        padding: 40px 0px;
-
-        .box-footer-top {
-            gap: 30px;
-
-            .icon {
-                color: $color-1;
-            }
-
-            .content {
-                .title {
-                    color: $color-1;
-                    margin-bottom: 6px;
-                }
-
-                p {
-                    color: $color-1;
-                    opacity: 0.3;
-                }
-            }
-
-        }
-    }
-
-    .footer-main {
-        padding: 40px 0px;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
+  }
 }
 
+/* --------------------------------------------------------------------------
+ * The promise strip
+ *
+ * What the four fabricated boxes were replaced with. Every line is a rule the
+ * business holds itself to and that a visitor can check against the listings —
+ * not a ranking, a volume, or an award. Wording is NICHE.md's.
+ * ------------------------------------------------------------------------ */
 
-/* Widget
--------------------------------------------------------------- */
+.footer-promise {
+  padding-block: $space-10;
 
-/* widget-menu */
+  ul {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $space-8;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-4;
+  }
+
+  &__icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-control;
+    // 4.76:1 on indigo — comfortably past the 3:1 a non-text graphic needs.
+    color: $color-3;
+    background-color: rgba($brand-terracotta, 0.14);
+  }
+
+  &__body {
+    display: block;
+    min-width: 0;
+  }
+
+  &__title {
+    display: block;
+    margin-block-end: $space-1;
+    font-family: $font-1;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    color: $color-1;
+  }
+
+  &__text {
+    display: block;
+    font-family: $font-2;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 21px;
+    color: $footer-link;
+  }
+}
+
+@media only screen and (max-width: 991px) {
+  .footer-promise ul {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-6;
+  }
+}
+
+@media only screen and (max-width: 575px) {
+  .footer-promise {
+    padding-block: $space-8;
+
+    ul {
+      grid-template-columns: 1fr;
+      gap: $space-5;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Link columns and brand block
+ * ------------------------------------------------------------------------ */
+
+#footer .footer-main {
+  padding-block: $space-10;
+  border-block: 1px solid $footer-rule;
+}
+
+.footer-brand {
+  img {
+    display: block;
+    width: 190px;
+    height: auto;
+    margin-block-end: $space-4;
+  }
+
+  a {
+    display: inline-block;
+    @include focusable-inverse;
+  }
+
+  p {
+    max-width: 30ch;
+    margin-block-end: $space-5;
+    font-family: $font-2;
+    font-size: 15px;
+    line-height: 23px;
+    color: $footer-link;
+  }
+}
+
 .widget-menu {
-    .title-widget {
-        font-size: 22px;
-        margin-bottom: 28px;
+  .box-menu {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li:not(:last-child) {
+      margin-block-end: $space-1;
     }
 
-    .box-menu {
-        li {
-            a {
-                position: relative;
-                color: rgba(#fff, 0.5);
-                font-family: $font-1;
-                font-size: 16px;
-                line-height: 22px;
-            }
+    a {
+      position: relative;
+      display: block;
+      padding-block: $space-2;
+      font-family: $font-1;
+      font-size: 15px;
+      line-height: 22px;
+      color: $footer-link;
+      transition: color $dur-fast $ease-standard;
+      @include focusable-inverse(-3px);
 
-            &:not(:last-child) {
-                margin-bottom: 11.5px;
-            }
-
-            &:hover {
-                a {
-                    @include transition3;
-                    color: $color-3;
-                }
-            }
-        }
+      &:hover {
+        // stays $color-3, NOT $color-3-text: on $brand-indigo terracotta is
+        // 4.76:1 and passes AA, while #BD4B2B is 2.83:1 and fails.
+        color: $color-3;
+      }
     }
-
+  }
 }
 
-.widget-form {
-    p {
-        margin-bottom: 18px;
-        color: rgba(255, 255, 255, 0.5);
-    }
+/* Heading as a disclosure button below 576px. responsive.scss owns the
+   show/hide of the two headings and draws the +/− marker; these rules make the
+   button look like the heading it replaces, and re-anchor the marker so it
+   sits on the correct edge under RTL. */
+#footer .footer-heading-mobie {
+  margin-bottom: 0;
 
-    label {
-        position: relative;
-        cursor: pointer;
-    }
-
-    label input {
-        position: absolute;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        z-index: 1;
-        margin-right: 0px;
-        margin-bottom: 0px;
-    }
-
-    .btn-checkbox {
-        width: 24px;
-        height: 20px;
-        border: 1px solid #FFFFFF1A;
-        background-color: rgba($color-1, 0.1);
-        border-radius: 6px;
-        justify-content: center;
-        margin-right: 12px;
-
-    }
-
-    fieldset {
-        position: relative;
-        width: 100%;
-        margin-bottom: 17px;
-
-        input {
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            padding: 15px 14px 15px 17px;
-            color: $color-1;
-            font-weight: 400;
-            font-size: 13px;
-            background-color: rgba(255, 255, 255, 0.07);
-            border-radius: 14px;
-            @include transition3;
-            position: relative;
-            font-family: $font-1;
-            line-height: 19.5px;
-
-            &::placeholder {
-                color: rgba(255, 255, 255, 0.2);
-                line-height: 19.6px;
-                font-size: 14px;
-                font-weight: 400;
-                @include transition3;
-                font-family: $font-2;
-            }
-
-            &:focus {
-                border: 1px solid $color-3;
-            }
-
-        }
-    }
-
-    button {
-        width: 100%;
-        height: 50px;
-        background-color: $color-3;
-        border: 1px solid $color-3;
-        color: $color-1;
-        position: relative;
-        font-size: 15px;
-        font-weight: 700;
-        border-radius: 14px;
-        @include transition3;
-
-        &:hover {
-            background-color: $color-1;
-            border: 1px solid $color-2;
-            color: $color-2;
-        }
-    }
+  button {
+    display: block;
+    width: 100%;
+    padding: $space-3 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+    @include focusable-inverse(-3px);
+  }
 }
 
+@media only screen and (max-width: 575px) {
+  // responsive.scss hides `.tf-collapse-content` outright at this width and
+  // the old accordion only ever animated `height` — so on exactly the screens
+  // this site is built for, the footer was four headings and no links at all.
+  #footer .footer-col-block .tf-collapse-content {
+    display: none;
+  }
 
-.footer-bottom {
-    position: relative;
-    padding: 40px 0;
-    color: $color-1;
+  #footer .footer-col-block.open .tf-collapse-content {
+    display: block;
+    padding-block: $space-2;
+  }
 
-    .footer-bottom-right {
-        gap: 40px;
+  #footer .footer-col-block {
+    border-block-end: 1px solid $footer-rule;
+  }
 
-        .title-bottom {
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 19.6px;
-            font-family: $font-2;
+  #footer .footer-main .widget {
+    margin-bottom: 0;
+  }
 
-        }
-    }
+  // The marker is positioned with physical `right` in responsive.scss.
+  #footer .footer-heading-mobie::before,
+  #footer .footer-heading-mobie::after {
+    right: auto;
+  }
+
+  #footer .footer-heading-mobie::before {
+    inset-inline-end: 15px;
+  }
+
+  #footer .footer-heading-mobie::after {
+    inset-inline-end: 10px;
+  }
 }
+
+/* --------------------------------------------------------------------------
+ * Bottom bar
+ * ------------------------------------------------------------------------ */
+
+#footer .footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3 $space-8;
+  padding-block: $space-6;
+  color: $color-1;
+
+  .title-bottom {
+    margin: 0;
+    font-family: $font-2;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: $footer-link;
+  }
+}
+
+@media only screen and (max-width: 575px) {
+  #footer .footer-bottom {
+    justify-content: flex-start;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Social icon row
+ *
+ * Not used by the footer — we have no verified accounts to link to — but
+ * components/otherPages/Faqs.jsx and Contact.jsx both render it, so the styles
+ * stay here rather than being deleted out from under them.
+ * ------------------------------------------------------------------------ */
 
 .icon-social {
-    a {
-        color: $color-1;
-        font-size: 16px;
-        width: 40px;
-        height: 40px;
-        background-color: rgba(255, 255, 255, 0.08);
-        text-align: center;
-        line-height: 45px;
-        border-radius: 50%;
-        margin-right: 8px;
-        @include transition3;
+  a {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    margin-right: 0;
+    margin-inline-end: $space-2;
+    border-radius: $radius-circle;
+    background-color: rgba($brand-white, 0.08);
+    color: $color-1;
+    font-size: 16px;
+    line-height: 40px;
+    text-align: center;
+    transition: background-color $dur-fast $ease-standard,
+      color $dur-fast $ease-standard;
 
-        &:hover {
-            background-color: $color-3;
-            color: $color-1;
-        }
+    &:hover {
+      background-color: $color-3;
+      // was white — 2.97:1 on terracotta, fails AA
+      color: $color-on-accent;
+    }
 
-        &:last-child  {
-            margin-right: 0;
-        }
+    &:last-child {
+      margin-inline-end: 0;
     }
-    &.style1{
-        a{
-            color: $color-2;
-            border: 1px solid $color-6;
-            &:hover {
-                color: $color-1;
-            }
-        }
-    }
-    &.style2{
+  }
 
-        a{
-            width: 44px;
-            height: 44px;
-            color: $color-2;
-            border-radius: 8px;
-            border: 1px solid $color-6;
-            color: $color-5;
-            &:hover {
-                color: $color-1;
-            }
-        }
+  &.style1 a {
+    border: 1px solid $color-6;
+    color: $color-2;
+
+    &:hover {
+      color: $color-on-accent;
     }
+  }
+
+  &.style2 a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    border: 1px solid $color-6;
+    border-radius: $radius-sm;
+    color: $color-5;
+
+    &:hover {
+      color: $color-on-accent;
+    }
+  }
 }

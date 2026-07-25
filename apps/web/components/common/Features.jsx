@@ -1,6 +1,7 @@
 "use client";
 
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Link } from "@/i18n/navigation";
 
 export default function Features() {
   return (
@@ -15,16 +16,16 @@ export default function Features() {
                   data-wow-delay="0.2s"
                   data-wow-duration="1000ms"
                 >
-                  Why Choose Auto Decar
+                  Why Choose Autosouq
                 </h2>
                 <p
                   className="text-color-1 wow fadeInUpSmall"
                   data-wow-delay="0.2s"
                   data-wow-duration="1000ms"
                 >
-                  Our experienced team excels in car sales with many years of
-                  successfully navigating the market, delivering informed
-                  decisions and optimal results.
+                  Four things we promise on every listing: the real price, a checked
+                  listing, GCC spec or import stated plainly, and one tap to the
+                  seller on WhatsApp.
                 </p>
               </div>
             </div>
@@ -60,17 +61,16 @@ export default function Features() {
                       </div>
                       <div className="content">
                         <h3>
-                          <a href="#">Browse inventory</a>
+                          <Link href="/listing-grid">Real prices</Link>
                         </h3>
                         <p>
-                          Find the ideal car for you and browse our affordable
-                          inventory.
+                          The number on the card is the price the seller is asking, in OMR. No bait figures, no hidden prices.
                         </p>
                         <div className="meta style">
-                          <a href="#" className="btn-button">
-                            <span>Search inventory</span>
+                          <Link href="/listing-grid" className="btn-button">
+                        <span>Browse cars</span>
                             <i className="icon-autodeal-next" />
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -101,17 +101,16 @@ export default function Features() {
                       </div>
                       <div className="content">
                         <h3>
-                          <a href="#">Get An Offer</a>
+                          <Link href="/faq">Verified listings</Link>
                         </h3>
                         <p>
-                          What's your car worth? Get the best value for your
-                          vehicle.
+                          Every car is checked before it goes live. If we cannot verify it, we do not publish it.
                         </p>
                         <div className="meta style">
-                          <a href="#" className="btn-button">
-                            <span>Get trade-in Value</span>
+                          <Link href="/faq" className="btn-button">
+                        <span>How we check</span>
                             <i className="icon-autodeal-next" />
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -138,16 +137,16 @@ export default function Features() {
                       </div>
                       <div className="content">
                         <h3>
+                          <Link href="/faq">GCC spec or import, stated</Link>
                         </h3>
                         <p>
-                          Fill out our credit approval form for your next used
-                          vehicle loan.
+                          Every listing shows whether the car is GCC spec, a US import or a Japan import, and says so plainly when the seller has not told us.
                         </p>
                         <div className="meta style">
-                          <a href="#" className="btn-button">
-                            <span>Apply Now</span>
+                          <Link href="/faq" className="btn-button">
+                        <span>What the labels mean</span>
                             <i className="icon-autodeal-next" />
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -178,17 +177,16 @@ export default function Features() {
                       </div>
                       <div className="content">
                         <h3>
-                          <a href="#">Expert Service</a>
+                          <Link href="/faq">One WhatsApp tap</Link>
                         </h3>
                         <p>
-                          Expert technicians will keep your vehicle in top
-                          running condition.
+                          Message the seller straight from the listing. The car and its listed price are already written into the message.
                         </p>
                         <div className="meta style">
-                          <a href="#" className="btn-button">
-                            <span>Schedule Service</span>
+                          <Link href="/faq" className="btn-button">
+                        <span>See how it works</span>
                             <i className="icon-autodeal-next" />
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -233,17 +231,16 @@ export default function Features() {
                     </div>
                     <div className="content">
                       <h3>
-                        <a href="#">Browse inventory</a>
+                        <Link href="/listing-grid">Real prices</Link>
                       </h3>
                       <p>
-                        Find the ideal car for you and browse our affordable
-                        inventory.
+                        The number on the card is the price the seller is asking, in OMR. No bait figures, no hidden prices.
                       </p>
                       <div className="meta style">
-                        <a href="#" className="btn-button">
-                          <span>Search inventory</span>
+                        <Link href="/listing-grid" className="btn-button">
+                        <span>Browse cars</span>
                           <i className="icon-autodeal-next" />
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -274,17 +271,16 @@ export default function Features() {
                     </div>
                     <div className="content">
                       <h3>
-                        <a href="#">Get An Offer</a>
+                        <Link href="/faq">Verified listings</Link>
                       </h3>
                       <p>
-                        What's your car worth? Get the best value for your
-                        vehicle.
+                        Every car is checked before it goes live. If we cannot verify it, we do not publish it.
                       </p>
                       <div className="meta style">
-                        <a href="#" className="btn-button">
-                          <span>Get trade-in Value</span>
+                        <Link href="/faq" className="btn-button">
+                        <span>How we check</span>
                           <i className="icon-autodeal-next" />
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -311,16 +307,16 @@ export default function Features() {
                     </div>
                     <div className="content">
                       <h3>
-                      </h3>
+                          <Link href="/faq">GCC spec or import, stated</Link>
+                        </h3>
                       <p>
-                        Fill out our credit approval form for your next used
-                        vehicle loan.
+                        Every listing shows whether the car is GCC spec, a US import or a Japan import, and says so plainly when the seller has not told us.
                       </p>
                       <div className="meta style">
-                        <a href="#" className="btn-button">
-                          <span>Apply Now</span>
+                        <Link href="/faq" className="btn-button">
+                        <span>What the labels mean</span>
                           <i className="icon-autodeal-next" />
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -351,17 +347,16 @@ export default function Features() {
                     </div>
                     <div className="content">
                       <h3>
-                        <a href="#">Expert Service</a>
+                        <Link href="/faq">One WhatsApp tap</Link>
                       </h3>
                       <p>
-                        Expert technicians will keep your vehicle in top running
-                        condition.
+                        Message the seller straight from the listing. The car and its listed price are already written into the message.
                       </p>
                       <div className="meta style">
-                        <a href="#" className="btn-button">
-                          <span>Schedule Service</span>
+                        <Link href="/faq" className="btn-button">
+                        <span>See how it works</span>
                           <i className="icon-autodeal-next" />
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>

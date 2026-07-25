@@ -1,2 +1,5 @@
 @forward './variables';
 @forward './mixin';
+// The only emitting file in abstracts/ - global :root tokens, the
+// prefers-reduced-motion kill switch, and the :focus-visible safety net.
+@forward './base';

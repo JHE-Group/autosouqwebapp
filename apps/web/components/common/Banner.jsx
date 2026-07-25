@@ -1,61 +1,64 @@
-import React from "react";
-import Image from "next/image";
+import { Link } from "@/i18n/navigation";
+
+/**
+ * The two jobs, at the foot of the page: buy one, or sell one.
+ *
+ * Three fixes here:
+ *
+ * - **A live contrast failure.** `.tf-image-box.bg-orange` fills with
+ *   terracotta `$color-3`, and both the heading and the paragraph carried
+ *   `.text-color-1` (white). White on terracotta is 2.97:1 and fails AA at
+ *   every size — the palette notes in `abstracts/_variables.scss` say so
+ *   explicitly. Filled accent surfaces take ink instead: #231F20 on #E97451 is
+ *   5.50:1. The indigo card keeps white, which is 14.12:1.
+ *
+ * - **Two blank grey rectangles.** `find-car-1.png` and `find-car-2.png` are
+ *   the theme's unfilled placeholders — solid #D3D7E0, no illustration in them
+ *   — shipped with `alt="images"`. Two requests and two decorative boxes that
+ *   depict nothing. Removed; the copy gets the room instead.
+ *
+ * - **No vertical space.** The section wore `.tf-section-banner`, a class that
+ *   is not defined anywhere in the stylesheet, so it had zero padding and
+ *   collided with whatever preceded it.
+ */
 export default function Banner() {
   return (
-    <section className="tf-section-banner">
+    <section className="hp-section hp-banner">
       <div className="container">
-        <div className="row">
+        <div className="row hp-banner__row">
           <div className="col-lg-6">
-            <div className="tf-image-box style1 bg-orange flex-three">
-              <div className="image">
-                <Image
-                  className="ls-is-cached lazyloaded"
-                  data-src="/assets/images/img-box/find-car-1.png"
-                  alt="images"
-                  src="/assets/images/img-box/find-car-1.png"
-                  width={315}
-                  height={257}
-                />
-              </div>
+            <div className="tf-image-box style1 bg-orange hp-banner__card">
               <div className="content">
-                <h3 className="text-color-1">
-                  <a href="#">Are you looking for a car?</a>
-                </h3>
-                <p className="text-color-1">
-                  Save time and effort as you no longer need to visit multiple
-                  stores to find the right car.
+                <h2 className="text-color-2 hp-banner__title">
+                  <Link href="/listing-grid">Looking for a car?</Link>
+                </h2>
+                <p className="text-color-2">
+                  Every car is between OMR 1,500 and 6,000, checked before it
+                  goes live, with GCC spec or import stated up front.
                 </p>
-                <a href="#" className="find-cars">
+                <Link href="/listing-grid" className="find-cars">
                   <span>Find cars</span>
-                  <i className="icon-autodeal-search" />
-                </a>
+                </Link>
               </div>
             </div>
           </div>
           <div className="col-lg-6">
-            <div className="tf-image-box style1 bg-black flex-three">
-              <div className="image">
-                <Image
-                  className="ls-is-cached lazyloaded"
-                  data-src="/assets/images/img-box/find-car-2.png"
-                  alt="images"
-                  src="/assets/images/img-box/find-car-2.png"
-                  width={315}
-                  height={257}
-                />
-              </div>
+            {/* Not `.bg-black`: `_widget.scss` sets that to $brand-indigo, but
+                Bootstrap ships a `.bg-black { background: #000 !important }`
+                utility that wins, so this card has been rendering pure black
+                rather than the brand indigo. */}
+            <div className="tf-image-box style1 hp-banner__card hp-banner__card--indigo">
               <div className="content">
-                <h3 className="text-color-1">
-                  <a href="#">Do you want to sell a car?</a>
-                </h3>
+                <h2 className="text-color-1 hp-banner__title">
+                  <Link href="/sell-your-car">Selling one?</Link>
+                </h2>
                 <p className="text-color-1">
-                  Find your perfect car match and sell your car quickly with our
-                  user-friendly online service.
+                  List it with its real asking price and its spec stated
+                  honestly. Buyers reach you on WhatsApp — no account needed.
                 </p>
-                <a href="#" className="find-cars">
-                  <span>Find cars</span>
-                  <i className="icon-autodeal-search" />
-                </a>
+                <Link href="/sell-your-car" className="find-cars">
+                  <span>List your car</span>
+                </Link>
               </div>
             </div>
           </div>

@@ -9422,19 +9422,10 @@
   width: auto;
 }
 
-@font-face {
-  font-family: "Font Awesome 5 Pro";
-  font-style: normal;
-  font-weight: 300;
-  font-display: block;
-  src: url("/assets/fonts/fa-light-300.woff2") format("woff2"),
-    url("/assets/fonts/fa-light-300.woff") format("woff");
-}
-
-.fal {
-  font-family: "Font Awesome 5 Pro";
-  font-weight: 300;
-}
+/* Regular (400) only. Light and Solid were 332 KB of woff2 on every page view;
+ * all three Pro faces have the identical 1,850-glyph cmap (verified), so .fal /
+ * .fa / .fas are re-pointed at 400 and nothing can render as tofu. Endgame is
+ * deleting Font Awesome outright for inline SVG — perf audit §4. */
 @font-face {
   font-family: "Font Awesome 5 Pro";
   font-style: normal;
@@ -9444,21 +9435,10 @@
     url("/assets/fonts/fa-regular-400.woff") format("woff");
 }
 
-.far {
+.fa,
+.fas,
+.far,
+.fal {
   font-family: "Font Awesome 5 Pro";
   font-weight: 400;
-}
-@font-face {
-  font-family: "Font Awesome 5 Pro";
-  font-style: normal;
-  font-weight: 900;
-  font-display: block;
-  src: url("/assets/fonts/fa-solid-900.woff2") format("woff2"),
-    url("/assets/fonts/fa-solid-900.woff") format("woff");
-}
-
-.fa,
-.fas {
-  font-family: "Font Awesome 5 Pro";
-  font-weight: 900;
 }

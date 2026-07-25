@@ -206,7 +206,13 @@
 
 .nice-select .option.selected {
   font-weight: 600;
-  color: #ff7101;
+  /* Brand terracotta, darkened step. Plain terracotta #E97451 is 2.97:1 on
+     white and fails AA. Was #C9502E, but that is 4.4964:1 on white (rounds to
+     4.50, actually under the bar) and only 4.16:1 once the option is hovered and
+     the row goes #f6f6f6. #BD4B2B is 4.99:1 on white and 4.62:1 on #f6f6f6.
+     Keep in sync with $color-3-text in scss/abstracts/_variables.scss.
+     Was the AutoDeal orange #ff7101. */
+  color: #bd4b2b;
 }
 
 .nice-select .option.disabled {

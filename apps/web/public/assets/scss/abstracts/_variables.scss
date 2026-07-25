@@ -1,30 +1,323 @@
+@use 'sass:map';
 
-$font-1: 'Outfit', sans-serif;
-$font-2: 'Inter', sans-serif;
+// --------------------------------------------------------------------------
+// Typeface roles
+//
+//   $font-1 = Outfit  -> DISPLAY. Headings, prices, numerals, button labels.
+//   $font-2 = Inter   -> UI / PROSE. Body copy, meta, form controls, tables.
+//
+// Both are loaded by next/font and exposed as CSS custom properties, so the
+// fallback stack matters: on a cold cache (the audience is on budget Android
+// over patchy mobile data) the page renders in the system UI font, and the
+// system stack below is metrically far closer to Inter/Outfit than plain
+// `sans-serif` was.
+// --------------------------------------------------------------------------
+
+$font-fallback: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  'Helvetica Neue', Arial, 'Noto Sans Arabic', sans-serif;
+
+$font-1: var(--font-outfit), #{$font-fallback};
+$font-2: var(--font-inter), #{$font-fallback};
 
 
-$color-1: #FFFFFF;
-$color-2: #24272C;
-$color-3: #FF7101;
+// --------------------------------------------------------------------------
+// Autosouq brand palette
+//
+// SOURCE OF TRUTH: the supplied logo artwork in
+//   public/assets/images/brand/*.svg
+// These hexes are read straight off the vector fills. Do NOT re-derive the
+// palette from the AutoDeal template (it shipped #FF7101) or from any older
+// tokens doc (an earlier guess used #FDD906 / #0A1426). The artwork wins.
+//
+// Contrast notes (computed, WCAG 2.1):
+//   white  on terracotta  = 2.97:1  FAILS  -> never put white text on $color-3
+//   ink    on terracotta  = 5.50:1  passes AA  -> use $color-on-accent
+//   cream  on indigo      = 11.19:1 passes AAA
+//   indigo on cream       = 11.19:1 passes AAA
+//   white  on indigo      = 14.12:1 passes AAA
+//   terracotta on indigo  = 4.76:1  passes AA
+//   terracotta on white   = 2.97:1  FAILS as text (see $color-3-text)
+// --------------------------------------------------------------------------
+
+$brand-terracotta      : #E97451; // the mark - the accent colour
+$brand-indigo          : #262262; // the wordmark - the dark / primary surface
+$brand-cream           : #F1E4C5; // light wordmark on dark - warm surface
+$brand-ink             : #231F20; // near-black, mono lockups
+$brand-white           : #FFFFFF; // reversed mono
+
+// Derived steps (not in the artwork - same hue, different lightness)
+$brand-terracotta-dark : #C9502E; // ~700 step. white on it = 4.50:1
+$brand-terracotta-soft : #F2A88F; // ~300 step. decorative washes only
+
+
+$color-1: $brand-white;
+$color-2: $brand-ink;        // was #24272C - now brand ink, visually identical
+$color-3: $brand-terracotta; // was #FF7101 - THE accent
 $color-4: #696665;
 $color-5: #B6B6B6;
 $color-6: #EDEDED;
 $color-7: #5C6368;
 $color-8: #E4E4E4;
 $color-9: #7ED321;
-$color-10: #EE6742;
+$color-10: #B45309;          // "pending" amber. was #EE6742, too close to terracotta to read as a distinct status
 $color-11: #6E55FF;
 
-$bg-color: #FFAD6B;
+// Text / icons sitting ON a terracotta fill.
+// White is 2.97:1 on $color-3 and fails AA at every size, so filled accent
+// surfaces carry ink instead - same call the WhatsApp button already makes
+// (ink #24272C on green #25D366, because white-on-green was 1.98:1).
+$color-on-accent: $brand-ink;
+
+// Accent used as TEXT on a light surface is 2.97:1 and fails AA. This is the
+// accessible substitute, applied per-surface (the light-background pass is
+// done; $color-3 is retained where accent text sits on the dark footer /
+// dashboard sidebar / dark hero, where terracotta is 4.76-5.25:1 and this
+// darker step would FAIL at 2.83-3.47:1).
+//
+// NOT $brand-terracotta-dark. Recomputed: #C9502E on white is 4.4964:1, which
+// rounds to the advertised "4.50" but is fractionally UNDER the 4.5 threshold,
+// and on the terracotta tint surfaces that actually carry accent body text
+// (header dropdown hover = $bg-color4 over white = #FEF7F5) it is only 4.25:1.
+// #BD4B2B is the same hue (13.2 deg) and saturation, one lightness step down:
+//   #BD4B2B on white           = 4.99:1  passes AA
+//   #BD4B2B on $bg-color4 tint = 4.72:1  passes AA
+//   #BD4B2B on $bg-color3 tint = 4.52:1  passes AA
+// The extra headroom is deliberate - see NICHE.md: the audience reads outdoors
+// in bright sun on budget Android screens.
+// To revert to the ~700 fill step, set this back to $brand-terracotta-dark.
+$color-3-text: #BD4B2B;
+
+// Same problem, same fix, for the success green.
+//
+// $color-9 #7ED321 is a light yellow-green. As TEXT it measures:
+//   #7ED321 on white                     1.87:1  FAILS badly
+//   #7ED321 on its own 10% tint #F2FBE9  1.76:1  FAILS badly
+//   white   on #7ED321                   1.87:1  FAILS badly
+// The "Verified" badge - per NICHE.md the single most important thing the
+// site says, since trust is the whole differentiator against OpenSooq and
+// Dubizzle - was rendering as pale green on a pale green pill and was
+// effectively invisible. design/tokens.md proposed #0F9D58 for it, but that
+// is only 3.51:1 on white and also fails AA for text.
+//
+// $color-9-text is the same hue (88.7 deg) and saturation as $color-9, four
+// lightness steps down - the identical construction as $color-3-text:
+//   #4A7B13 on white            5.08:1  passes AA
+//   #4A7B13 on the green tint   4.78:1  passes AA
+//   #4A7B13 on $bg-color2       4.79:1  passes AA
+//   #4A7B13 on cream            4.03:1  large text / non-text only
+// $color-9 itself stays as-is for FILLS, where the label on top is ink
+// (ink on #7ED321 = 8.71:1).
+$color-9-text: #4A7B13;
+
+$bg-color: $brand-terracotta-soft; // was #FFAD6B
 $bg-color2: #F8F8F9;
-$bg-color3: rgba(255, 113, 1, 0.1);
-$bg-color4: rgba(255, 113, 1, 0.06);
+$bg-color3: rgba(233, 116, 81, 0.1);  // $brand-terracotta @ 10%
+$bg-color4: rgba(233, 116, 81, 0.06); // $brand-terracotta @ 6%
 $bg-color5: rgba(0, 0, 0, 0.3);
 $bg-color6: rgba(126, 211, 33, 0.1);
 $bg-color7: rgba(110, 85, 255, 0.1);
 $bg-color8: #A9B3BC;
 
 
+// ==========================================================================
+// TYPE SCALE
+//
+// Audited from the ported theme: the sizes actually in use were
+//   16(80x) 14(78x) 12(31x) 18(15x) 13(12x) 24(11x) 30(10x) 20(9x) 17(7x)
+//   15(7x) 70(6x) 40(5x) 26(4x) 22(4x) ... plus 19/25/33/34/35/36/37/45.
+//
+// The 12/14/16/18/20/24/30/40 spine is already a sane progression - small
+// steps for UI text, widening steps for display - so it is KEPT and formalised
+// here rather than replaced. 13/15/17/19/22/25/26/33/35/36/37 are strays and
+// should collapse onto the nearest step.
+//
+// What changed is the LINE HEIGHTS. The theme shipped body at 14px/19.6px
+// (1.40) and every heading at exactly 1.26. Per NICHE.md the audience reads
+// outdoors in bright sun on small budget Android screens, and half of them are
+// reading a second language - so prose gets 1.5-1.63 leading (WCAG 1.4.12 asks
+// 1.5 as a minimum users must be able to reach), and headings relax from 1.26
+// to 1.20-1.40 with the ratio tightening as the size grows.
+//
+// Each step is (font-size, line-height). Use via the `type()` mixin.
+// ==========================================================================
+
+$type-scale: (
+  'micro' : (12px, 18px),  // 1.500 - badges, legal, timestamps. FLOOR: never prose.
+  'sm'    : (14px, 22px),  // 1.571 - meta rows (year - km - city), captions, table cells
+  'base'  : (16px, 26px),  // 1.625 - BODY COPY and all form controls
+  'md'    : (18px, 28px),  // 1.556 - lead paragraph, h6, card titles
+  'lg'    : (20px, 28px),  // 1.400 - h5
+  'xl'    : (24px, 32px),  // 1.333 - h4, price on a listing card
+  '2xl'   : (30px, 38px),  // 1.267 - h3, section headings
+  '3xl'   : (40px, 48px),  // 1.200 - h2, page titles
+  '4xl'   : (56px, 62px),  // 1.107 - h1 hero display
+  '5xl'   : (70px, 76px),  // 1.086 - oversized display numerals only
+);
+
+// Individual handles, for the many places that only need one half of the pair.
+$fs-micro : 12px;  $lh-micro : 18px;
+$fs-sm    : 14px;  $lh-sm    : 22px;
+$fs-base  : 16px;  $lh-base  : 26px;
+$fs-md    : 18px;  $lh-md    : 28px;
+$fs-lg    : 20px;  $lh-lg    : 28px;
+$fs-xl    : 24px;  $lh-xl    : 32px;
+$fs-2xl   : 30px;  $lh-2xl   : 38px;
+$fs-3xl   : 40px;  $lh-3xl   : 48px;
+$fs-4xl   : 56px;  $lh-4xl   : 62px;
+
+// Unitless leading, for cases where the line box must not inflate a fixed
+// control height (button labels, chips, single-line nav items).
+$lh-flat  : 1;
+$lh-tight : 1.2;
+$lh-snug  : 1.35;
+$lh-normal: 1.5;
+$lh-loose : 1.625;
+
+// Weights. Outfit and Inter are both loaded at 400/500/600/700.
+$fw-regular : 400;
+$fw-medium  : 500;
+$fw-semibold: 600;
+$fw-bold    : 700;
+
+// Tracking. Large display text needs negative tracking to stop it looking
+// loose; micro text needs positive tracking to stay legible at 12px.
+$ls-display: -0.02em;
+$ls-tight  : -0.01em;
+$ls-normal : 0;
+$ls-micro  : 0.01em;
 
 
+// ==========================================================================
+// SPACING SCALE - 4px base unit
+//
+// The theme's own top values were 20(188x) 30(180x) 10(122x) 15(82x) 5(78x)
+// 16(76x) 14(65x) 17(55x) 8(50x) 12(48x) - i.e. two competing rhythms, a
+// 5-based one and a 4-based one, plus a long tail of one-off values
+// (7, 9, 11, 13, 19, 21, 22, 26, 27, 28, 29, 31, 34, 37, 38, 39, 41, 42, 49).
+//
+// One rhythm wins: 4px. 4/8/12/16/20/24 are already the most common values in
+// the file, so most of the codebase is already on-scale. The migrations that
+// matter are 5->4, 10->8 or 12, 15->16, 30->32, 50->48, 60->64, 100->96.
+// The token name is the multiplier: $space-6 == 6 * 4px == 24px.
+// ==========================================================================
 
+$space-unit: 4px;
+
+$space-0 : 0;
+$space-05: 2px;
+$space-1 : 4px;
+$space-2 : 8px;
+$space-3 : 12px;
+$space-4 : 16px;
+$space-5 : 20px;
+$space-6 : 24px;
+$space-7 : 28px;
+$space-8 : 32px;
+$space-10: 40px;
+$space-12: 48px;
+$space-14: 56px;
+$space-16: 64px;
+$space-18: 72px;
+$space-20: 80px;
+$space-24: 96px;
+$space-28: 112px;
+$space-32: 128px;
+
+// Page rhythm. A section is a band of vertical space; these are the only three
+// values it is allowed to be. Sub-rhythm inside a section uses $space-*.
+$section-py       : $space-24;  // 96px - standard section band (theme used 92-101px)
+$section-py-tight : $space-16;  // 64px - dense/utility bands (theme used 60-65px)
+$section-py-mobile: $space-12;  // 48px - the same bands under 768px
+$section-title-gap: $space-8;   // 32px - heading block -> content
+$gutter           : 15px;       // Bootstrap grid gutter - do not change
+
+
+// ==========================================================================
+// RADIUS
+//
+// DECISION: controls are 14px, not the 10px design/tokens.md used to specify.
+//
+// 10px was documented but never shipped: the theme has buttons, text inputs,
+// textareas and .view-car all at 14px (38 occurrences) and only lib/whatsapp.js
+// at 10px. More importantly a button and the search field it sits beside must
+// share a corner - inputs are 14px in style.scss, so 14px is the value that
+// makes the search bar, the filter row and the CTA read as one control group.
+// design/tokens.md has been corrected to match. The outlier to fix is
+// lib/whatsapp.js, not the 38 SCSS sites.
+// ==========================================================================
+
+$radius-xs     : 4px;    // tags, tiny badges
+$radius-sm     : 8px;    // inner elements, small thumbnails
+$radius-md     : 12px;   // nested panels, media inside a card
+$radius-control: 14px;   // buttons, inputs, selects, textareas  <- THE control radius
+$radius-card   : 16px;   // cards, widgets, listing tiles
+$radius-lg     : 24px;   // hero media, modals, large panels
+$radius-pill   : 999px;  // pills, chips, segmented controls
+$radius-circle : 50%;    // avatars, icon buttons
+
+
+// ==========================================================================
+// MOTION
+//
+// The theme shipped 0.3s / 0.5s / 0.6s / 500ms / 300ms / 0.2s / 0.4s / 0.25s /
+// 450ms / 150ms / 0.8s / 2s with `ease` and three different cubic-beziers.
+// Four durations and three easings replace all of it.
+//
+// Everything here is disabled under prefers-reduced-motion - see
+// abstracts/_base.scss.
+// ==========================================================================
+
+$dur-fast  : 150ms;  // colour/opacity swaps, tooltips, icon tints
+$dur-base  : 250ms;  // DEFAULT - hover and active states on controls
+$dur-slow  : 400ms;  // disclosure, dropdowns, accordions, drawers
+$dur-slower: 600ms;  // image zoom, large reveals, hero transitions
+
+$ease-standard: cubic-bezier(0.4, 0, 0.2, 1);  // default, both directions
+$ease-out     : cubic-bezier(0, 0, 0.2, 1);    // things entering the screen
+$ease-in      : cubic-bezier(0.4, 0, 1, 1);    // things leaving the screen
+
+
+// ==========================================================================
+// FOCUS
+//
+// WCAG 2.1 SC 1.4.11 wants 3:1 between a focus indicator and everything
+// adjacent to it. Computed against every surface in the palette:
+//
+//   ring $color-3 #E97451 on white   2.97:1  FAILS
+//                         on #F8F8F9 2.79:1  FAILS
+//                         on cream   2.35:1  FAILS
+//   ring $color-3-text    on white   4.99:1  passes, but 2.56:1 on the soft
+//                                            terracotta wash - not universal
+//   ring $brand-indigo    on white  14.12:1
+//                         on #F8F8F9 13.30:1
+//                         on cream  11.19:1
+//                         on soft terracotta 7.24:1
+//                         on a terracotta FILL 4.76:1
+//
+// So the accent colour cannot be the focus ring. Indigo is the only brand
+// colour that clears 3:1 against every light surface the site has, including
+// the terracotta button fill it will most often sit next to - and at 4.76:1
+// minimum it has real headroom for a screen in direct sun.
+//
+// On indigo/dark surfaces indigo is invisible, so those use cream: 11.19:1.
+//
+// 3px rather than the conventional 2px, again for sunlight and small screens;
+// 2px of offset keeps the ring off the control's own fill so its contrast is
+// measured against the page, not the button.
+// ==========================================================================
+
+$focus-ring-color        : $brand-indigo;  // on light surfaces
+$focus-ring-color-inverse: $brand-cream;   // on indigo / dark / photographic surfaces
+$focus-ring-width        : 3px;
+$focus-ring-offset       : 2px;
+
+
+// ==========================================================================
+// ELEVATION
+// The theme had ~20 distinct one-off box-shadows. These four cover them.
+// ==========================================================================
+
+$shadow-sm: 0 1px 2px 0 rgba($brand-ink, 0.06);
+$shadow-md: 0 4px 18px 0 rgba($brand-ink, 0.08);
+$shadow-lg: 0 8px 30px 0 rgba($brand-ink, 0.10);
+$shadow-xl: 0 20px 60px 0 rgba($brand-ink, 0.12);

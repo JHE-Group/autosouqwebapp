@@ -50,7 +50,7 @@
 -------------------------------------------------------------- */
 .flat-title-page {
   &.inner {
-    padding: 328px 0 41px 0px;
+    padding: 328px 0 $space-10 0; // 328 top is the hero art overlap, not rhythm
     position: relative;
     // background-image: url(/assets/images/section/bg-page.jpg);
     background-repeat: no-repeat;
@@ -64,10 +64,15 @@
   .page-title-heading {
     .heading {
       color: $color-1;
-      margin-bottom: 25px;
-      line-height: 45px;
-      font-size: 45px;
-      font-weight: 700;
+      margin-bottom: $space-6;
+      // Was a flat 45px with 45px leading - a ratio of 1.0, which clips
+      // descenders outright. Arabic is the primary language here and its
+      // descenders are deep, so the hero title cannot run at 1.0. Now the
+      // $3xl-$4xl range with $lh-tight (1.2).
+      font-size: clamp(#{$fs-3xl}, 5vw, #{$fs-4xl});
+      line-height: $lh-tight;
+      font-weight: $fw-bold;
+      letter-spacing: $ls-display;
     }
 
     &.style-2 {
@@ -81,24 +86,24 @@
     .icon-4::before {
       content: "\f279";
       font-family: "Font Awesome 5 Pro";
-      font-size: 12px;
-      font-weight: 500;
-      margin-right: 5px;
-      color: #fff;
+      font-size: $fs-micro;
+      font-weight: $fw-regular;
+      margin-right: $space-1;
+      color: $color-1; // was a hardcoded #fff
     }
 
     .icons {
-      margin-right: 19px;
+      margin-right: $space-5;
     }
   }
 }
 
 .flat-title {
   border-bottom: 1px solid $color-6;
-  margin-bottom: 60px;
+  margin-bottom: $space-16;
 
   .title-inner {
-    padding: 19px 0 17px;
+    padding: $space-5 0 $space-4;
 
     .title-group {
       font-family: $font-2;
@@ -106,19 +111,32 @@
       > a {
         position: relative;
         display: inline-block;
+        @include focusable;
 
+        // Chevron separator, drawn from borders — `\f054` was a blank box.
+        // Mirrored under RTL so the sequence still reads left-to-right in
+        // English and right-to-left in Arabic.
         &::after {
-          content: "\f054";
-          font-family: "Font Awesome 5 Pro";
-          color: $color-5;
-          font-size: 8px;
-          line-height: normal;
-          margin: 0 8.5px 0 8.5px;
+          content: "";
+          display: inline-block;
+          width: 5px;
+          height: 5px;
+          border-top: 1.4px solid $color-5; // decorative separator only
+          border-right: 1.4px solid $color-5;
+          transform: rotate(45deg);
+          margin: 0 $space-2;
+          vertical-align: middle;
+        }
+
+        [dir="rtl"] &::after {
+          transform: rotate(-135deg);
         }
       }
 
+      // The current page in the breadcrumb. $color-5 was 2.03:1 on white -
+      // it is a hairline colour, not a text colour. $color-7 is 6.11:1.
       span {
-        color: $color-5;
+        color: $color-7;
       }
     }
   }
@@ -126,7 +144,7 @@
 
 // top filters
 .top-filters {
-  padding: 30px 0px 30px 0px;
+  padding: $space-8 0;
   background-color: $color-1;
   z-index: 10;
   position: relative;
@@ -136,7 +154,7 @@
   }
 
   &.style2 {
-    padding: 24px 0px 30px 0px;
+    padding: $space-6 0 $space-8;
   }
 
   //flat tabs
@@ -171,28 +189,30 @@
   }
 
   .button-top {
-    background: #fff5e0;
+    background: $brand-cream;
 
     span {
-      color: $color-2;
+      color: $color-2; // ink on cream = 12.92:1
       @include transition3;
     }
 
-    &:hover {
+    // The fill goes terracotta, not dark, so the label must stay INK.
+    // White on terracotta is 2.97:1; ink on terracotta is 5.50:1.
+    &:hover,
+    &.active {
       background: $color-3;
 
-      span {
-        color: $color-1;
-      }
-
+      span,
       i {
-        color: $color-1;
+        color: $color-on-accent;
       }
 
       path {
-        stroke: $color-1;
+        stroke: $color-on-accent;
       }
     }
+
+    @include focusable;
   }
 
   .wd-find-select .group-select .nice-select {
@@ -218,33 +238,37 @@
       cursor: pointer;
       width: 112px;
       height: 54px;
-      background-color: #fff5e0;
+      background-color: $brand-cream;
       @include flex-center;
       @include transition3;
-      border-radius: 6px;
+      border-radius: $radius-sm;
 
       i {
-        margin-right: 8px;
-        font-size: 19px;
-        color: $color-1;
-        font-weight: 100;
+        margin-right: $space-2;
+        font-size: $fs-lg;
+        color: $color-2;
+        font-weight: 400;
       }
 
       h4 {
         @include transition3;
       }
 
+      // Terracotta fill -> ink label (5.50:1). This was white (2.97:1).
       &:hover,
       &.active {
         background-color: $color-3;
 
-        h4 {
-          color: $color-1;
+        h4,
+        i {
+          color: $color-on-accent;
         }
       }
 
+      @include focusable;
+
       &:nth-child(1) {
-        margin-right: 5px;
+        margin-right: $space-1;
       }
     }
   }
@@ -281,7 +305,7 @@
   }
 
   &.page-contact {
-    padding: 96px 0 241px;
+    padding: $section-py 0 241px; // 241 bottom clears the background artwork
     // background-image: url(/assets/images/section/bg-brand.png);
     background-position: bottom;
     background-repeat: no-repeat;
@@ -307,7 +331,7 @@
   }
 
   &.home3 {
-    padding: 49px 0 157px;
+    padding: $space-12 0 157px;
   }
 }
 
@@ -320,25 +344,28 @@
   .tab-title {
     li {
       position: relative;
-      line-height: 24px;
-      margin-right: 12.7px;
-      padding-bottom: 5px;
+      line-height: $lh-xl;
+      margin-right: $space-3;
       cursor: pointer;
-      padding: 8px 14px 8px 14px;
-      box-shadow: 0px 4px 18px 0px #42474c1a;
+      padding: $space-2 $space-4;
+      border-radius: $radius-sm;
+      box-shadow: $shadow-md;
+      @include transition3;
 
       h5 {
-        font-weight: 400;
+        font-weight: $fw-regular;
         @include transition3;
       }
 
       &:hover,
       &.active {
         h5 {
-          font-weight: 600;
-          color: $color-3;
+          font-weight: $fw-semibold;
+          color: $color-3-text; // 4.99:1 on white
         }
       }
+
+      @include focusable;
 
       &:last-child {
         margin-right: 0;
@@ -350,11 +377,11 @@
 // flat featured
 .flat-featured {
   &.home {
-    padding: 0px 0 71px;
+    padding: 0 0 $space-18;
   }
 
   &.home4 {
-    padding-bottom: 100px;
+    padding-bottom: $section-py;
 
     .owl-stage-outer::after,
     .owl-stage-outer::before {
@@ -363,7 +390,7 @@
   }
 
   &.home5 {
-    padding: 100px 0 70px;
+    padding: $section-py 0 $space-18;
   }
 
   &.home5-two {
@@ -441,7 +468,7 @@
   }
 
   &.home3 {
-    padding: 100px 0 71px;
+    padding: $section-py 0 $space-18;
 
     .flat-tabs .box-tab {
       margin-bottom: 44px;
@@ -524,7 +551,7 @@
     content: "\f279";
     font-family: "Font Awesome 5 Pro";
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;
     margin-right: 5px;
     color: $color-4;
   }
@@ -624,12 +651,15 @@
       top: 43px;
     }
 
+    // Show/hide password. The icon is this control's only label, so it needs
+    // 3:1 (SC 1.4.11). $color-5 was 2.03:1 on white; $color-7 is 6.11:1.
     .toggle-password {
-      color: $color-5;
-      font-size: 17px;
+      color: $color-7;
+      font-size: $fs-md;
       position: absolute;
-      right: 15px;
+      right: $space-4;
       top: 47px;
+      @include focusable;
     }
 
     .text-wrap {
@@ -660,9 +690,16 @@
           @include transition3;
         }
 
+        // A terracotta border on white is 2.97:1 - under the 3:1 SC 1.4.11
+        // needs for the boundary that tells you which field you are in.
+        // $color-3-text is 4.99:1. The ring is added on top for keyboard
+        // users, since a 1px border colour change alone is a weak signal on a
+        // phone screen in sunlight.
         &:focus {
-          border: 1px solid $color-3;
+          border: 1px solid $color-3-text;
         }
+
+        @include focusable(0);
       }
     }
 
@@ -688,9 +725,16 @@
           @include transition3;
         }
 
+        // A terracotta border on white is 2.97:1 - under the 3:1 SC 1.4.11
+        // needs for the boundary that tells you which field you are in.
+        // $color-3-text is 4.99:1. The ring is added on top for keyboard
+        // users, since a 1px border colour change alone is a weak signal on a
+        // phone screen in sunlight.
         &:focus {
-          border: 1px solid $color-3;
+          border: 1px solid $color-3-text;
         }
+
+        @include focusable(0);
       }
 
       textarea {
@@ -711,9 +755,16 @@
           @include transition3;
         }
 
+        // A terracotta border on white is 2.97:1 - under the 3:1 SC 1.4.11
+        // needs for the boundary that tells you which field you are in.
+        // $color-3-text is 4.99:1. The ring is added on top for keyboard
+        // users, since a 1px border colour change alone is a weak signal on a
+        // phone screen in sunlight.
         &:focus {
-          border: 1px solid $color-3;
+          border: 1px solid $color-3-text;
         }
+
+        @include focusable(0);
       }
     }
 
@@ -732,7 +783,7 @@
 
   &.home2 {
     .content {
-      padding: 20px 0px 0;
+      padding: $space-5 0 0;
     }
 
     .sub-box {
@@ -741,7 +792,7 @@
   }
 
   &.page-detail {
-    padding: 41px 0 100px;
+    padding: $space-10 0 $section-py;
 
     .title-heading {
       margin-bottom: 30px;
@@ -762,7 +813,7 @@
       &::before {
         font-family: "Font Awesome 5 Pro";
         font-size: 14px;
-        font-weight: 100;
+        font-weight: 400;
         content: "\f07c";
         margin-right: 6px;
         color: $color-4;
@@ -781,7 +832,7 @@
   }
 
   .content {
-    padding-top: 28px;
+    padding-top: $space-7;
 
     h3 {
       margin-bottom: 6px;
@@ -794,7 +845,7 @@
         -webkit-line-clamp: 2;
 
         &:hover {
-          color: $color-3;
+          color: $color-3-text;
         }
       }
     }
@@ -803,17 +854,19 @@
 
 .meta {
   .btn-button {
+    @include focusable;
+
     span {
       @include transition3;
     }
 
     i {
-      margin-left: 9px;
+      margin-left: $space-2;
       @include transition3;
     }
 
     svg {
-      margin-left: 11px;
+      margin-left: $space-3;
 
       path {
         @include transition3;
@@ -825,11 +878,11 @@
     .btn-button {
       &:hover {
         span {
-          color: $color-3;
+          color: $color-3-text;
         }
 
         i {
-          color: $color-3;
+          color: $color-3-text;
         }
 
         svg path {
@@ -864,7 +917,7 @@
 // flat testimonial2
 .flat-testimonial2 {
   .heading-tesi {
-    padding-top: 37px;
+    padding-top: $space-10;
 
     h2 {
       margin-bottom: 16px;
@@ -888,7 +941,7 @@
 
   .text-testi {
     border-bottom: 4px solid $color-3;
-    padding-bottom: 21px;
+    padding-bottom: $space-5;
     font-style: italic;
     margin-bottom: 27px;
 
@@ -944,8 +997,8 @@
   //   background-image: url(/assets/images/section/bg-contact.png);
   background-repeat: no-repeat;
   background-size: cover;
-  background-color: #fff5e0;
-  padding: 28px 0 29px;
+  background-color: $brand-cream;
+  padding: $space-7 0;
 
   .heading-section {
     margin-bottom: 0;
@@ -1001,7 +1054,7 @@
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
-  padding: 101px 0 297px;
+  padding: $section-py 0 297px; // 297 bottom clears the background artwork
   color: $color-1;
 
   p {
@@ -1037,7 +1090,7 @@
 
 .flat-slider-home3 {
   margin-top: -242px;
-  padding-bottom: 118px;
+  padding-bottom: $space-28;
 }
 
 // flat why choose
@@ -1162,7 +1215,7 @@
 
   .swiper-container {
     margin-bottom: -110px;
-    padding-bottom: 110px;
+    padding-bottom: $space-28;
   }
 
   .bg-image {
@@ -1186,7 +1239,7 @@
 
     .swiper-container {
       margin: -50px 0 -110px;
-      padding: 50px 0 110px;
+      padding: $space-12 0 $space-28;
     }
 
     .box {
@@ -1203,7 +1256,7 @@
         border-radius: 50%;
         width: 112px;
         height: 112px;
-        border: 6px solid #fff5e0;
+        border: 6px solid $brand-cream;
         box-shadow: 0px 20px 30px 0px #0000003d;
       }
     }
@@ -1238,7 +1291,7 @@
   //   background-image: url(/assets/images/section/bg-contact2.png);
   background-repeat: no-repeat;
   background-size: cover;
-  padding: 100px 0 62px;
+  padding: $section-py 0 $space-16;
   background-color: $color-1;
 
   .heading-section {
@@ -1302,17 +1355,17 @@
 
 .flat-sale {
   &.home3 {
-    padding: 95px 0 100px;
+    padding: $section-py 0;
   }
 }
 
 .flat-discover {
-  padding-bottom: 99px;
+  padding-bottom: $section-py;
 }
 
 // flat search today
 .flat-search-today {
-  background-color: #fff5e0;
+  background-color: $brand-cream;
 
   .bg-images {
     // background-image: url(/assets/images/section/bg-search-today.jpg);
@@ -1323,7 +1376,7 @@
   }
 
   .wrap-search-today {
-    padding: 101px 0px 93px 21px;
+    padding: $section-py 0 $section-py $space-5;
     overflow: hidden;
 
     .heading-section {
@@ -1360,8 +1413,8 @@
         }
 
         i {
-          font-size: 17px;
-          color: $color-1;
+          font-size: $fs-base;
+          color: $color-on-accent; // was white - 2.97:1 on terracotta
         }
       }
     }
@@ -1454,7 +1507,7 @@
 
     .inner {
       min-height: 190px;
-      padding-bottom: 11px;
+      padding-bottom: $space-3;
       margin-bottom: 29px;
       border-bottom: 1px solid $color-5;
     }
@@ -1469,7 +1522,7 @@
   //   background-image: url(/assets/images/section/bg-testimonial2.png);
   background-repeat: no-repeat;
   background-size: cover;
-  padding: 100px 0 111px;
+  padding: $section-py 0 $space-28;
 
   .box {
     padding: 2px 190px;
@@ -1496,10 +1549,10 @@
 
 // flat pricing
 .flat-pricing {
-  padding-bottom: 100px;
+  padding-bottom: $section-py;
 
   &.page {
-    padding: 92px 0 0;
+    padding: $section-py 0 0;
   }
 
   .box {
@@ -1539,7 +1592,7 @@
 
     .texts {
       margin-bottom: 24px;
-      padding-bottom: 24px;
+      padding-bottom: $space-6;
       border-bottom: 1px solid #efefef;
       @include transition3;
     }
@@ -1551,17 +1604,21 @@
         margin-bottom: 14px;
         font-family: $font-2;
 
+        // Terracotta disc with an ink tick. The tick was Font Awesome's `\f00c`,
+        // from a sheet this project never imports, so these rendered as plain
+        // empty circles — a checklist with no checks in it.
+        //
+        // Drawn as an inline SVG background rather than a border-tick because
+        // the disc and the mark are the same pseudo-element. Ink (#231F20) on
+        // terracotta is 5.50:1; white would have been 2.97:1.
         &::before {
-          content: "\f00c";
-          font-family: "Font Awesome 5 Pro";
-          font-size: 6px;
-          font-weight: 600;
-          color: #fff;
-          margin-right: 13px;
+          content: "";
+          margin-inline-end: 13px;
           width: 17px;
           height: 17px;
-          @include flex-center;
-          background: $color-3;
+          background: $color-3
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8'%3E%3Cpath d='M1 4.1 3.6 6.7 9 1.3' fill='none' stroke='%23231F20' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+            center / 9px 8px no-repeat;
           border-radius: 50%;
           flex: none;
         }
@@ -1573,24 +1630,30 @@
       text-align: center;
     }
 
+    // Terracotta-filled "featured plan" card. EVERY text child in here has to
+    // be ink: white on terracotta is 2.97:1 and ink is 5.50:1. The theme set
+    // the card colour correctly but then re-declared white on four children,
+    // including a 50%-alpha white on .texts which measured 1.76:1.
     &.active {
       background-color: $color-3;
-      color: $color-1;
+      color: $color-on-accent;
 
       @include transition3;
 
       .title-price .mo {
-        margin-left: 6px;
-        color: $color-1;
+        margin-left: $space-2;
+        color: $color-on-accent;
       }
 
       .texts {
-        color: rgba($color-1, 0.5);
-        border-bottom: 1px solid rgba(#efefef, 0.5);
+        // 90% ink over terracotta = #372825 = 4.74:1, still AA, and visibly
+        // softer than the full-strength ink beside it. 80% would be 4.03:1.
+        color: rgba($color-on-accent, 0.9);
+        border-bottom: 1px solid rgba($color-on-accent, 0.3);
       }
 
       .text-sub {
-        color: $color-1;
+        color: $color-on-accent;
       }
 
       .check li {
@@ -1600,7 +1663,7 @@
 
         &::before {
           background-color: $color-1;
-          color: $color-3;
+          color: $color-3-text;
         }
       }
 
@@ -1608,7 +1671,7 @@
         background-color: $color-1;
 
         span {
-          color: $color-3;
+          color: $color-3-text;
         }
 
         &:hover {
@@ -1716,7 +1779,7 @@
 }
 
 .flat-property-list2 {
-  padding-bottom: 95px;
+  padding-bottom: $section-py;
 
   .box {
     padding: 16px 14px 16px 16px;
@@ -1782,7 +1845,7 @@
       padding-left: 17px;
 
       .icon-box {
-        padding-bottom: 26px;
+        padding-bottom: $space-6;
       }
     }
   }
@@ -1848,7 +1911,7 @@
         width: 61.5%;
 
         .icon-box {
-          padding-bottom: 33px;
+          padding-bottom: $space-8;
         }
       }
     }
@@ -1913,7 +1976,7 @@
     }
 
     &:hover {
-      background-color: #fff5e0;
+      background-color: $brand-cream;
     }
   }
 
@@ -1979,7 +2042,7 @@
 
     .icon-group {
       margin-bottom: 20px;
-      padding-bottom: 20px;
+      padding-bottom: $space-5;
       border-bottom: 1px solid #efefef;
     }
 
@@ -2015,7 +2078,7 @@
 
   .icon-group {
     margin-bottom: 20px;
-    padding-bottom: 39px;
+    padding-bottom: $space-10;
     border-bottom: 1px solid $color-8;
 
     .icon-phone {
@@ -2024,7 +2087,7 @@
       &::before {
         font-family: "Font Awesome 5 Pro";
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 400;
         content: "\f4d2";
         transform: rotate(99deg);
         display: inline-block;
@@ -2041,7 +2104,7 @@
       &::before {
         font-family: "Font Awesome 5 Pro";
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 400;
         content: "\f0e0";
         text-decoration-line: unset;
         margin-right: 10px;
@@ -2061,7 +2124,7 @@
     @include transition3;
 
     &:hover {
-      color: $color-3;
+      color: $color-3-text;
     }
   }
 
@@ -2069,14 +2132,14 @@
     color: #c8c8cf;
 
     &:hover {
-      color: $color-3;
+      color: $color-3-text;
     }
   }
 }
 
 // flat agent detail
 .flat-agent-detail {
-  padding-bottom: 105px;
+  padding-bottom: $section-py;
 
   .titles {
     margin-bottom: 2px;
@@ -2090,7 +2153,7 @@
 
   .icon-group {
     margin-bottom: 20px;
-    padding-bottom: 20px;
+    padding-bottom: $space-5;
     border-bottom: 1px solid #efefef;
 
     .icon-email {
@@ -2101,7 +2164,7 @@
       &::before {
         font-family: "Font Awesome 5 Pro";
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 400;
         content: "\f3c5";
         display: inline-block;
         margin-right: 12px;
@@ -2123,7 +2186,7 @@
   }
 
   .wrap-item {
-    padding-bottom: 5px;
+    padding-bottom: $space-1;
     border-bottom: 1px solid $color-5;
     margin-bottom: 30px;
 
@@ -2162,7 +2225,7 @@
     z-index: 9;
 
     .tab-title {
-      padding-bottom: 16px;
+      padding-bottom: $space-4;
       margin-bottom: 25px;
       border-bottom: 1px solid $color-8;
 
@@ -2170,17 +2233,18 @@
         position: relative;
         cursor: pointer;
         @include transition3;
-        margin-right: 13px;
+        margin-right: $space-3;
+        @include focusable;
 
         h3 {
           @include transition3;
-          margin-right: 8px;
+          margin-right: $space-2;
         }
 
         &:hover,
         &.active {
           h3 {
-            color: $color-3;
+            color: $color-3-text;
           }
 
           &::after {
@@ -2259,7 +2323,7 @@
 
       ul {
         flex-wrap: wrap;
-        padding-bottom: 8px;
+        padding-bottom: $space-2;
         border-bottom: 1px solid $color-8;
         margin-bottom: 21px;
 
@@ -2295,7 +2359,7 @@
 
     .content {
       .title-group {
-        padding-bottom: 20px;
+        padding-bottom: $space-5;
         margin-bottom: 18px;
         border-bottom: 1px solid $color-8;
       }
@@ -2342,7 +2406,7 @@
 
 // flat agencies detail
 .flat-agencies-detail {
-  padding-bottom: 100px;
+  padding-bottom: $section-py;
 
   .avatar {
     box-shadow: 0px 4px 18px 0px #00000014;
@@ -2357,7 +2421,7 @@
     margin: -96px 30px 30px;
 
     .content {
-      padding: 10px 0px 5px 26px;
+      padding: $space-3 0 $space-1 $space-6;
 
       .title-avatar {
         margin-bottom: 4px;
@@ -2371,7 +2435,7 @@
     margin-bottom: 30px;
 
     .titles {
-      padding-bottom: 12px;
+      padding-bottom: $space-3;
       margin-bottom: 12px;
       border-bottom: 1px solid $color-8;
     }
@@ -2379,7 +2443,7 @@
     .inner {
       flex-wrap: wrap;
       border-radius: 12px;
-      background-color: #fff5e0;
+      background-color: $brand-cream;
       padding: 20px 21px 7px;
       margin-bottom: 31px;
 
@@ -2417,7 +2481,7 @@
 
 // flat about
 .flat-about {
-  padding: 60px 0 100px;
+  padding: $section-py-tight 0 $section-py;
 
   .heading-about {
     padding-right: 100px;
@@ -2450,7 +2514,7 @@
 
       p {
         margin-left: 30px;
-        padding: 7px 0;
+        padding: $space-2 0;
       }
     }
 
@@ -2488,7 +2552,7 @@
   .icon-box {
     position: absolute;
     padding: 30px 15px 16px;
-    background-color: #fff5e0;
+    background-color: $brand-cream;
     right: 65px;
     bottom: 1px;
     border-radius: 10px;
@@ -2499,7 +2563,7 @@
       right: -95px;
       bottom: 160px;
       background-color: $color-3;
-      color: $color-1;
+      color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
       z-index: 2;
       padding: 27px 15px 16px;
 
@@ -2560,7 +2624,7 @@
 
     h3 {
       margin-bottom: 15px;
-      padding-bottom: 16px;
+      padding-bottom: $space-4;
       position: relative;
 
       &::before {
@@ -2595,7 +2659,7 @@
 }
 
 .flat-search-home.page {
-  padding: 65px 0 258px;
+  padding: $section-py-tight 0 258px; // 258 bottom clears the background artwork
 
   .heading-section {
     padding: 0 130px;
@@ -2663,7 +2727,7 @@
 
 // flat property detail
 .flat-property-detail {
-  padding-top: 12px;
+  padding-top: $space-3;
 
   .wrap-house {
     justify-content: space-between;
@@ -2805,7 +2869,7 @@
 
         .contents {
           position: absolute;
-          padding-top: 10px;
+          padding-top: $space-3;
           padding-right: 10px;
 
           svg {
@@ -2818,7 +2882,7 @@
 
   .post {
     .titles {
-      padding-bottom: 12px;
+      padding-bottom: $space-3;
       margin-bottom: 20px;
       border-bottom: 1px solid $color-6;
     }
@@ -2981,42 +3045,59 @@
         }
 
         .toggle-title {
-          padding: 0px 0px 13px 22px;
+          padding: 0px 0px $space-3 $space-6;
           cursor: pointer;
           color: $color-2;
           width: 100%;
           @include transition3;
           position: relative;
 
+          // Accordion header. Inset ring - an offset one would be clipped by
+          // the collapsed panel above it.
+          @include focusable-inset;
+
+          // Expanded: the chevron points up.
           &.active {
-            .btn-toggle {
-              &::after {
-                content: "\f054";
-                rotate: -90deg;
-              }
+            .btn-toggle::after {
+              transform: rotate(-135deg);
+              margin-top: 4px;
             }
           }
         }
 
+        // Disclosure chevron, drawn from two borders.
+        //
+        // This was Font Awesome's `\f054` rotated 90deg. font-awesome.css is
+        // never imported — style.scss loads bootstrap, swiper, nice-select and
+        // the `autodeal` icon font, not that sheet — so all 17 questions on
+        // /faq rendered a blank box where the open/close affordance belongs, on
+        // the one page whose entire job is answering questions.
         .btn-toggle {
           position: absolute;
-          left: 4px;
+          // Logical: the marker sits on the leading edge in Arabic too.
+          inset-inline-start: 4px;
           top: 0px;
+          width: 14px;
+          height: 14px;
           @include transition3;
 
           &::after {
-            content: "\f054";
-            font-family: "Font Awesome 5 Pro";
-            rotate: 90deg;
-            font-weight: 400;
-            color: $color-2;
-            font-size: 14px;
-            @include flex-center;
+            content: "";
+            position: absolute;
+            inset-inline-start: 2px;
+            top: 0;
+            width: 8px;
+            height: 8px;
+            border-right: 1.6px solid $color-2;
+            border-bottom: 1.6px solid $color-2;
+            // Collapsed: points down.
+            transform: rotate(45deg);
+            @include transition3;
           }
         }
 
         .toggle-content {
-          padding: 8px 0px 20px 0px;
+          padding: $space-2 0 $space-5;
           display: none;
           background-color: $color-1;
           width: 100%;
@@ -3077,7 +3158,7 @@
       }
 
       canvas {
-        background: #fff5e0;
+        background: $brand-cream;
         border-radius: 50%;
       }
 
@@ -3137,7 +3218,7 @@
     }
 
     .box-1 {
-      padding-bottom: 12px;
+      padding-bottom: $space-3;
       margin-bottom: 20px;
       border-bottom: 1px solid $color-5;
     }
@@ -3158,7 +3239,7 @@
       }
 
       label.checkbox-wrap {
-        padding-bottom: 13px;
+        padding-bottom: $space-3;
       }
 
       .nice-select {
@@ -3221,7 +3302,7 @@
     .comment-list {
       li {
         margin-bottom: 37px;
-        padding-bottom: 33px;
+        padding-bottom: $space-8;
         border-bottom: 1px solid $color-6;
 
         &:last-child {
@@ -3241,7 +3322,7 @@
           }
 
           .content {
-            padding: 0px 0px 0 20px;
+            padding: 0 0 0 $space-5;
 
             h5 {
               margin-bottom: 5px;
@@ -3370,7 +3451,7 @@
       margin-bottom: 38px;
 
       .titles {
-        padding-bottom: 21px;
+        padding-bottom: $space-5;
         margin-bottom: 20px;
 
         h3::before {
@@ -3406,7 +3487,7 @@
       }
 
       .comment-list .content {
-        padding: 1px 0px 0 21px;
+        padding: 1px 0 0 $space-5;
       }
     }
 
@@ -3415,7 +3496,7 @@
 
       .titles {
         margin-bottom: 20px;
-        padding-bottom: 13px;
+        padding-bottom: $space-3;
 
         h3::before {
           bottom: -40px;
@@ -3438,7 +3519,7 @@
 
 // flat error
 .flat-error {
-  padding: 32px 0 100px;
+  padding: $space-8 0 $section-py;
 
   .images {
     margin-bottom: 71px;
@@ -3464,7 +3545,7 @@
 // flat-blog-grid
 .flat-blog-grid {
   .flat-blog {
-    padding-bottom: 10px;
+    padding-bottom: $space-3;
     border-bottom: 1px solid $color-6;
   }
 
@@ -3475,7 +3556,7 @@
       position: absolute;
       top: 10px;
       left: 10px;
-      color: $color-1;
+      color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
       background-color: $color-3;
       padding: 6px 12px;
       border-radius: 99px;
@@ -3483,7 +3564,7 @@
     }
 
     .content {
-      padding-top: 26px;
+      padding-top: $space-6;
 
       .sub-box {
         margin-bottom: 9px;
@@ -3544,7 +3625,7 @@
     .box {
       margin-bottom: 36px;
       border-bottom: 1px solid $color-6;
-      padding-bottom: 36px;
+      padding-bottom: $space-8;
 
       &:last-child {
         margin-bottom: 25px;
@@ -3576,7 +3657,7 @@
   .icon-boxs {
     padding-left: 2px;
     margin-bottom: 30px;
-    padding-bottom: 32px;
+    padding-bottom: $space-8;
     border-bottom: 1px solid $color-6;
 
     svg {
@@ -3614,7 +3695,7 @@
 
   .texts-3 {
     margin-bottom: 15px;
-    padding-bottom: 30px;
+    padding-bottom: $space-8;
     border-bottom: 1px solid $color-5;
   }
 
@@ -3639,7 +3720,7 @@
 
   .tag-wrap {
     margin-bottom: 34px;
-    padding-top: 18px;
+    padding-top: $space-4;
     margin-top: 30px;
     border-top: 1px solid $color-6;
   }
@@ -3666,7 +3747,7 @@
       &:hover {
         background-color: $color-3;
         border: 1px solid $color-3;
-        color: $color-1;
+        color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
       }
     }
   }
@@ -3688,7 +3769,7 @@
         &:hover {
           border: 1px solid $color-3;
           background-color: $color-3;
-          color: $color-1;
+          color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
         }
       }
     }
@@ -3704,7 +3785,7 @@
   }
 
   .comment-list .content {
-    padding: 1px 0px 0 21px;
+    padding: 1px 0 0 $space-5;
   }
 
   .image-wrap {
@@ -3758,7 +3839,7 @@
 }
 
 .flat-video-page {
-  padding-bottom: 104px;
+  padding-bottom: $section-py;
 }
 
 // video
@@ -3830,9 +3911,9 @@
 
 //flat-count
 .flat-count {
-  background: $color-2;
+  background: $brand-indigo;
   color: $color-1;
-  padding: 80px 0 90px;
+  padding: $space-20 0 $section-py;
 
   .themes-count {
     margin-left: -60px;
@@ -3849,44 +3930,52 @@
     box-shadow: 9px 9px 0 $color-6;
 
     .icon {
-      margin-right: 31px;
+      margin-right: $space-8;
       width: 140px;
       height: 160px;
       @include flex-center;
       border: 1px solid $color-1;
-      border-radius: 12px;
-      background: #9664ff;
+      border-radius: $radius-md;
+      // Was #9664ff - an orphan purple from the template, outside the palette.
+      background: $brand-indigo;
     }
 
+    // Terracotta-filled stat card. White here was 2.97:1 - and 100px display
+    // text is "large", so it needed 3:1 and still missed. Ink is 5.50:1.
     .number {
-      font-size: 100px;
-      font-weight: 600;
-      margin-bottom: 42px;
-      color: $color-1;
+      // Was a flat 100px, which overflows a 33%-wide card on a 360px phone.
+      // Floors at the $4xl step and only reaches 100px on a wide viewport.
+      font-size: clamp(#{$fs-4xl}, 8vw, 100px);
+      line-height: $lh-tight;
+      font-weight: $fw-semibold;
+      font-family: $font-1;
+      letter-spacing: $ls-display;
+      margin-bottom: $space-10;
+      color: $color-on-accent;
 
       &.number-style {
         &::after {
           content: "k";
-          font-size: 100px;
-          color: $color-1;
+          font-size: inherit;
+          color: $color-on-accent;
           font-family: $font-1;
         }
       }
     }
 
     .content {
-      padding-top: 26px;
+      padding-top: $space-6;
     }
   }
 }
 
 // flat faq
 .flat-faq {
-  padding-top: 92px;
-  padding-bottom: 102px;
+  padding-top: $section-py;
+  padding-bottom: $section-py;
 
   &.page {
-    padding: 100px 0 87px;
+    padding: $section-py 0 $space-20;
   }
 
   .text-box {
@@ -3939,7 +4028,7 @@
 
 // section
 .loan-calculator {
-  padding: 110px 0px;
+  padding: $space-28 0;
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -3974,7 +4063,7 @@
     background-image: url(/assets/images/section/bg-8.jpg);
     position: relative;
     overflow: hidden;
-    padding: 100px 0px 237px 0px !important;
+    padding: $section-py 0 237px 0 !important;
 
     .heading {
       max-width: 550px;
@@ -3993,7 +4082,7 @@
     background-image: url(/assets/images/section/bg-6.jpg);
     position: relative;
     overflow: hidden;
-    padding: 100px 0px 298px 0px !important;
+    padding: $section-py 0 298px 0 !important;
 
     &::before {
       position: absolute;
@@ -4025,7 +4114,7 @@
 
   &.inner-2 {
     background-image: url(/assets/images/section/bg-2.jpg);
-    padding: 100px 0px 188px 0px !important;
+    padding: $section-py 0 188px 0 !important;
     position: relative;
     overflow: hidden;
 
@@ -4135,7 +4224,7 @@
         .bottom-box {
           border-top: 1px solid $color-6;
           margin-top: 26px;
-          padding-top: 27px;
+          padding-top: $space-7;
         }
       }
     }
@@ -4230,7 +4319,7 @@
   }
 
   .content-wcs {
-    padding-top: 112px;
+    padding-top: $space-28;
     padding-right: 77px;
 
     .heading-section {
@@ -4253,7 +4342,7 @@
       background-image: url(/assets/images/section/bg-9.jpg);
       position: relative;
       overflow: hidden;
-      padding: 110px 0px;
+      padding: $space-28 0;
       background-repeat: no-repeat;
       background-size: cover;
       background-position: center;
@@ -4264,8 +4353,8 @@
   }
 
   .content-wcs {
-    padding-top: 55px;
-    padding-bottom: 56px;
+    padding-top: $space-14;
+    padding-bottom: $space-14;
     padding-left: 30px;
   }
 }
@@ -4278,7 +4367,7 @@
       background-image: url(/assets/images/section/bg-5.jpg);
       position: relative;
       overflow: hidden;
-      padding: 110px 0px;
+      padding: $space-28 0;
       background-repeat: no-repeat;
       background-size: cover;
       background-position: center;
@@ -4289,10 +4378,10 @@
   }
 
   .content-wcs {
-    padding-top: 66px;
+    padding-top: $space-16;
     padding-left: 80px;
     padding-right: 20.3em;
-    padding-bottom: 48px;
+    padding-bottom: $space-12;
 
     .heading-section {
       margin-bottom: 26px;
@@ -4325,10 +4414,10 @@
   }
 
   .content-wcs {
-    padding-top: 66px;
+    padding-top: $space-16;
     padding-left: 20.8em;
     padding-right: 80px;
-    padding-bottom: 50px;
+    padding-bottom: $space-12;
 
     .heading-section {
       margin-bottom: 26px;
@@ -4394,19 +4483,24 @@
 .specs-features {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: $space-3;
   background: $color-1;
-  padding: 9px 20px;
-  border-radius: 12px;
+  padding: $space-3 $space-5;
+  border-radius: $radius-md;
+  @include transition3;
 
-  &:hover {
+  // Terracotta fill -> ink label (5.50:1). This was white (2.97:1).
+  &:hover,
+  &.active {
     background: $color-3;
 
     .icon,
     span {
-      color: $color-1 !important;
+      color: $color-on-accent !important;
     }
   }
+
+  @include focusable;
 
   .icon {
     color: $color-2;
@@ -4444,7 +4538,7 @@
         margin-bottom: 10px;
 
         &:hover {
-          color: $color-3;
+          color: $color-3-text;
         }
       }
     }
@@ -4500,21 +4594,27 @@
     border: 1px solid $color-6;
     text-align: center;
     line-height: 37px;
-    border-radius: 10px;
-    color: $color-5;
+    border-radius: $radius-md;
+    // Was $color-5 #B6B6B6 = 2.03:1 on white. These are the favourite /
+    // compare / share controls; an icon that is the only label a control has
+    // needs 3:1 (SC 1.4.11). $color-7 is 6.11:1.
+    color: $color-7;
     @include transition3;
 
-    &:hover {
+    &:hover,
+    &.active {
       border: 1px solid $color-3;
-      color: $color-1;
+      color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
       background-color: $color-3;
     }
+
+    @include focusable;
   }
 }
 
 .prolile-info {
   gap: 20px;
-  padding-bottom: 28px;
+  padding-bottom: $space-7;
   border-bottom: 1px solid $color-6;
 
   .image {
@@ -4529,13 +4629,17 @@
       margin-bottom: 10px;
     }
 
+    // The trust signal. $color-9 on this tint was 1.76:1 - unreadable.
+    // $color-9-text is 4.78:1 on it. The border goes to 0.35 alpha so the
+    // pill itself clears 3:1 as a boundary.
     .verified {
       background-color: rgba(126, 211, 33, 0.1);
-      border: 1px solid rgba(126, 211, 33, 0.14);
-      border-radius: 100px;
-      color: $color-9;
-      padding: 4px 10px;
-      gap: 6px;
+      border: 1px solid rgba($color-9-text, 0.35);
+      border-radius: $radius-pill;
+      color: $color-9-text;
+      padding: $space-1 $space-3;
+      gap: $space-2;
+      @include type('sm', $fw-semibold, $font-2);
     }
   }
 }
@@ -4561,18 +4665,26 @@
   .btn-contact {
     gap: 10px;
 
+    // Both fills here are light - terracotta (white on it = 2.97:1) and the
+    // success green (white on it = 1.87:1). The label is ink on both:
+    // 5.50:1 on terracotta, 8.71:1 on green. It stays ink through the hover
+    // swap because the two fills simply trade places.
     .btn-pf {
-      padding: 15px 26.5px;
-      border-radius: 14px;
+      padding: $space-4 $space-6;
+      min-height: 48px;
+      border-radius: $radius-control;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: $color-1;
+      color: $color-on-accent;
       width: 100%;
-      gap: 10px;
+      gap: $space-3;
+      @include type-label('base', $fw-medium);
+      @include transition3;
 
       i {
-        font-size: 16px;
+        font-size: $fs-base;
+        color: inherit;
       }
 
       &.bg-orange {
@@ -4590,6 +4702,8 @@
           background-color: $color-3;
         }
       }
+
+      @include focusable;
     }
   }
 }
@@ -4602,17 +4716,16 @@
   }
 
   .list-file a {
-    border-radius: 5px;
     border: 1px solid $color-6;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 17.64px;
+    border-radius: $radius-md; // was declared twice, 5px then 10px
     color: $color-2;
-    padding: 9px 10px 9px 10px;
+    padding: $space-2 $space-3;
+    @include type-label('sm', $fw-medium);
+    @include transition3;
+    @include focusable;
 
     svg {
-      margin-right: 6px;
+      margin-right: $space-2;
     }
   }
 }
@@ -4670,20 +4783,19 @@
   & > .inner {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    padding-bottom: 20px;
+    padding-bottom: $space-5;
     gap: 22.5px 25px;
 
     .listing-feature-wrap {
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 19.6px;
+      @include type('sm', $fw-regular, $font-2);
       color: $color-4;
-      font-family: $font-2;
 
+      // The tick that says a car HAS this feature - it carries information, so
+      // it needs 3:1. $color-9 was 1.87:1 on white; $color-9-text is 5.08:1.
       i {
-        color: $color-9;
-        font-size: 18px;
-        margin-right: 9px;
+        color: $color-9-text;
+        font-size: $fs-md;
+        margin-right: $space-2;
       }
     }
   }
@@ -4730,7 +4842,7 @@
     border-radius: 100%;
     text-align: center;
     line-height: 68px;
-    color: $color-3;
+    color: $color-3-text;
     font-size: 32px;
     margin-right: 12px;
   }
@@ -4739,7 +4851,7 @@
     font-size: 70px;
     font-weight: 700;
     line-height: 70px;
-    color: $color-3;
+    color: $color-3-text;
     margin-right: 20px;
   }
 
@@ -4761,7 +4873,7 @@
 
   .wrap-review .comment-list li {
     margin-bottom: 31px;
-    padding-bottom: 30px;
+    padding-bottom: $space-8;
   }
 }
 
@@ -4794,13 +4906,12 @@
 
     .image-list-details {
       flex: 1;
-      -webkit-transition: all 0.3s ease 0s;
-      -moz-transition: all 0.3s ease 0s;
-      -ms-transition: all 0.3s ease 0s;
-      -o-transition: all 0.3s ease 0s;
-      transition: all 0.3s ease 0s;
+      @include transition3;
       display: none;
       cursor: pointer;
+      // Gallery thumbnail. Inset ring - an offset one is clipped by the
+      // overflow:hidden on the thumbnail strip.
+      @include focusable-inset;
 
       &.item-1,
       &.item-2,
@@ -4868,7 +4979,7 @@
 
       .start {
         i {
-          color: $color-3;
+          color: $color-3-text;
           font-size: 13px;
         }
 
@@ -4910,7 +5021,7 @@
 }
 
 .tf-section-contact {
-  padding: 60px 0px;
+  padding: $section-py-tight 0;
 
   .contact-left {
     padding-right: 28px;
@@ -5036,19 +5147,24 @@
   }
 
   .button-box {
-    margin-left: -10px;
+    margin-left: -$space-3;
 
+    // Social sign-in buttons.
     a {
-      width: calc(50% - 10px) !important;
-      margin-left: 10px;
+      width: calc(50% - #{$space-3}) !important;
+      margin-left: $space-3;
+      min-height: 48px;
       border: 1px solid $color-6;
-      padding: 15px 17.5px;
-      border-radius: 99px;
+      padding: $space-4;
+      border-radius: $radius-pill;
       display: flex;
+      align-items: center;
       justify-content: center;
+      @include transition3;
+      @include focusable;
 
       svg {
-        margin-right: 10px;
+        margin-right: $space-3;
       }
     }
   }
@@ -5086,18 +5202,22 @@
 .modal-content .close {
   overflow: hidden;
   position: absolute;
-  right: 42px;
-  top: 36px;
+  right: $space-10;
+  top: $space-8;
   border: none;
-  outline: none;
   z-index: 10 !important;
   opacity: 1;
   background: transparent;
+
+  // Was `outline: none`. This is the only way to dismiss the modal by keyboard
+  // apart from Escape, so it is the last control on the page that should have
+  // had its focus ring removed.
+  @include focusable;
 }
 
 .modal-content .close:hover {
   span {
-    color: $color-3;
+    color: $color-3-text;
   }
 }
 
@@ -5186,7 +5306,7 @@
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
-            padding-top: 20px;
+            padding-top: $space-5;
             margin-top: 20px;
             border-top: 1px solid #ededed;
           }

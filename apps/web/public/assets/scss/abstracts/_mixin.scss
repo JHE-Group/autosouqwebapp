@@ -1,28 +1,142 @@
+@use 'sass:map';
+@use 'sass:list';
 @use './variables' as *;
 
 
+// --------------------------------------------------------------------------
+// TYPOGRAPHY
+//
+//   @include type('base');                 -> 16px / 26px
+//   @include type('xl', $fw-semibold);     -> 24px / 32px, weight 600
+//   @include type('sm', $family: $font-2); -> 14px / 22px, Inter
+//   @include type('lg', $lh: $lh-tight);   -> 20px, leading 1.2 (fixed-height control)
+//
+// $lh accepts a unitless ratio to override the paired px leading - use it only
+// where a taller line box would break a fixed control height.
+// --------------------------------------------------------------------------
+
+@mixin type($step, $weight: null, $family: null, $lh: null, $tracking: null) {
+    @if not map.has-key($type-scale, $step) {
+        @error 'Unknown type step "#{$step}". Valid: #{map.keys($type-scale)}.';
+    }
+
+    $pair: map.get($type-scale, $step);
+    font-size: list.nth($pair, 1);
+
+    @if $lh {
+        line-height: $lh;
+    } @else {
+        line-height: list.nth($pair, 2);
+    }
+
+    @if $weight   { font-weight   : $weight; }
+    @if $family   { font-family   : $family; }
+    @if $tracking { letter-spacing: $tracking; }
+}
+
+// Prose: the default reading setting. Inter, 16/26, body grey.
+@mixin type-body {
+    @include type('base', $fw-regular, $font-2);
+    color: $color-4;
+}
+
+// Secondary meta - the "2019 - 120,000 km - Muscat" row under a listing title.
+@mixin type-meta {
+    @include type('sm', $fw-regular, $font-2);
+    color: $color-7; // #5C6368 on white = 6.11:1
+}
+
+// Smallest permitted text. 12px is the floor; nothing on the site goes under
+// it, and it never carries prose - only badges, chips and timestamps.
+@mixin type-micro {
+    @include type('micro', $fw-medium, $font-2, $tracking: $ls-micro);
+}
+
+// Display headings. Outfit, tightened tracking so the large steps do not read
+// as loose.
+@mixin type-display($step: '3xl', $weight: $fw-semibold) {
+    @include type($step, $weight, $font-1, $tracking: $ls-display);
+    color: $color-2;
+}
+
+// A control's label: never wraps, never inflates the control's height.
+@mixin type-label($step: 'base', $weight: $fw-medium) {
+    @include type($step, $weight, $font-1, $lh: $lh-tight);
+}
+
+
+// --------------------------------------------------------------------------
+// FOCUS
+//
+// Every interactive element must take one of these. :focus-visible only fires
+// for keyboard/AT focus, so this never appears on a mouse click.
+//
+// Contrast of the ring against adjacent colour (SC 1.4.11 wants 3:1):
+//   indigo on white 14.12:1 - on #F8F8F9 13.30:1 - on cream 11.19:1
+//   indigo on a terracotta fill 4.76:1 - on the soft terracotta wash 7.24:1
+//   cream on indigo 11.19:1  (the -inverse variant)
+// --------------------------------------------------------------------------
+
+@mixin focus-ring($color: $focus-ring-color, $offset: $focus-ring-offset) {
+    outline       : $focus-ring-width solid $color;
+    outline-offset: $offset;
+}
+
+// Interactive element on a light surface.
+@mixin focusable($offset: $focus-ring-offset) {
+    &:focus-visible {
+        @include focus-ring($focus-ring-color, $offset);
+    }
+}
+
+// Interactive element on indigo, on a dark hero, or over a photograph.
+@mixin focusable-inverse($offset: $focus-ring-offset) {
+    &:focus-visible {
+        @include focus-ring($focus-ring-color-inverse, $offset);
+    }
+}
+
+// Inset ring, for controls that are flush to a container edge (table rows,
+// list items, sidebar links) where an offset ring would be clipped.
+@mixin focusable-inset {
+    &:focus-visible {
+        outline       : $focus-ring-width solid $focus-ring-color;
+        outline-offset: -$focus-ring-width;
+    }
+}
+
+
+// --------------------------------------------------------------------------
+// MOTION
+//
+// `motion()` is the one to reach for in new code - it names the properties it
+// animates instead of `all`, which is both cheaper and stops unrelated
+// property changes from being dragged into a transition.
+//
+// transition3/5/6 are the theme's legacy names, kept so the ~500 existing call
+// sites keep working, but retimed onto the token durations and one shared
+// easing curve. The vendor prefixes they used to emit are gone: -ms-transition
+// and -o-transition were never real properties, and unprefixed `transition`
+// has been supported since Chrome 26 / Android WebView 4.4.
+// --------------------------------------------------------------------------
+
+@mixin motion($props: all, $duration: $dur-base, $easing: $ease-standard, $delay: 0s) {
+    transition-property       : $props;
+    transition-duration       : $duration;
+    transition-timing-function: $easing;
+    @if $delay != 0s { transition-delay: $delay; }
+}
+
 @mixin transition3 () {
-    -webkit-transition: all 0.3s ease;
-    -moz-transition: all 0.3s ease;
-    -ms-transition: all 0.3s ease;
-    -o-transition: all 0.3s ease;
-    transition: all 0.3s ease;
+    transition: all $dur-base $ease-standard;
 }
 
 @mixin transition5 () {
-    -webkit-transition: all 0.5s ease;
-    -moz-transition: all 0.5s ease;
-    -ms-transition: all 0.5s ease;
-    -o-transition: all 0.5s ease;
-    transition: all 0.5s ease;
+    transition: all $dur-slow $ease-standard;
 }
 
 @mixin transition6 () {
-    -webkit-transition: all 0.6s ease;
-    -moz-transition: all 0.6s ease;
-    -ms-transition: all 0.6s ease;
-    -o-transition: all 0.6s ease;
-    transition: all 0.6s ease;
+    transition: all $dur-slower $ease-standard;
 }
 
 @mixin transitionY () {
@@ -54,12 +168,10 @@
     position: absolute;
 }
 
+// Was hardcoded to 14px/30px #706C83 in 'Open Sans' - a font this project never
+// loads and a grey outside the palette. Now the standard prose setting.
 @mixin text-p {
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 30px;
-    color: #706C83;
-    font-family: 'Open Sans', sans-serif;
+    @include type-body;
 }
 
 @mixin flex-center {

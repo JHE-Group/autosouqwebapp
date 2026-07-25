@@ -1,3 +1,5 @@
+@use '../abstracts/' as *;
+
 /* DashBoard
 -------------------------------------------------------------- */
 
@@ -23,9 +25,11 @@
 #wrapper-dashboard .content-area {
   border-radius: 0px;
   overflow: hidden;
-  padding: 50px 10px 60px 28px;
-  margin-right: 0px;
-  margin-left: 0px;
+  /* Logical, so the 28px gutter sits beside the sidebar in both directions:
+     under dir="rtl" the drawer is on the right and this padding follows it. */
+  padding: 50px 10px 60px;
+  padding-inline-start: 28px;
+  margin-inline: 0;
 }
 
 #wrapper-dashboard .admin-title {
@@ -42,13 +46,14 @@
 }
 
 #wrapper-dashboard #header .tf-btn {
-  background: #ff7101;
-  color: #fff;
+  background: $color-3;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
 }
 
 #wrapper-dashboard #header .tf-btn:hover {
-  background: #24272c;
-  border-color: #24272c;
+  background: $brand-indigo;
+  color: $color-1; // fill goes dark on hover, so the label flips back to white (14.12:1)
+  border-color: $color-2;
 }
 
 #wrapper-dashboard .tfcl-login-form .tf-btn {
@@ -68,7 +73,7 @@
 }
 
 #wrapper-dashboard {
-  padding-left: 287px;
+  padding-inline-start: 287px;
 }
 
 #wrapper-dashboard .container {
@@ -87,9 +92,10 @@
   border-radius: 0;
   -webkit-box-shadow: none;
   box-shadow: none;
-  background: #24272c;
-  left: 0;
-  overflow-y: scroll;
+  background: $brand-indigo;
+  inset-inline-start: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .sidebar-dashboard::-webkit-scrollbar {
@@ -109,18 +115,18 @@
 
 .sidebar-dashboard .db-content {
   color: #fff;
-  padding: 30px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-left: 30px;
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-inline-start: 24px;
+  padding-inline-end: 16px;
 }
 
 .sidebar-dashboard .db-content.db-list-menu {
-  padding-left: 16px;
-  padding-right: 11px;
+  padding-inline: 12px;
 }
 
 .sidebar-dashboard .db-content.db-list-menu .db-title {
-  margin-left: 14px;
+  margin-inline-start: 14px;
 }
 
 .sidebar-dashboard .db-content:last-child {
@@ -128,7 +134,7 @@
 }
 
 .sidebar-dashboard .db-author .name {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -136,7 +142,7 @@
 }
 
 .sidebar-dashboard .db-author .author-position {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 12px;
   font-weight: 400;
   line-height: 16.8px;
@@ -160,32 +166,44 @@
   gap: 10px;
 }
 
+/* Was opacity .4 on white over indigo — an effective #8785A0 at about 4.4:1,
+   under AA for a 14px label. Cream at full opacity is 11.19:1 and still reads
+   as secondary because of the size, weight and letter-spacing. */
 .sidebar-dashboard .db-title {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 400;
+  color: $brand-cream;
+  font-family: $font-2;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   line-height: 150%;
-  opacity: 0.4;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.sidebar-dashboard .db-title.db-title-sub {
+  margin-top: 24px;
 }
 
 .sidebar-dashboard .db-list-menu ul li a {
-  color: #fff;
+  color: #fff; /* 14.12:1 on $brand-indigo */
   padding: 12px 14px;
-  display: block;
-  border-radius: 16px;
-  color: #fff;
+  /* 48px minimum target: this is the primary navigation on a phone. */
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border-radius: $radius-card;
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
   position: relative;
+  @include focusable-inverse(-2px);
 }
 
 .sidebar-dashboard .db-list-menu ul li a .count-page {
   width: 24px;
   height: 24px;
-  background: #7ed321;
-  color: #fff;
+  background: $color-9;
+  color: $color-2; /* ink on #7ED321 = 8.71:1; white on it was 1.87:1 */
   font-size: 14px;
   font-weight: 700;
   line-height: 17.64px;
@@ -193,7 +211,7 @@
   flex-shrink: 0;
   position: absolute;
   top: 50%;
-  right: 14px;
+  inset-inline-end: 14px;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
@@ -208,7 +226,7 @@
 .sidebar-dashboard .db-list-menu ul li a:hover .count-page,
 .sidebar-dashboard .db-list-menu ul li a.active .count-page {
   background: #fff;
-  color: #24272c !important;
+  color: $color-2 !important;
 }
 
 .sidebar-dashboard .db-list-menu ul li:not(:last-child) {
@@ -229,24 +247,39 @@
 
 .sidebar-dashboard .db-list-menu ul li a img,
 .sidebar-dashboard .db-list-menu ul li a svg {
-  margin-right: 14px;
+  margin-inline-end: 12px;
   vertical-align: bottom;
+  flex-shrink: 0;
+  /* The theme wrapped every one of these in <g opacity="0.2">, which on the
+     indigo panel rendered the icon set all but invisible until hover. They now
+     stroke currentColor, so the active row's ink flows straight into them. */
+  opacity: 0.75;
 }
 
 .sidebar-dashboard .db-list-menu ul li a:hover,
 .sidebar-dashboard .db-list-menu ul li a.active {
-  background: #ff7101;
-  color: #fff !important;
+  background: $color-3;
+  color: $color-on-accent !important; // was white - 2.97:1 on terracotta, fails AA
 }
 
-.sidebar-dashboard .db-list-menu ul li a:hover *,
-.sidebar-dashboard .db-list-menu ul li a.active * {
+.sidebar-dashboard .db-list-menu ul li a:hover svg,
+.sidebar-dashboard .db-list-menu ul li a.active svg {
   opacity: 1;
 }
 
-.sidebar-dashboard .db-list-menu ul li a:hover i,
-.sidebar-dashboard .db-list-menu ul li a.active i {
-  color: #fff;
+/* The current page has to be distinguishable by more than the fill (SC 1.4.1):
+   the marker on the inline edge says "you are here" where the terracotta alone
+   reads as just another hover. */
+.sidebar-dashboard .db-list-menu ul li a.active::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  border-radius: $radius-pill;
+  background: $brand-cream;
 }
 
 .sidebar-dashboard .db-logo img {
@@ -274,12 +307,15 @@
   word-break: break-all;
 }
 
+/* .sidebar-dashboard is $brand-indigo and .db-media-box is #1a2435, so these two
+   stay $color-3, NOT $color-3-text: terracotta on #1a2435 = 5.25:1 passes AA,
+   #BD4B2B on #1a2435 = 3.47:1 fails body text. */
 .sidebar-dashboard .db-media-box .group-title a:hover {
-  color: #ff7101;
+  color: $color-3;
 }
 
 .sidebar-dashboard .db-media-box .group-title i {
-  color: #ff7101;
+  color: $color-3;
   margin-right: 16px;
   font-size: 20px;
   vertical-align: text-bottom;
@@ -313,9 +349,9 @@
 }
 
 .sidebar-dashboard .db-media-box .list-social li a:hover {
-  color: #fff;
-  background: #ff7101;
-  border-color: #ff7101;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
+  background: $color-3;
+  border-color: $color-3;
 }
 
 .sidebar-dashboard .db-media-box .media-social .group-title i {
@@ -331,7 +367,9 @@
 
 .db-email-box .icon {
   font-size: 37px;
-  color: #ff7101;
+  /* stays $color-3: .db-email-box sits in the indigo dashboard sidebar (its
+     sibling .content p is rgba(255,255,255,.53)). #BD4B2B would be 2.83:1. */
+  color: $color-3;
   margin-right: 25px;
 }
 
@@ -351,13 +389,15 @@
   text-transform: uppercase;
 }
 
+/* A <button> now, not a div: it closes the drawer, so it is a control with a
+   name and a keyboard path. */
 .dashboard-overlay {
   position: fixed;
   z-index: 7;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  appearance: none;
   background: rgba(18, 18, 18, 0.4);
   opacity: 0;
   filter: alpha(opacity=0);
@@ -370,8 +410,7 @@
 .dashboard-overlay.active {
   visibility: visible;
   opacity: 1;
-  filter: alpha(opacity=100);
-  cursor: not-allowed;
+  cursor: pointer;
   z-index: 9999;
 }
 
@@ -384,26 +423,26 @@
 }
 
 .dashboard-toggle {
-  padding-top: 30px;
-  padding-left: 25px;
-  padding-right: 25px;
-  color: #24272c;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.dashboard-toggle i {
-  margin-right: 5px;
-  vertical-align: middle;
-  font-size: 24px;
-  margin-top: -4px;
-  display: inline-block;
-  color: #ff7101;
-}
-
-.dashboard-toggle {
   display: none;
+  align-items: center;
+  gap: 8px;
+  margin-block: 16px 0;
+  margin-inline: 16px 0;
+  padding: 12px 18px;
+  min-height: 48px;
+  background: $color-1;
+  border: 1px solid $color-6;
+  border-radius: $radius-control;
+  color: $color-2; /* 16.30:1 on white */
+  cursor: pointer;
+  font-family: $font-1;
+  font-weight: 600;
+  font-size: 15px;
+  @include focusable;
+}
+
+.dashboard-toggle svg {
+  color: $color-3-text; /* 4.99:1 on white — the icon carries the accent */
 }
 
 #wrapper-dashboard .header .header-ct-left,
@@ -452,22 +491,34 @@
 
 @media only screen and (max-width: 991px) {
   .sidebar-dashboard {
-    left: 0;
-    -webkit-transform: translateX(-100%);
-    -ms-transform: translateX(-100%);
-    -o-transform: translateX(-100%);
+    inset-inline-start: 0;
+    /* translateX(-100%) would push the drawer off the RIGHT of an RTL page —
+       i.e. into view. The logical direction is what has to flip. */
     transform: translateX(-100%);
   }
 
+  [dir="rtl"] .sidebar-dashboard {
+    transform: translateX(100%);
+  }
+
+  .sidebar-dashboard.active,
+  [dir="rtl"] .sidebar-dashboard.active {
+    transform: translateX(0);
+  }
+
   #wrapper-dashboard {
-    padding-left: 0px;
+    padding-inline-start: 0;
   }
 
   #wrapper-dashboard .content-area {
-    margin-left: 0;
+    margin-inline-start: 0;
+    padding-inline-start: 0;
   }
 
-  .dashboard-toggle,
+  .dashboard-toggle {
+    display: inline-flex !important;
+  }
+
   #wrapper-dashboard .header .header-ct-left {
     display: block !important;
   }
@@ -525,10 +576,10 @@
 -------------------------------------------------------------- */
 .widget_login_menu_widget .dropdown-menu {
   border: none;
-  border-top: 2px solid #ff7101;
+  border-top: 2px solid $color-3;
   min-width: 240px;
   background: #fff;
-  box-shadow: 0px 30px 60px 0px #24272c1a;
+  box-shadow: 0px 30px 60px 0px rgba(35, 31, 32, 0.1);
   top: 62% !important;
   border-radius: 0 0 16px 16px;
 }
@@ -545,7 +596,7 @@
 .widget_login_menu_widget .dropdown-menu ul li a {
   font-weight: 500;
   font-size: 16px;
-  color: #24272c;
+  color: $color-2;
   position: relative;
   display: block;
 }
@@ -584,7 +635,7 @@
   .user-dropdown-menu
   .list-group-item
   a.active {
-  color: #ff7101 !important;
+  color: $color-3-text !important;
 }
 
 .table-responsive {
@@ -614,7 +665,7 @@
 
 .tfcl-dashboard-overview .tfcl-card .card-body {
   border-radius: 16px;
-  background: rgba(255, 113, 1, 0.06);
+  background: rgba(233, 116, 81, 0.06);
   padding: 33px 20px 20px 20px;
   display: flex;
   align-items: center;
@@ -630,7 +681,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #ff7101;
+  color: $color-3-text;
   background: #fff;
   font-size: 40px;
   margin-right: 20px;
@@ -656,7 +707,7 @@
   font-size: 18px;
   font-weight: 500;
   line-height: 22.68px;
-  color: #24272c;
+  color: $color-2;
   margin-bottom: 2px;
 }
 
@@ -709,7 +760,7 @@
 .tfcl-dashboard .tfcl-dashboard-listing .group-input-icon input {
   border-color: #ededed;
   padding: 16.5px 17px;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -728,7 +779,7 @@
 }
 
 .tfcl-dashboard .tfcl-dashboard-listing .nice-select {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -737,7 +788,7 @@
 }
 
 .tfcl-dashboard .tfcl-dashboard-listing .group-input-icon input::placeholder {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -766,7 +817,7 @@
 }
 
 .tfcl-dashboard .tfcl-dashboard-listing .result-text b {
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .tfcl-table-listing .table-responsive thead tr th:first-child {
@@ -827,12 +878,12 @@
   font-size: 18px;
   font-weight: 500;
   line-height: 22.68px;
-  color: #24272c;
+  color: $color-2;
   margin-bottom: 2px;
 }
 
 .tfcl-table-listing .tfcl-listing-product .features-text {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 12px;
   font-weight: 400;
   line-height: 16.8px;
@@ -861,7 +912,7 @@
 }
 
 .tfcl-table-listing .tfcl-listing-product .price .inner:nth-child(1) {
-  color: #ff7101;
+  color: $color-3-text;
   text-decoration: none;
   font-size: 16px;
   font-weight: 500;
@@ -938,7 +989,7 @@
 }
 
 .tfcl-dashboard-reviews .comment-by-user .review-name span {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 12px;
   font-weight: 400;
   line-height: 16.8px;
@@ -960,12 +1011,12 @@
 }
 
 .tfcl-dashboard-reviews .star-rating-review i.active {
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .tfcl-dashboard-reviews .comment-by-user .content {
   margin-top: -7px;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -996,7 +1047,7 @@
 }
 
 .tfcl-page-insight-filter-button .nice-select {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -1022,7 +1073,7 @@
 .tfcl-empty-data {
   text-align: left;
   font-size: 16px;
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .tfcl-table-listing.tfcl-table-listing-sc {
@@ -1069,11 +1120,11 @@
 }
 
 .no-listing-found {
-  color: #24272c;
-  background-color: rgba(255, 113, 1, 0.06);
+  color: $color-2;
+  background-color: rgba(233, 116, 81, 0.06);
   border-color: transparent;
   border-radius: 16px;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 30px;
@@ -1137,7 +1188,7 @@
 
 .tfcl-my-listing-sc .list-wrapper b,
 .tfcl-table-listing .list-wrapper b {
-  color: #0a1426;
+  color: $brand-indigo;
   font-weight: 600;
   font-size: 16px;
 }
@@ -1154,66 +1205,44 @@
   font-weight: 500;
 }
 
-.tfcl-table-listing .column-status .tfcl-listing-status {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 17.64px;
-  background: var(--theme-primary-rgba);
-  padding: 6px 14px 6px 14px;
-  border-radius: 999px;
-  border: 1px solid #ff7101;
-}
-
-.tfcl-table-listing .column-status .tfcl-listing-status.status-pending {
-  background: #ee67421a;
-  border-color: #ee674224;
-  color: #ee6742;
-}
-
-.tfcl-table-listing .column-status .tfcl-listing-status.status-publish {
-  background: #7ed3211a;
-  border-color: #7ed32124;
-  color: #7ed321;
-}
-
-.tfcl-table-listing .column-status .tfcl-listing-status.status-sold {
-  background: #6e55ff1a;
-  border-color: #6e55ff24;
-  color: #6e55ff;
-}
+/* Status pill colours moved to the .tfcl-pill family at the end of this file,
+   where the seller's table and the saved-cars cards share them. The theme's
+   three failed on two counts: "publish" was #7ED321 on a 10% tint of itself
+   (1.76:1, an unreadable pill) and "sold" was #6E55FF on its own tint
+   (4.18:1, under AA for 14px). */
 
 .tfcl-table-listing .column-status {
-  text-align: left;
+  text-align: start;
   vertical-align: baseline;
-  padding-left: 30px;
+  padding-inline-start: 30px;
   padding-top: 22px;
 }
 
 .tfcl-table-listing .column-date {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  text-align: left;
+  text-align: start;
   vertical-align: baseline;
-  padding-left: 30px;
+  padding-inline-start: 30px;
   padding-top: 22px;
 }
 
 .tfcl-table-listing .column-controller {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 500;
   line-height: 19.6px;
-  text-align: left;
+  text-align: start;
   vertical-align: baseline;
-  padding-left: 30px;
+  padding-inline-start: 30px;
   padding-top: 22px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .tfcl-table-listing .column-listing {
-  padding-right: 20px;
+  padding-inline-end: 20px;
 }
 
 .tfcl-table-listing .column-controller .inner-controller:not(:last-child),
@@ -1252,11 +1281,11 @@
   content: "";
   width: 1px;
   height: 75%;
-  background: #ededed;
+  background: $color-6;
   display: block;
   position: absolute;
   top: 50%;
-  right: 0;
+  inset-inline-end: 0;
   transform: translateY(-50%);
 }
 
@@ -1284,13 +1313,13 @@
 .tfcl-listing-listing .mypt-address i,
 .favorite-listing .mypt-address i {
   margin-right: 7px;
-  color: #ff7101;
+  color: $color-3-text;
   font-size: 14px;
 }
 
 .tfcl-listing-listing .tfcl-listing-price:nth-child(1),
 .favorite-listing .tfcl-listing-price:nth-child(1) {
-  color: #ff7101;
+  color: $color-3-text;
   font-size: 17px;
   font-weight: 700;
 }
@@ -1356,7 +1385,7 @@
 
 .tfcl-listing-listing .features-images .controller a:hover,
 .favorite-listing .controller a:hover {
-  background: #ff7101;
+  background: $color-3;
 }
 
 .tfcl-listing-listing
@@ -1411,7 +1440,7 @@
 
 .tfcl-listing-listing .features-images .controller-2 li a:hover,
 .tfcl-listing-listing .features-images .controller-2 li a.active {
-  background: #ff7101;
+  background: $color-3;
 }
 
 .tfcl-listing-listing
@@ -1441,7 +1470,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid #ededed;
-  color: #24272c;
+  color: $color-2;
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
@@ -1450,9 +1479,9 @@
 
 .tfcl-pagination a:hover,
 .tfcl-pagination .current {
-  background: #ff7101;
-  color: #fff;
-  border-color: #ff7101;
+  background: $color-3;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
+  border-color: $color-3;
 }
 
 .tfcl-pagination a i::before {
@@ -1551,11 +1580,11 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .controller-sorting .count-list span {
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .controller-sorting .sorting-input {
@@ -1582,7 +1611,7 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .controller-sorting .sorting-input .nice-select::after {
@@ -1611,15 +1640,16 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #fff;
-  background: #ff7101;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
+  background: $color-3;
   padding: 14px 20px;
   border-radius: 14px;
   margin-bottom: 15px;
 }
 
 .tfcl-add-listing .upload-media a:hover {
-  background: #24272c;
+  background: $brand-indigo;
+  color: $color-1; // fill goes dark on hover, so the label flips back to white (14.12:1)
 }
 
 .tfcl-add-listing .upload-media a svg {
@@ -1628,7 +1658,7 @@
 }
 
 .tfcl-add-listing .upload-media .desc {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -1642,14 +1672,13 @@
 .tfcl-add-listing .thumbnail-media {
   display: flex;
   flex-wrap: wrap;
-  margin-left: -20px;
+  gap: 20px;
   margin-top: 20px;
-  row-gap: 20px;
 }
 
 .tfcl-add-listing .thumbnail-media > * {
-  width: calc(12.5% - 20px);
-  margin-left: 20px;
+  width: calc(16.66666% - 17px);
+  margin-inline-start: 0;
 }
 
 .tfcl-add-listing .thumbnail-media .item {
@@ -1679,7 +1708,7 @@
 }
 
 .tfcl-add-listing .thumbnail-media .item a:hover {
-  background: #ff7101;
+  background: $color-3;
 }
 
 .tfcl-add-listing h3 {
@@ -1691,7 +1720,7 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 17.64px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .tfcl-add-listing .form-group input,
@@ -1699,11 +1728,11 @@
   border-radius: 14px;
   background: #fff;
   padding: 16px 16px;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .tfcl-add-listing .form-group textarea {
@@ -1713,7 +1742,7 @@
 
 .tfcl-add-listing .form-group input::placeholder,
 .tfcl-add-listing .form-group textarea::placeholder {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -1727,33 +1756,32 @@
 }
 
 .tfcl-add-listing .form-group .nice-select .current {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  color: #24272c;
+  color: $color-2;
 }
 
-.tfcl-add-listing .form-group-4 {
-  display: flex;
-  flex-wrap: wrap;
-  margin-left: -30px;
-}
-
-.tfcl-add-listing .form-group-4 > * {
-  width: calc(25% - 30px);
-  margin-left: 30px;
-}
-
+/* Was a -30px left margin with a matching left margin on the children, which
+   in RTL pushed the whole row off the inline start. Gap does the same job in
+   both directions and needs no compensating negative margin. */
+.tfcl-add-listing .form-group-4,
 .tfcl-add-listing .form-group-2 {
   display: flex;
   flex-wrap: wrap;
-  margin-left: -30px;
+  gap: 0 30px;
+  margin-inline-start: 0;
+}
+
+.tfcl-add-listing .form-group-4 > * {
+  width: calc(25% - 22.5px);
+  margin-inline-start: 0;
 }
 
 .tfcl-add-listing .form-group-2 > * {
-  width: calc(50% - 30px);
-  margin-left: 30px;
+  width: calc(50% - 15px);
+  margin-inline-start: 0;
 }
 
 .tfcl-add-listing .form-group {
@@ -1804,8 +1832,8 @@
 }
 
 .tfcl-add-listing .group-checkbox input:checked::before {
-  background: #ff7101;
-  border-color: #ff7101;
+  background: $color-3;
+  border-color: $color-3;
 }
 
 .tfcl-add-listing .group-checkbox input:checked::after {
@@ -1816,11 +1844,11 @@
 .tfcl-add-listing .group-checkbox label {
   margin: 0;
   margin-left: 12px;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  color: #24272c;
+  color: $color-2;
   cursor: pointer;
 }
 
@@ -1879,18 +1907,21 @@
   margin-bottom: 20px;
 }
 
-.tfcl-add-listing.car-attr .list-attrach {
+.tfcl-add-listing .list-attrach {
   display: flex;
   flex-wrap: wrap;
-  margin-left: -20px;
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.tfcl-add-listing.car-attr .list-attrach > * {
-  width: calc(16.66666% - 20px);
-  margin-left: 20px;
+.tfcl-add-listing .list-attrach > * {
+  width: calc(25% - 15px);
+  margin-inline-start: 0;
 }
 
-.tfcl-add-listing.car-attr .list-attrach .item {
+.tfcl-add-listing .list-attrach .item {
   position: relative;
   border: 1px solid #ededed;
   border-radius: 16px;
@@ -1900,7 +1931,7 @@
   justify-content: center;
 }
 
-.tfcl-add-listing.car-attr .list-attrach .item a {
+.tfcl-add-listing .list-attrach .item a {
   width: 30px;
   height: 30px;
   font-size: 16px;
@@ -1915,11 +1946,11 @@
   justify-content: center;
 }
 
-.tfcl-add-listing.car-attr .list-attrach .item a:hover {
-  background: #ff7101;
+.tfcl-add-listing .list-attrach .item a:hover {
+  background: $color-3;
 }
 
-.tfcl-add-listing.car-attr .list-attrach .item .inner {
+.tfcl-add-listing .list-attrach .item .inner {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1927,20 +1958,20 @@
   align-items: center;
 }
 
-.tfcl-add-listing.car-attr .list-attrach .item .inner a {
+.tfcl-add-listing .list-attrach .item .inner a {
   all: unset;
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #24272c;
+  color: $color-2;
   cursor: pointer;
 }
 
-.tfcl-add-listing.car-attr .list-attrach .item .inner a:hover {
-  color: #ff7101;
+.tfcl-add-listing .list-attrach .item .inner a:hover {
+  color: $color-3-text;
 }
 
-.tfcl-add-listing.car-attr .list-attrach .item.upload {
+.tfcl-add-listing .list-attrach .item.upload {
   border: 1px dashed #e5e5ea;
 }
 
@@ -1960,11 +1991,11 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #fff;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   border-radius: 14px;
-  background: #ff7101;
+  background: $color-3;
   padding: 13px 20px;
-  border-color: #ff7101;
+  border-color: $color-3;
   outline: none;
   border: none;
   -webkit-transition: all 0.3s ease;
@@ -1979,11 +2010,11 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #ff7101;
+  color: $color-3-text;
   border-radius: 14px;
   background: transparent;
   padding: 13px 20px;
-  border: 1px solid #ff7101;
+  border: 1px solid $color-3;
   outline: none;
   -webkit-transition: all 0.3s ease;
   -moz-transition: all 0.3s ease;
@@ -1993,13 +2024,13 @@
 }
 
 .group-button-submit .pre-btn:hover {
-  background: #24272c;
+  background: $brand-indigo;
   color: #fff;
 }
 
 .group-button-submit .second-btn:hover {
-  background: #ff7101;
-  color: #fff;
+  background: $color-3;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
 }
 
 /* Add profile */
@@ -2035,7 +2066,7 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 17.64px;
-  color: #24272c;
+  color: $color-2;
   margin-bottom: 10px;
 }
 
@@ -2046,12 +2077,12 @@
 
 .tfcl_choose_avatar .choose-box button {
   border-radius: 10px;
-  background: #ff7101;
+  background: $color-3;
   position: absolute;
   top: 50%;
   left: 6px;
   transform: translateY(-50%);
-  color: #fff;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
@@ -2066,14 +2097,14 @@
   margin: 0;
   padding-left: 135px;
   padding-top: 14px;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
 }
 
 .tfcl_choose_avatar .notify-avatar {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 12px;
   font-weight: 400;
   line-height: 16.8px;
@@ -2145,7 +2176,7 @@
 
 .tfcl-message .list-user-chat li.active .user-item,
 .tfcl-message .list-user-chat li .user-item:hover {
-  background: rgba(255, 113, 1, 0.06);
+  background: rgba(233, 116, 81, 0.06);
 }
 
 .tfcl-message .list-user-chat li:not(:last-child) {
@@ -2180,7 +2211,7 @@
   font-size: 18px;
   font-weight: 500;
   line-height: 22.68px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .tfcl-message .list-user-chat .user-item .date {
@@ -2238,7 +2269,7 @@
   font-size: 18px;
   font-weight: 500;
   line-height: 22.68px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .tfcl-message .header-inner-chat .user-infor .nofi {
@@ -2267,12 +2298,12 @@
 }
 
 .tfcl-message .content-inner-chat .chat-text p {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
   padding: 14px 60px 14px 14px;
-  background: rgba(255, 113, 1, 0.06);
+  background: rgba(233, 116, 81, 0.06);
   border-radius: 16px;
   display: inline-block;
   text-align: left;
@@ -2342,7 +2373,7 @@
 }
 
 .tfcl-message .controller-chat .controll a:hover {
-  background: #ff7101;
+  background: $color-3;
 }
 
 .tfcl-message .controller-chat .controll a:hover * {
@@ -2358,9 +2389,9 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #fff;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   padding: 10px 42px;
-  background: #ff7101;
+  background: $color-3;
   border-radius: 10px;
   position: absolute;
   right: 5px;
@@ -2373,7 +2404,8 @@
 }
 
 .tfcl-message .controller-chat .form-message a:hover {
-  background: #24272c;
+  background: $brand-indigo;
+  color: $color-1; // fill goes dark on hover, so the label flips back to white (14.12:1)
 }
 
 /* Compare
@@ -2393,8 +2425,8 @@
   font-weight: 500;
   line-height: 22.4px;
   padding: 14px 86px;
-  background: #ff7101;
-  color: #fff;
+  background: $color-3;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   border-radius: 14px;
   border: none;
   -webkit-transition: all 0.3s;
@@ -2406,7 +2438,8 @@
   .compare-listing
   .compare-listing-body
   .tfcl-compare-listing-button:hover {
-  background: #24272c;
+  background: $brand-indigo;
+  color: $color-1; // fill goes dark on hover, so the label flips back to white (14.12:1)
 }
 #compare_listing_wrap
   .compare-listing
@@ -2455,7 +2488,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #24272c;
+  color: $color-2;
   font-size: 11px;
   padding: 0;
   background: #fff;
@@ -2472,8 +2505,8 @@
   .compare-thumb-main
   .compare-thumb
   .compare-listing-remove:hover {
-  background: #ff7101;
-  border-color: #ff7101;
+  background: $color-3;
+  border-color: $color-3;
 }
 #compare_listing_wrap
   .compare-listing
@@ -2549,7 +2582,7 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #24272c;
+  color: $color-2;
   border: 1px solid #ededed;
   padding: 13px;
   border-radius: 999px;
@@ -2561,9 +2594,9 @@
 }
 .wrap-single-compare .filter-compare li.active,
 .wrap-single-compare .filter-compare li:hover {
-  background: #ff7101;
-  border-color: #ff7101;
-  color: #fff;
+  background: $color-3;
+  border-color: $color-3;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
 }
 .wrap-single-compare .compare-table {
   padding: 30px;
@@ -2575,7 +2608,7 @@
   font-size: 24px;
   font-weight: 500;
   line-height: 30.24px;
-  color: #24272c;
+  color: $color-2;
   margin-bottom: 20px;
 }
 .wrap-single-compare .compare-table .title-tr {
@@ -2583,7 +2616,7 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22.4px;
-  color: #24272c;
+  color: $color-2;
   padding: 10px 20px;
   border-radius: 10px;
   margin-bottom: 8px;
@@ -2600,11 +2633,11 @@
 .wrap-single-compare .compare-table .group-tr li {
   flex: 1;
   text-align: center;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  color: #24272c;
+  color: $color-2;
 }
 
 /* Dealer
@@ -2643,21 +2676,21 @@
 }
 
 .search-dealer-list .filter-search a {
-  background: rgba(255, 113, 1, 0.06);
+  background: rgba(233, 116, 81, 0.06);
   border-radius: 14px;
   padding: 14px 20px;
   font-size: 16px;
   font-weight: 700;
   line-height: 22.4px;
-  color: #24272c;
+  color: $color-2;
   min-width: 112px;
   text-align: center;
 }
 
 .search-dealer-list .filter-search a.active,
 .search-dealer-list .filter-search a:hover {
-  color: #fff;
-  background: #ff7101;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
+  background: $color-3;
 }
 
 .search-dealer-list .filter-search a svg {
@@ -2678,10 +2711,10 @@
 
 .search-dealer-list .search-submit {
   min-width: 204px;
-  background: #ff7101;
+  background: $color-3;
   padding: 14px 20px;
   border-radius: 14px;
-  color: #fff;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   font-size: 16px;
   font-weight: 500;
   line-height: 20.16px;
@@ -2689,7 +2722,8 @@
 }
 
 .search-dealer-list .search-submit:hover {
-  background: #24272c;
+  background: $brand-indigo;
+  color: $color-1; // fill goes dark on hover, so the label flips back to white (14.12:1)
 }
 
 .search-dealer-list .search-submit i {
@@ -2719,7 +2753,7 @@
 }
 
 .group-dealer-title .group-sort-filter .nice-select .current {
-  color: #24272c;
+  color: $color-2;
 }
 
 .tf-dealer-list {
@@ -2762,11 +2796,11 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .tf-dealer-list .infor-dealder .rating span b {
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .tf-dealer-list .infor-dealder h4 {
@@ -2781,11 +2815,11 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .tf-dealer-list .dealer-phone a:hover {
-  color: #24272c;
+  color: $color-2;
 }
 
 .tf-dealer-list .dealer-phone a svg {
@@ -2798,13 +2832,13 @@
 }
 
 .tf-dealer-list .dealder-button a {
-  border: 1px solid #ff7101;
+  border: 1px solid $color-3;
   border-radius: 14px;
   padding: 13px 34px;
   font-size: 16px;
   font-weight: 500;
   line-height: 20.16px;
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .tf-dealer-list .dealder-button a i {
@@ -2844,7 +2878,7 @@
 }
 
 .widget-dealer-contact .list-authencation li {
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 12px;
   font-weight: 400;
   line-height: 16.8px;
@@ -2889,7 +2923,7 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
-  color: #24272c;
+  color: $color-2;
 }
 
 .widget-dealer-contact .rating .overall-rating-detail-star span {
@@ -2897,24 +2931,24 @@
 }
 
 .widget-dealer-contact .rating .overall-rating-detail-star span b {
-  color: #ff7101;
+  color: $color-3-text;
   font-weight: 400;
 }
 
 .widget-dealer-contact .rating .overall-rating-detail-star i {
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .widget-dealer-contact .button-form-1 {
   font-size: 16px;
   font-weight: 500;
   line-height: 20.16px;
-  color: #fff;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   width: 100%;
   display: block;
   padding: 15px 35px;
   border-radius: 14px;
-  background: #ff7101;
+  background: $color-3;
   text-align: center;
   margin-bottom: 11px;
 }
@@ -2956,7 +2990,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: "Inter";
+  font-family: var(--font-inter), sans-serif;
   font-size: 14px;
   font-weight: 400;
   line-height: 19.6px;
@@ -2964,7 +2998,7 @@
 }
 
 .dealer-sidebar .widget-dealer-map .location-link {
-  border: 1px solid #ff7101;
+  border: 1px solid $color-3;
   padding: 14px 20px;
   border-radius: 14px;
   font-size: 16px;
@@ -2974,12 +3008,12 @@
   width: 100%;
   text-align: center;
   display: block;
-  color: #ff7101;
+  color: $color-3-text;
 }
 
 .dealer-sidebar .widget-dealer-map .location-link:hover {
-  background: #ff7101;
-  color: #fff;
+  background: $color-3;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
 }
 
 .tf-sale-agent-list .list-agent li {
@@ -2992,7 +3026,7 @@
 }
 
 .tf-sale-agent-list .list-agent li .btn-agent {
-  border: 1px solid #ff7101;
+  border: 1px solid $color-3;
   padding: 14px 20px;
   border-radius: 14px;
   font-size: 16px;
@@ -3002,13 +3036,13 @@
   text-align: center;
   display: block;
   min-width: 230px;
-  color: #ff7101;
+  color: $color-3-text;
   margin-top: 3px;
 }
 
 .tf-sale-agent-list .list-agent li .btn-agent:hover {
-  background: #ff7101;
-  color: #fff;
+  background: $color-3;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
 }
 
 .tf-sale-agent-list .list-agent .author {
@@ -3024,7 +3058,7 @@
 }
 
 .tf-sale-agent-list .list-agent .author .overall-rating-detail-star i {
-  color: #ff7101;
+  color: $color-3-text;
   font-size: 13px;
 }
 
@@ -3060,7 +3094,7 @@
 }
 
 .widget-book-apoint {
-  background: rgba(255, 113, 1, 0.06);
+  background: rgba(233, 116, 81, 0.06);
   padding: 30px;
   border-radius: 16px;
 }
@@ -3070,18 +3104,18 @@
 }
 
 .widget-book-apoint a {
-  background: #ff7101;
+  background: $color-3;
   font-size: 16px;
   font-weight: 500;
   line-height: 20.16px;
-  color: #fff;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   padding: 15px 36px;
   border-radius: 14px;
   text-align: center;
 }
 
 .widget-book-apoint a:hover {
-  background: #24272c;
+  background: $brand-indigo;
   color: #fff;
 }
 
@@ -3111,9 +3145,8 @@
   }
 
   .tfcl-add-listing .thumbnail-media > *,
-  .tfcl-add-listing.car-attr .list-attrach > * {
-    width: calc(25% - 20px);
-    margin-left: 20px;
+  .tfcl-add-listing .list-attrach > * {
+    width: calc(25% - 15px);
   }
 
   .tfcl-add-listing .group-features-5 > * {
@@ -3146,8 +3179,8 @@
   }
 
   .tfcl-add-listing .group-features-5 > *,
-  .tfcl-add-listing.car-attr .list-attrach > * {
-    width: calc(33.33333% - 44px);
+  .tfcl-add-listing .list-attrach > * {
+    width: calc(33.33333% - 30px);
   }
   .wrap-scoll-dealer {
     overflow-y: auto;
@@ -3193,7 +3226,7 @@
   }
 
   .tfcl-add-listing .form-group-4 > * {
-    width: calc(50% - 30px);
+    width: calc(50% - 15px);
   }
 
   .tfcl-message {
@@ -3260,15 +3293,19 @@
     display: none !important;
   }
 
-  .wrap-favorite-listing .box-car-list,
-  .tfcl-add-listing .form-group-4 > *,
-  .tfcl-add-listing .group-features-5 > *,
-  .tfcl-add-listing .form-group-2 > * {
+  .wrap-favorite-listing .box-car-list {
     width: calc(100% - 30px);
   }
 
-  .tfcl-add-listing .thumbnail-media > * {
-    width: calc(33.33333% - 20px);
+  .tfcl-add-listing .form-group-4 > *,
+  .tfcl-add-listing .group-features-5 > *,
+  .tfcl-add-listing .form-group-2 > * {
+    width: 100%;
+  }
+
+  .tfcl-add-listing .thumbnail-media > *,
+  .tfcl-add-listing .list-attrach > * {
+    width: calc(50% - 10px);
   }
 
   .tfcl-message .list-user-chat,
@@ -3296,4 +3333,1220 @@
   .wrap-single-compare .inner-respond {
     width: 220%;
   }
+}
+
+/* ==========================================================================
+   Autosouq seller dashboard
+   --------------------------------------------------------------------------
+   Everything below is Autosouq's, not the AutoDeal template's. Three rules it
+   follows that the theme above does not:
+
+   1. LOGICAL PROPERTIES ONLY. /ar is served dir="rtl". padding-left in a
+      bilingual layout is a bug waiting for a translator.
+   2. EVERY COLOUR PAIR IS COMPUTED. The ratio is in the comment beside it. The
+      brand's terracotta is 2.97:1 on white and must never carry text at any
+      size; $color-3-text (#BD4B2B, 4.99:1) is the accent for text, and a
+      terracotta FILL carries ink ($color-on-accent, 5.50:1).
+   3. 48px MINIMUM TARGETS. NICHE.md's seller is standing next to a car in the
+      sun holding a budget Android in one hand.
+   ========================================================================== */
+
+/* Screen-reader-only, for labels whose visual equivalent is a placeholder or
+   an icon. Not `display:none` — that removes it from the a11y tree too. */
+.tfcl-dashboard .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* -------------------------------------------------------------- buttons -- */
+
+.tfcl-dashboard .pre-btn,
+.tfcl-dashboard .second-btn,
+.tfcl-empty-state .pre-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 12px 24px;
+  border-radius: $radius-control;
+  font-family: $font-1;
+  font-size: 16px;
+  font-weight: $fw-medium;
+  line-height: $lh-tight;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  @include motion(background-color color);
+  @include focusable;
+}
+
+.tfcl-dashboard .pre-btn,
+.tfcl-empty-state .pre-btn {
+  background: $color-3;
+  border: 1px solid $color-3;
+  /* Ink, not white: white on terracotta is 2.97:1 and fails at every size.
+     Ink on terracotta is 5.50:1. */
+  color: $color-on-accent;
+}
+
+.tfcl-dashboard .pre-btn:hover,
+.tfcl-empty-state .pre-btn:hover {
+  background: $brand-indigo;
+  border-color: $brand-indigo;
+  color: $color-1; /* the fill goes dark, so the label flips back — 14.12:1 */
+}
+
+.tfcl-dashboard .second-btn {
+  background: transparent;
+  border: 1px solid $color-3;
+  color: $color-3-text; /* 4.99:1 on white */
+}
+
+.tfcl-dashboard .second-btn:hover {
+  background: $color-3;
+  color: $color-on-accent;
+}
+
+.tfcl-dashboard .pre-btn:disabled,
+.tfcl-dashboard .second-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tfcl-dashboard .pre-btn:disabled:hover,
+.tfcl-dashboard .second-btn:disabled:hover {
+  background: $color-3;
+  border-color: $color-3;
+  color: $color-on-accent;
+}
+
+.tfcl-dashboard .second-btn:disabled:hover {
+  background: transparent;
+  color: $color-3-text;
+}
+
+/* A control that reads as a link: used for "Discard draft", "Start again" and
+   the jump-to-step list, all of which are actions, not navigation. */
+.tfcl-linkish {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: $color-3-text; /* 4.99:1 on white, 4.72:1 on the terracotta 6% tint */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  @include focusable;
+}
+
+.tfcl-linkish:hover {
+  color: $brand-indigo; /* 14.12:1 */
+}
+
+.tfcl-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.tfcl-page-head .admin-title {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------- status pills --- */
+
+/*
+   One family, five members, used identically by the seller's table and the
+   saved-cars cards so a state means the same thing wherever it appears.
+
+     live     $color-9-text  #4A7B13 on #F2FBE9  4.78:1
+     pending  $brand-indigo  #262262 on #EEEDF2 12.12:1
+     sold     $color-7       #5C6368 on #F1F1F2  5.41:1
+     as-is    $color-10      #B45309 on #FFF7ED  4.73:1
+     spec     $color-7       #5C6368 on #F8F8F9  5.75:1
+
+   Amber belongs to ONE thing: information the buyer is missing or terms they
+   need to know about (sold as-is, spec not stated). "Pending review" therefore
+   takes indigo rather than a second amber, so the seller never has to work out
+   which amber they are looking at. Nothing here is red — an as-is car in the
+   1,000–1,499 band is priced honestly, not faulty, and a red pill would tell
+   the seller their car is a problem.
+*/
+.tfcl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: $radius-xs;
+  border: 1px solid transparent;
+  font-family: $font-2;
+  font-size: 12px;
+  font-weight: $fw-semibold;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.tfcl-pill__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: $radius-circle;
+  background: currentColor;
+  flex: none;
+}
+
+.tfcl-pill--live {
+  color: $color-9-text;
+  background: $bg-color6;
+  border-color: rgba(74, 123, 19, 0.22);
+}
+
+.tfcl-pill--pending {
+  color: $brand-indigo;
+  background: rgba(38, 34, 98, 0.08);
+  border-color: rgba(38, 34, 98, 0.18);
+}
+
+.tfcl-pill--sold {
+  color: $color-7;
+  background: #f1f1f2;
+  border-color: rgba(92, 99, 104, 0.2);
+}
+
+.tfcl-pill--as-is,
+.tfcl-pill--unstated {
+  color: $color-10;
+  background: #fff7ed;
+  border-color: rgba(180, 83, 9, 0.25);
+}
+
+.tfcl-pill--spec {
+  color: $color-7;
+  background: $bg-color2;
+  border-color: $color-6;
+}
+
+.tfcl-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* ---------------------------------------------------------- stat tiles -- */
+
+.tfcl-stat .card-body {
+  align-items: center;
+}
+
+.tfcl-stat .tfcl-icon-overview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tfcl-stat__sublabel {
+  font-family: $font-2;
+  font-size: 14px;
+  font-weight: $fw-regular;
+  color: $color-4; /* 5.69:1 on white */
+}
+
+/* The tile's accent matches the pill of the same name in the table under it,
+   so "3 live" and the three green rows are visibly the same statement. */
+.tfcl-stat--live .tfcl-icon-overview {
+  color: $color-9-text;
+  background: $bg-color6;
+}
+
+.tfcl-stat--pending .tfcl-icon-overview {
+  color: $brand-indigo;
+  background: rgba(38, 34, 98, 0.08);
+}
+
+.tfcl-stat--sold .tfcl-icon-overview {
+  color: $color-7;
+  background: #f1f1f2;
+}
+
+/* --------------------------------------------------------- empty states -- */
+
+.tfcl-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  border: 1px dashed $color-6;
+  border-radius: $radius-card;
+  background: $bg-color2;
+}
+
+.tfcl-empty-state__icon {
+  color: $color-5;
+  margin-bottom: 12px;
+}
+
+/* Ink on $bg-color2 = 15.36:1 */
+.tfcl-empty-state__title {
+  color: $color-2;
+  font-family: $font-1;
+  font-size: 20px;
+  font-weight: $fw-semibold;
+  line-height: $lh-snug;
+}
+
+.tfcl-empty-state__title-en {
+  color: $color-2;
+  font-family: $font-1;
+  font-size: 18px;
+  font-weight: $fw-medium;
+  line-height: $lh-snug;
+  margin-bottom: 8px;
+}
+
+/* $color-4 on $bg-color2 = 5.36:1 */
+.tfcl-empty-state__body {
+  color: $color-4;
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: $lh-loose;
+  margin-bottom: 4px;
+  max-width: 52ch;
+}
+
+.tfcl-empty-state__steps {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  text-align: start;
+  max-width: 52ch;
+}
+
+.tfcl-empty-state__steps li {
+  position: relative;
+  padding-inline-start: 34px;
+  margin-bottom: 10px;
+  color: $color-4;
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: $lh-loose;
+}
+
+.tfcl-empty-state__steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: $radius-circle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: $fw-semibold;
+  /* Ink on terracotta = 5.50:1 */
+  background: $color-3;
+  color: $color-on-accent;
+}
+
+.tfcl-empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.tfcl-empty-state__secondary {
+  color: $color-3-text; /* 4.99:1 on white, 4.86:1 on $bg-color2 */
+  font-family: $font-2;
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  @include focusable;
+}
+
+/* An empty state inside a card already has the card's padding and border. */
+.tfcl-card .tfcl-empty-state {
+  border: 0;
+  background: transparent;
+  padding-block: 24px;
+}
+
+/* ------------------------------------------------- listings table chrome -- */
+
+.tfcl-listing-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tfcl-listing-toolbar .group-input-icon.search {
+  flex: 1 1 260px;
+}
+
+.tfcl-listing-toolbar__status {
+  flex: 0 1 220px;
+}
+
+.tfcl-listing-toolbar select {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid $color-6;
+  border-radius: $radius-control;
+  background: $color-1;
+  font-family: $font-2;
+  font-size: 14px;
+  color: $color-2;
+  @include focusable;
+}
+
+.tfcl-table-noresult {
+  margin: 20px 0 0;
+  font-family: $font-2;
+  font-size: 15px;
+  color: $color-4; /* 5.69:1 */
+}
+
+.tfcl-table-listing .column-controller .btn-action {
+  display: inline-block;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: $color-3-text; /* 4.99:1 */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  @include focusable;
+}
+
+.tfcl-table-listing .column-controller .btn-action:disabled {
+  color: $color-7; /* 6.11:1 — legible, plainly not available */
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.tfcl-table-listing .btn-action-note {
+  margin: 8px 0 0;
+  font-family: $font-2;
+  font-size: 12px;
+  line-height: $lh-normal;
+  color: $color-7; /* 6.11:1 */
+  max-width: 22ch;
+}
+
+/* ============================== add a listing ============================= */
+
+.tfcl-add-listing-flow .tfcl-add-listing {
+  padding: 24px;
+}
+
+/* The band, said once before anything is typed. Cream rather than terracotta
+   precisely because this is the friendliest possible way to say no: it reads as
+   guidance, not as a rejection banner. Indigo on cream = 11.19:1, AAA. */
+.tfcl-band-note {
+  background: $brand-cream;
+  color: $brand-indigo;
+  border: 1px solid rgba(38, 34, 98, 0.15);
+  border-radius: $radius-card;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: $lh-loose;
+}
+
+.tfcl-band-note__ar {
+  font-size: 17px;
+  font-weight: $fw-semibold;
+  margin-bottom: 6px;
+}
+
+.tfcl-stepper {
+  margin-bottom: 24px;
+}
+
+.tfcl-stepper__progress {
+  margin: 0 0 8px;
+  font-family: $font-2;
+  font-size: 14px;
+  font-weight: $fw-medium;
+  color: $color-4; /* 5.69:1 */
+}
+
+.tfcl-stepper__bar {
+  height: 6px;
+  border-radius: $radius-pill;
+  background: $color-6;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.tfcl-stepper__bar span {
+  display: block;
+  block-size: 100%;
+  background: $color-3;
+  border-radius: $radius-pill;
+  @include motion(inline-size);
+}
+
+.tfcl-stepper__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: none;
+}
+
+.tfcl-stepper__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid $color-6;
+  border-radius: $radius-pill;
+  background: $color-1;
+  font-family: $font-2;
+  font-size: 14px;
+  font-weight: $fw-medium;
+  color: $color-4; /* 5.69:1 on white */
+  cursor: pointer;
+  white-space: nowrap;
+  @include motion(background-color color border-color);
+  @include focusable;
+}
+
+.tfcl-stepper__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: $radius-circle;
+  background: $bg-color2;
+  color: $color-2; /* 15.36:1 */
+  font-size: 12px;
+  font-weight: $fw-semibold;
+  flex: none;
+}
+
+.tfcl-stepper__step.is-done {
+  color: $color-2;
+  border-color: rgba(74, 123, 19, 0.3);
+}
+
+.tfcl-stepper__step.is-done .tfcl-stepper__num {
+  background: $bg-color6;
+  color: $color-9-text; /* 4.78:1 on the green tint */
+}
+
+.tfcl-stepper__step.is-current {
+  background: $color-3;
+  border-color: $color-3;
+  color: $color-on-accent; /* ink on terracotta = 5.50:1 */
+}
+
+.tfcl-stepper__step.is-current .tfcl-stepper__num {
+  background: rgba(35, 31, 32, 0.14);
+  color: $color-on-accent;
+}
+
+.tfcl-step-heading {
+  font-family: $font-1;
+  font-size: 24px;
+  font-weight: $fw-semibold;
+  color: $color-2; /* 16.30:1 */
+  margin-bottom: 16px;
+}
+
+.tfcl-step-heading:focus {
+  outline: none;
+}
+
+.tfcl-step-heading__en {
+  display: block;
+  font-size: 18px;
+  font-weight: $fw-medium;
+  color: $color-4; /* 5.69:1 */
+}
+
+.tfcl-step-intro {
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: $lh-loose;
+  color: $color-4;
+  margin-bottom: 20px;
+  max-width: 62ch;
+}
+
+/* Guidance sits under the field it belongs to, never in a tooltip: a tooltip
+   on a touch screen is a hover state nobody can reach. */
+.tfcl-hint {
+  font-family: $font-2;
+  font-size: 14px;
+  line-height: $lh-normal;
+  color: $color-4; /* 5.69:1 on white */
+  margin: 8px 0 0;
+  max-width: 62ch;
+}
+
+/* Amber, never red — see the pill note above. 4.73:1 on white. */
+.tfcl-amber {
+  font-family: $font-2;
+  font-size: 14px;
+  line-height: $lh-normal;
+  color: $color-10;
+  margin: 8px 0 0;
+  max-width: 62ch;
+}
+
+.tfcl-notice {
+  border: 1px solid $color-6;
+  border-inline-start: 3px solid $color-3;
+  border-radius: $radius-md;
+  background: $bg-color4; /* terracotta @6% over white */
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: $lh-loose;
+  color: $color-2; /* 15.6:1 on the tint */
+}
+
+.tfcl-notice__ar {
+  display: block;
+  font-weight: $fw-semibold;
+  margin-bottom: 4px;
+}
+
+.tfcl-notice--action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tfcl-notice__buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.tfcl-derived {
+  margin: 16px 0 0;
+  padding: 14px 18px;
+  border-radius: $radius-md;
+  background: $bg-color2;
+  font-family: $font-2;
+  font-size: 14px;
+  line-height: $lh-loose;
+  color: $color-4; /* 5.36:1 on $bg-color2 */
+}
+
+.tfcl-derived strong {
+  color: $color-2; /* 15.36:1 */
+}
+
+.tfcl-draft-status {
+  margin: 16px 0 0;
+  font-family: $font-2;
+  font-size: 14px;
+  line-height: $lh-normal;
+  color: $color-7; /* 6.11:1 */
+}
+
+/* Native selects, sized and shaped like the theme's inputs. Native because on
+   a budget Android this opens the OS picker — a bigger, more reliable target
+   than a scripted dropdown list, and it works before the JS arrives. */
+.tfcl-add-listing .form-group select.form-control {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 16px;
+  border: 1px solid $color-6;
+  border-radius: $radius-control;
+  background: $color-1;
+  font-family: $font-2;
+  font-size: 15px;
+  color: $color-2;
+  @include focusable;
+}
+
+.tfcl-add-listing .form-group input,
+.tfcl-add-listing .form-group textarea {
+  min-height: 52px;
+  border: 1px solid $color-6;
+  /* 16px so iOS Safari does not zoom the page on focus, which on a long form
+     leaves the seller scrolled sideways with no way back. */
+  font-size: 16px;
+}
+
+.tfcl-add-listing .form-group input,
+.tfcl-add-listing .form-group textarea,
+.tfcl-add-listing .form-group select {
+  @include focusable;
+}
+
+.tfcl-add-listing .form-group textarea {
+  min-height: 96px;
+  height: 96px;
+}
+
+.tfcl-add-listing .form-group textarea:disabled {
+  background: $bg-color2;
+  color: $color-7;
+  cursor: not-allowed;
+}
+
+.tfcl-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.tfcl-fieldset legend {
+  font-family: $font-1;
+  font-size: 14px;
+  font-weight: $fw-medium;
+  color: $color-2;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.tfcl-radio-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tfcl-radio,
+.tfcl-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid $color-6;
+  border-radius: $radius-control;
+  font-family: $font-2;
+  font-size: 15px;
+  color: $color-2; /* 16.30:1 */
+  cursor: pointer;
+}
+
+.tfcl-radio:has(input:checked),
+.tfcl-checkbox:has(input:checked) {
+  border-color: $color-3;
+  background: $bg-color4;
+}
+
+.tfcl-radio input,
+.tfcl-checkbox input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: $color-3;
+  margin: 0;
+}
+
+.tfcl-radio:focus-within,
+.tfcl-checkbox:focus-within {
+  @include focus-ring;
+}
+
+.tfcl-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.tfcl-shotlist {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px 24px;
+}
+
+.tfcl-shotlist li {
+  position: relative;
+  padding-inline-start: 26px;
+  font-family: $font-2;
+  font-size: 14px;
+  line-height: $lh-loose;
+  color: $color-4; /* 5.69:1 */
+}
+
+.tfcl-shotlist li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-circle;
+  background: $color-3;
+}
+
+.upload-media.is-dragging {
+  border-style: solid;
+  border-color: $color-3;
+  background: $bg-color4;
+}
+
+.tfcl-thumb-remove {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: $radius-circle;
+  /* Ink at 78% behind a white glyph — 12.1:1 against the icon at worst. */
+  background: rgba(35, 31, 32, 0.78);
+  color: $color-1;
+  cursor: pointer;
+  @include focusable;
+}
+
+.tfcl-thumb-remove:hover {
+  background: $brand-indigo;
+}
+
+.tfcl-thumb-flag {
+  position: absolute;
+  bottom: 6px;
+  inset-inline-start: 6px;
+  padding: 3px 8px;
+  border-radius: $radius-xs;
+  background: rgba(35, 31, 32, 0.78);
+  color: $color-1;
+  font-family: $font-2;
+  font-size: 11px;
+  font-weight: $fw-semibold;
+}
+
+.tfcl-attach-name {
+  position: absolute;
+  bottom: 8px;
+  inset-inline: 8px;
+  font-family: $font-2;
+  font-size: 12px;
+  color: $color-7;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tfcl-review {
+  margin: 0;
+  border: 1px solid $color-6;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.tfcl-review__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 12px 16px;
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: $lh-normal;
+}
+
+.tfcl-review__row:nth-child(odd) {
+  background: $bg-color2;
+}
+
+.tfcl-review__row dt {
+  flex: 0 0 200px;
+  color: $color-4; /* 5.36:1 on $bg-color2 */
+  font-weight: $fw-regular;
+}
+
+.tfcl-review__row dd {
+  flex: 1 1 200px;
+  margin: 0;
+  color: $color-2; /* 15.36:1 */
+  font-weight: $fw-medium;
+}
+
+.tfcl-review__row dd.is-empty {
+  color: $color-7; /* 5.75:1 — present but plainly unanswered */
+  font-weight: $fw-regular;
+}
+
+.tfcl-disclosure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 0;
+  background: none;
+  border: 0;
+  font-family: $font-1;
+  font-size: 18px;
+  font-weight: $fw-semibold;
+  color: $color-2; /* 16.30:1 */
+  cursor: pointer;
+  @include focusable;
+}
+
+.tfcl-disclosure__panel {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid $color-6;
+}
+
+.tfcl-missing {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 20px;
+}
+
+.tfcl-missing li {
+  margin-bottom: 8px;
+  font-family: $font-2;
+  font-size: 15px;
+}
+
+.tfcl-step-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 12px 0;
+}
+
+.tfcl-step-nav-bar__count {
+  font-family: $font-2;
+  font-size: 14px;
+  font-weight: $fw-medium;
+  color: $color-7; /* 6.11:1 */
+}
+
+/* ============================== responsive =============================== */
+
+@media only screen and (max-width: 991px) {
+  #wrapper-dashboard .content-area {
+    padding-inline: 15px;
+  }
+
+  .tfcl-add-listing-flow .tfcl-add-listing {
+    padding: 20px 16px;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  /*
+     The four-column table becomes four stacked cards. `.table-responsive`
+     above sets `width: max-content` and a horizontal scroll, which at 360px
+     means the seller swipes sideways to find out whether their own car is
+     live. Rows carry data-label, so each cell keeps its column name.
+  */
+  .tfcl-table-listing .table-responsive {
+    overflow-x: visible !important;
+  }
+
+  .tfcl-table-listing .table,
+  .tfcl-table-listing .table thead,
+  .tfcl-table-listing .table tbody,
+  .tfcl-table-listing .table tr,
+  .tfcl-table-listing .table td {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .tfcl-table-listing .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .tfcl-table-listing .table tr {
+    border: 1px solid $color-6;
+    border-radius: $radius-card;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .tfcl-table-listing .table td {
+    padding: 12px 0 0 !important;
+    border: 0;
+  }
+
+  .tfcl-table-listing .table td:first-child {
+    padding-top: 0 !important;
+  }
+
+  .tfcl-table-listing .table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 6px;
+    font-family: $font-2;
+    font-size: 12px;
+    font-weight: $fw-semibold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $color-7; /* 6.11:1 */
+  }
+
+  .tfcl-table-listing .table td.column-listing::before {
+    display: none;
+  }
+
+  /* The 1px column rules only make sense in a grid. */
+  .tfcl-table-listing .column-listing::after,
+  .tfcl-table-listing .column-status::after,
+  .tfcl-table-listing .column-date::after {
+    display: none;
+  }
+
+  .tfcl-table-listing .tfcl-listing-product {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .tfcl-table-listing .tfcl-listing-product img {
+    width: 96px;
+    height: auto;
+  }
+
+  .tfcl-table-listing .column-controller {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .tfcl-table-listing .btn-action-note {
+    flex: 1 0 100%;
+    max-width: none;
+  }
+
+  /* The stepper scrolls rather than wrapping to three rows of chips and
+     pushing the first question below the fold. */
+  .tfcl-stepper__list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: inline mandatory;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tfcl-stepper__list li {
+    scroll-snap-align: start;
+  }
+
+  /* Back / Next stay reachable with one thumb without scrolling to the end of
+     a long step. env() keeps them clear of the iOS home indicator. */
+  .tfcl-step-nav-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: $color-1;
+    border-top: 1px solid $color-6;
+    margin-inline: -15px;
+    padding: 12px 15px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .tfcl-step-nav-bar .pre-btn,
+  .tfcl-step-nav-bar .second-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 12px;
+  }
+
+  .tfcl-step-heading {
+    font-size: 20px;
+  }
+
+  .tfcl-review__row dt {
+    flex: 1 0 100%;
+  }
+
+  .tfcl-empty-state {
+    padding: 32px 16px;
+  }
+
+  .tfcl-listing-toolbar__status,
+  .tfcl-listing-toolbar .group-input-icon.search {
+    flex: 1 1 100%;
+  }
+}
+
+/* 360px — the budget Android NICHE.md names. Nothing below may overflow. */
+@media only screen and (max-width: 400px) {
+  #wrapper-dashboard .content-area {
+    padding-inline: 12px;
+  }
+
+  .tfcl-band-note {
+    padding: 16px;
+  }
+
+  .tfcl-add-listing-flow .tfcl-add-listing {
+    padding: 16px 12px;
+  }
+
+  .tfcl-table-listing .tfcl-listing-product {
+    flex-direction: column;
+  }
+
+  .tfcl-table-listing .tfcl-listing-product img {
+    width: 100%;
+  }
+
+  .tfcl-shotlist,
+  .tfcl-feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================== sidebar: primary action ====================== */
+
+.sidebar-dashboard .db-primary-action {
+  padding-block: 20px;
+}
+
+/* The supply-side action, at the weight the business gives it: NICHE.md's
+   binding constraint at launch is listing supply, not demand. Ink on
+   terracotta = 5.50:1; white would be 2.97:1 and fail. */
+.db-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: $radius-control;
+  background: $color-3;
+  color: $color-on-accent;
+  font-family: $font-1;
+  font-size: 16px;
+  font-weight: $fw-semibold;
+  line-height: $lh-tight;
+  @include motion(background-color color);
+  @include focusable-inverse(2px);
+}
+
+.db-cta:hover,
+.db-cta.active {
+  background: $brand-cream;
+  color: $brand-indigo; /* indigo on cream = 11.19:1 */
+}
+
+.db-cta svg {
+  flex: none;
+}
+
+.db-cta-en {
+  display: block;
+  font-family: $font-2;
+  font-size: 13px;
+  font-weight: $fw-medium;
+}
+
+.db-cta-note {
+  margin: 10px 2px 0;
+  font-family: $font-2;
+  font-size: 12px;
+  line-height: $lh-normal;
+  /* Cream on indigo = 11.19:1. Deliberately not white-at-50%, which is how the
+     theme wrote secondary text on this panel and lands around 4:1. */
+  color: $brand-cream;
+}
+
+/* Only meaningful while the sidebar is a drawer. */
+.db-logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.db-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 1px solid rgba(241, 228, 197, 0.35);
+  border-radius: $radius-circle;
+  background: transparent;
+  color: $brand-cream; /* 11.19:1 on indigo */
+  cursor: pointer;
+  @include focusable-inverse(2px);
+}
+
+.db-close:hover {
+  background: $brand-cream;
+  color: $brand-indigo;
+}
+
+@media only screen and (max-width: 991px) {
+  .db-close {
+    display: inline-flex;
+  }
+}
+
+/* The real file control is an opacity:0 <input class="ip-file"> laid over the
+   styled <a>. It is focusable, but an invisible control has no visible focus
+   state — so the ring is drawn on the parent instead. */
+.tfcl-add-listing .upload-media a:has(.ip-file:focus-visible),
+.tfcl-add-listing .list-attrach .item .inner:has(.ip-file:focus-visible) {
+  @include focus-ring;
+}
+
+@media only screen and (max-width: 767px) {
+  /* 96px of vertical padding is a dropzone for a mouse. On a phone there is no
+     drag, only the button, and the empty space pushes the shot list off screen. */
+  .tfcl-add-listing .upload-media {
+    padding: 28px 16px;
+  }
+
+  .tfcl-add-listing .upload-media .desc {
+    margin-top: 12px;
+  }
+}
+
+.tfcl-add-listing .list-attrach .item .inner {
+  cursor: pointer;
 }

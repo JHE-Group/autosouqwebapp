@@ -1,198 +1,107 @@
 "use client";
-import { homepages, listingPages, otherPages } from "@/data/menu";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
 
-export default function MobileNav() {
+import React, { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import { buildNavTree, isBranchCurrent, isCurrent } from "./navItems";
+
+/**
+ * Offcanvas navigation.
+ *
+ * The template version measured `scrollHeight`, wrote inline `height` and
+ * `padding` onto the `<ul>`, and toggled a class — so the open state lived in
+ * the DOM, could not be read back, and was announced to a screen reader as an
+ * unlabelled `<div>`. React owns it now, and the control is a real `<button>`
+ * carrying `aria-expanded` and `aria-controls`.
+ *
+ * Sizing is set for a 360px budget Android screen (see NICHE.md): top-level
+ * rows are 52px tall, submenu rows 48px, and the disclosure arrow is its own
+ * 48×48 target beside the link rather than an invisible overlay covering the
+ * whole row — the template's `.dropdown2-btn` was `width: 100%` and sat on top
+ * of the link, so tapping "Browse" expanded it instead of going there.
+ */
+export default function MobileNav({ onNavigate }) {
+  const t = useTranslations("nav");
   const pathname = usePathname();
-  const isActive = (menus) => {
-    let active = false;
+  const items = buildNavTree(t);
 
-    menus.forEach((elm) => {
-      if (elm.links) {
-        elm.links.forEach((elm2) => {
-          if (elm2.href.split("/")[1] == pathname.split("/")[1]) {
-            active = true;
-          }
-        });
-      } else {
-        if (elm.href.split("/")[1] == pathname.split("/")[1]) {
-          active = true;
-        }
-      }
-    });
-    return active;
-  };
-
-  const handleActive1 = (event) => {
-    const dropdown = event.currentTarget.closest(".dropdown2.parent-menu-1");
-    const allDropdowns = document.querySelectorAll(".dropdown2.parent-menu-1");
-    if (dropdown) {
-      const ulElement = dropdown.querySelector("ul");
-      if (dropdown.classList.contains("open")) {
-        dropdown.classList.remove("open");
-
-        if (ulElement) {
-          ulElement.style.height = `0px`;
-          ulElement.style.padding = "0px 20px";
-        }
-      } else {
-        dropdown.classList.add("open");
-
-        if (ulElement) {
-          ulElement.style.height = `${ulElement.scrollHeight + 30}px`;
-          ulElement.style.padding = "15px 20px";
-        }
-        allDropdowns.forEach((elm) => {
-          if (elm !== dropdown) {
-            elm.classList.remove("open");
-            const ulElement2 = elm.querySelector("ul");
-            if (ulElement2) {
-              ulElement2.style.height = `0px`;
-              ulElement2.style.padding = "0px 20px";
-            }
-          }
-        });
-      }
-    }
-  };
-  const handleActive2 = (event) => {
-    const dropdown = event.currentTarget.closest(
-      ".dropdown2:not(.parent-menu-1)"
-    );
-    if (dropdown) {
-      const ulElement = dropdown.querySelector("ul");
-      if (dropdown.classList.contains("open")) {
-        dropdown.classList.remove("open");
-
-        if (ulElement) ulElement.style.height = `0px`;
-        ulElement.style.padding = "0px 20px";
-      } else {
-        dropdown.classList.add("open");
-
-        if (ulElement)
-          ulElement.style.height = `${ulElement.scrollHeight + 30}px`;
-        ulElement.style.padding = "15px 20px";
-      }
-    }
-    const parentElement = dropdown.closest(".dropdown2.parent-menu-1");
-    const ulElement2 = parentElement.querySelector("ul");
-    ulElement2.style.height = `auto`;
-  };
-  useEffect(() => {
-    document.body.classList.remove("mobile-menu-visible");
-  }, [pathname]);
+  // The branch containing the current page is open by default, so the panel
+  // opens showing where you are rather than fully collapsed. `override` is
+  // what the visitor has since chosen: null means "still following the page",
+  // "" means they closed everything. Derived rather than held in an effect, so
+  // it stays correct across a back/forward navigation.
+  const [override, setOverride] = useState(null);
+  const currentBranch =
+    items.find((item) => item.children && isBranchCurrent(item, pathname))
+      ?.href ?? "";
+  const openHref = override === null ? currentBranch : override;
 
   return (
     <div className="menu-outer">
-      <div
-        className="navbar-collapse collapse clearfix"
-        id="navbarSupportedContent"
-      >
-        <ul className="navigation clearfix">
-          <li
-            className={`tf-megamenu dropdown2 parent-menu-1 ${
-              isActive(homepages) ? "current" : ""
-            } `}
-          >
-            <a href="#">Home</a>
-            <ul>
-              {homepages.map((page, index) => (
-                <li
-                  key={index}
-                  className={
-                    page.href.split("/")[1] == pathname.split("/")[1]
-                      ? "current"
-                      : ""
+      <ul className="navigation">
+        {items.map((item) => {
+          const hasChildren = Boolean(item.children?.length);
+          const open = openHref === item.href;
+          const panelId = `mobile-nav-${item.href.replace(/\W+/g, "-")}`;
+
+          return (
+            <li
+              key={item.href}
+              className={`${hasChildren ? "dropdown2" : ""} ${
+                open ? "open" : ""
+              } ${isBranchCurrent(item, pathname) ? "current" : ""}`.trim()}
+            >
+              <div className="mobile-nav-row">
+                <Link
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={
+                    isCurrent(item.href, pathname) ? "page" : undefined
                   }
                 >
-                  <Link href={page.href}>{page.text}</Link>
-                </li>
-              ))}
-            </ul>
-            <div className="dropdown2-btn" onClick={handleActive1} />
-          </li>
-          <li
-            className={`tfcl-mega-menu dropdown2 parent-menu-1  ${
-              isActive(listingPages) ? "current" : ""
-            } `}
-          >
-            <a href="#">Listing Car</a>
-            <ul>
-              {listingPages.map((item, index) => (
-                <li key={index} className={item.className}>
-                  <a href="#">{item.title}</a>
-                  <ul>
-                    {item.links.map((link, linkIndex) => (
-                      <li
-                        key={linkIndex}
-                        className={`${link.className || ""} ${
-                          link.href.split("/")[1] == pathname.split("/")[1]
-                            ? "current"
-                            : ""
-                        }`}
+                  {item.label}
+                </Link>
+
+                {hasChildren ? (
+                  <button
+                    type="button"
+                    className="dropdown2-btn"
+                    aria-expanded={open}
+                    aria-controls={panelId}
+                    aria-label={t(open ? "collapseSection" : "expandSection", {
+                      section: item.label,
+                    })}
+                    onClick={() => setOverride(open ? "" : item.href)}
+                  />
+                ) : null}
+              </div>
+
+              {hasChildren ? (
+                <ul id={panelId} hidden={!open}>
+                  {item.children.map((child) => (
+                    <li
+                      key={child.href}
+                      className={
+                        isCurrent(child.href, pathname) ? "current" : ""
+                      }
+                    >
+                      <Link
+                        href={child.href}
+                        onClick={onNavigate}
+                        aria-current={
+                          isCurrent(child.href, pathname) ? "page" : undefined
+                        }
                       >
-                        <Link href={link.href}>{link.text}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="dropdown2-btn" onClick={handleActive2} />
-                </li>
-              ))}
-            </ul>
-            <div className="dropdown2-btn" onClick={handleActive1} />
-          </li>
-          <li
-            className={`dropdown2 parent-menu-1  ${
-              isActive(otherPages) ? "current" : ""
-            } `}
-          >
-            <a href="#">Page</a>
-            <ul>
-              {otherPages.map((item, index) => (
-                <li
-                  key={index}
-                  className={`${item.className || ""}  ${
-                    item.links ? (isActive(item.links) ? "current" : "") : ""
-                  } ${
-                    item.href?.split("/")[1] == pathname.split("/")[1]
-                      ? "current"
-                      : ""
-                  }`}
-                >
-                  {item.title ? (
-                    <>
-                      <a href="#">{item.title}</a>
-                      <ul>
-                        {item.links.map((link, linkIndex) => (
-                          <li
-                            key={linkIndex}
-                            className={
-                              link.href.split("/")[1] == pathname.split("/")[1]
-                                ? "current"
-                                : ""
-                            }
-                          >
-                            <Link href={link.href}>{link.text}</Link>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="dropdown2-btn" onClick={handleActive2} />
-                    </>
-                  ) : (
-                    <Link href={item.href}>{item.text}</Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div className="dropdown2-btn" onClick={handleActive1} />
-          </li>
-          <li className={"contact" == pathname.split("/")[1] ? "current" : ""}>
-            <Link href={`/contact`}>Contact</Link>
-          </li>
-        </ul>
-      </div>
+                        {child.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

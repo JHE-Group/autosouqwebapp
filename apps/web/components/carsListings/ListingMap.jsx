@@ -1,5 +1,8 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { formatPrice } from "@/lib/format";
+import ListingSignals from "@/components/common/ListingSignals";
+import WhatsAppButton from "@/components/common/WhatsAppButton";
 import {
   GoogleMap,
   OverlayView,
@@ -7,8 +10,7 @@ import {
   InfoWindow,
 } from "@react-google-maps/api";
 import { useMemo, useState } from "react";
-import Link from "next/link";
-
+import { Link } from "@/i18n/navigation";
 import { cars } from "@/data/cars";
 
 // Muscat — the map centres here until a listing carries coordinates.
@@ -193,6 +195,7 @@ const containerStyle = {
   height: "100%",
 };
 export default function ListingMap({ listings }) {
+  const t = useTranslations("browse.filter");
   const [getLocation, setLocation] = useState(null);
 
   const { isLoaded } = useLoadScript({
@@ -241,12 +244,20 @@ export default function ListingMap({ listings }) {
   return (
     <>
       {!isLoaded ? (
-        <p>Loading...</p>
+        // Was a bare "Loading..." on a white panel, which on a slow connection
+        // is indistinguishable from a map that failed. A shaped placeholder at
+        // the map's own dimensions holds the layout and says what is coming.
+        <div className="asq-map-skeleton" role="status" aria-live="polite">
+          <span className="asq-map-skeleton__label">
+            {t("loadingMap")}
+          </span>
+        </div>
       ) : (
         <GoogleMap
           mapContainerStyle={containerStyle}
           center={center}
-          zoom={4}
+          // 4 is continent scale; Oman's cities need city scale.
+          zoom={11}
           options={option}
         >
           {markers.map((marker, i) => (
@@ -273,7 +284,13 @@ export default function ListingMap({ listings }) {
                 <div className="inner-box">
                   <div className="image-box">
                     <figure className="image">
-                      <img src={getLocation.imgSrc} alt="" />
+                      {/* eslint-disable-next-line @next/next/no-img-element --
+                          rendered inside a Google Maps InfoWindow portal,
+                          which next/image cannot measure. */}
+                      <img
+                        src={getLocation.imgSrc}
+                        alt={getLocation.imageAlt || getLocation.title || ""}
+                      />
                     </figure>
                   </div>
                   <div className="content">
@@ -286,7 +303,7 @@ export default function ListingMap({ listings }) {
                     <div className="flex flex-wrap gap-8">
                       <p className="location">
                         <i className="icon-autodeal-km1" />
-                        {getLocation.km?.toLocaleString("en-US") ?? "—"} kms
+                        {getLocation.km?.toLocaleString("en-US") ?? "—"} km
                       </p>
                       <p className="location">
                         <i className="icon-autodeal-diesel" />
@@ -300,6 +317,12 @@ export default function ListingMap({ listings }) {
                     <h3>
                       <a>{formatPrice(getLocation.price, getLocation.currency)}</a>
                     </h3>
+                    {/* Spec disclosure is shown "always" — a map bubble is a
+                        card like any other. */}
+                    <ListingSignals car={getLocation} className="mt-2" />
+                    <div className="mt-2">
+                      <WhatsAppButton car={getLocation} />
+                    </div>
                   </div>
                 </div>
               </div>

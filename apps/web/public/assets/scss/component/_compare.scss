@@ -1,3 +1,5 @@
+@use '../abstracts/' as *;
+
 #offcanvasBottom {
     width: 1310px;
     bottom: 20px;
@@ -14,8 +16,8 @@
                 font-weight: 500;
                 line-height: 22.4px;
                 padding: 14px 86px;
-                background: #FF7101;
-                color: #fff;
+                background: $color-3;
+                color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
                 border-radius: 14px;
                 border: none;
                 -webkit-transition: all .3s;
@@ -23,12 +25,16 @@
                 -o-transition: all .3s;
                 transition: all .3s;
                 &:hover {
-                    background: #24272C;
+                    background: $brand-indigo;
+                    color: $color-1; // fill goes dark on hover, so the label flips back to white (14.12:1)
                 }
             }
+            // Physical left/right below became logical inline-start/end when
+            // /ar shipped with dir="rtl": at 1310px wide this panel is the
+            // widest fixed element on the site, and every mirrored margin in it
+            // was visible as a shunted row.
             & .compare-thumb-main {
-                margin-left: 0;
-                margin-right: 0;
+                margin-inline: 0;
                 display: flex;
                 align-items: center;
                 flex-wrap: wrap;
@@ -43,7 +49,7 @@
                         object-fit: cover;
                         border-radius: 12px;
                         width: 106px;
-                        margin-right: 21px;
+                        margin-inline-end: 21px;
                         flex-shrink: 0;
                     }
                     & .compare-listing-remove {
@@ -54,19 +60,19 @@
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        color: #24272C;
+                        color: $color-2;
                         font-size: 11px;
                         padding: 0;
                         background: #fff;
-                        margin-right: 20px;
+                        margin-inline-end: 20px;
                         flex-shrink: 0;
                         -webkit-transition: all .3s;
                         -moz-transition: all .3s;
                         -o-transition: all .3s;
                         transition: all .3s;
                         &:hover {
-                            background: #FF7101;
-                            border-color: #FF7101;
+                            background: $color-3;
+                            border-color: $color-3;
                             & * {
                                 stroke: #fff;
                             }
@@ -109,11 +115,11 @@
 .wrap-single-compare {
     & .header-compare {
         display: flex;
-        margin-left: -30px;
+        margin-inline-start: -30px;
         margin-bottom: 31px;
         & .box-car-list {
             width: calc(33.33333% - 30px);
-            margin-left: 30px;
+            margin-inline-start: 30px;
         }
     }
     & .filter-compare {
@@ -127,7 +133,7 @@
             font-size: 16px;
             font-weight: 500;
             line-height: 22.4px;
-            color: #24272C;
+            color: $color-2;
             border: 1px solid #EDEDED;
             padding: 13px;
             border-radius: 999px;
@@ -138,9 +144,9 @@
             text-align: center;
             &.active,
             &:hover {
-                background: #FF7101;
-                border-color: #FF7101;
-                color: #fff;
+                background: $color-3;
+                border-color: $color-3;
+                color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
             }
         }
     }
@@ -153,7 +159,7 @@
             font-size: 24px;
             font-weight: 500;
             line-height: 30.24px;
-            color: #24272C;
+            color: $color-2;
             margin-bottom: 20px;
         }
         & .title-tr {
@@ -161,7 +167,7 @@
             font-size: 16px;
             font-weight: 500;
             line-height: 22.4px;
-            color: #24272C;
+            color: $color-2;
             padding: 10px 20px;
             border-radius: 10px;
             margin-bottom: 8px;
@@ -177,11 +183,11 @@
             & li {
                 flex: 1;
                 text-align: center;
-                font-family: 'Inter';
+                font-family: var(--font-inter), sans-serif;
                 font-size: 14px;
                 font-weight: 400;
                 line-height: 19.6px;
-                color: #24272C;
+                color: $color-2;
             }
         }
     }

@@ -43,7 +43,7 @@ export default function Categories2({ parentClass = "tf-section2" }) {
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
-                Popular Brands
+                Browse by brand
               </h2>
             </div>
           </div>
@@ -70,9 +70,6 @@ export default function Categories2({ parentClass = "tf-section2" }) {
                       <div className="fs-16 fw-6 title text-color-2 font-2">
                         {partner.title}
                       </div>
-                      <span className="sub-title fs-12 fw-4 font-2">
-                        {partner.subTitle}
-                      </span>
                     </div>
                   </a>
                 </SwiperSlide>

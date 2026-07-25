@@ -1,7 +1,9 @@
 "use client";
 import { formatPrice } from "@/lib/format";
 import { carListings } from "@/data/cars";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import ListingSignals from "@/components/common/ListingSignals";
+import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
@@ -135,14 +137,15 @@ export default function CarSlider() {
                               pagination={{ el: `.spd${i}`, clickable: true }}
                               className="swiper-container carousel-2 img-style"
                             >
-                              {elm.images.map((elm2, i2) => (
+                              {(elm.images ?? []).map((elm2, i2) => (
                                 <SwiperSlide key={i2} className="swiper-slide">
                                   <Image
                                     className="lazyload"
-                                    alt="image"
+                                    alt={elm2.alt || elm.title || ""}
                                     src={elm2.src}
                                     width={615}
                                     height={462}
+                                    sizes="(max-width: 767px) 100vw, 33vw"
                                   />
                                 </SwiperSlide>
                               ))}
@@ -154,47 +157,51 @@ export default function CarSlider() {
                               </div>
                             </Swiper>
                           </div>
+                          {/* Order: identity -> price -> disclosures -> wear -> place ->
+                              contact. Price sat under the spec row, and the spec disclosure
+                              NICHE.md says is shown "always" was absent from this card
+                              entirely, as was the one-tap WhatsApp contact. */}
                           <div className="content">
-                            <div className="text-address">
-                              <p className="text-color-3 font">{elm.type}</p>
-                            </div>
                             <h5 className="link-style-1">
-                              <Link href={`/listing-detail-v2/${elm.id}`}>
+                              <Link href={`/listing-detail-v1/${elm.id}`}>
                                 {elm.title}
                               </Link>
                             </h5>
-                            <div className="icon-box flex flex-wrap">
-                              <div className="icons flex-three">
-                                <i className="icon-autodeal-km1" />
-                                <span>{elm.km.toLocaleString("en-US")} kms</span>
-                              </div>
-                              <div className="icons flex-three">
-                                <i className="icon-autodeal-diesel" />
-                                <span>{elm.fuelType}</span>
-                              </div>
-                              <div className="icons flex-three">
-                                <i className="icon-autodeal-automatic" />
-                                <span>{elm.transmission}</span>
-                              </div>
-                            </div>
                             <div className="money fs-20 fw-5 lh-25 text-color-3">
                               {formatPrice(elm.price, elm.currency)}
                             </div>
-                            <div className="days-box flex justify-space align-center">
-                              <div className="img-author">
-                                <Image
-                                  className="lazyload"
-                                  alt="image"
-                                  src={elm.authorImage}
-                                  width={120}
-                                  height={120}
-                                />
-                                <span className="font text-color-2 fw-5">
-                                  {elm.authorName}
+                            <ListingSignals car={elm} className="mt-2" />
+                            <div className="icon-box flex flex-wrap mt-2">
+                              <div className="icons flex-three">
+                                <i className="icon-autodeal-km1" />
+                                <span>
+                                  {Number.isFinite(elm.km)
+                                    ? `${elm.km.toLocaleString("en-US")} km`
+                                    : "km not stated"}
                                 </span>
                               </div>
+                              {elm.transmission && (
+                                <div className="icons flex-three">
+                                  <i className="icon-autodeal-automatic" />
+                                  <span>{elm.transmission}</span>
+                                </div>
+                              )}
+                              {elm.location && (
+                                <div className="icons flex-three">
+                                  <i className="icon-autodeal-location" />
+                                  <span>{elm.location}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-2">
+                              <WhatsAppButton car={elm} />
+                            </div>
+                            {/* The author row was bound to authorName / authorImage,
+                                null on every record by deliberate policy, so it rendered
+                                an empty box on every card. */}
+                            <div className="days-box flex justify-space align-center">
                               <Link
-                                href={`/listing-detail-v2/${elm.id}`}
+                                href={`/listing-detail-v1/${elm.id}`}
                                 className="view-car"
                               >
                                 View car

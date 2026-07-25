@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 export default function Cta() {
   return (
     <section className="tf-section3">
@@ -12,7 +13,7 @@ export default function Cta() {
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
-                Search for your favorite car or sell your car on AutoDecar
+                Buy or sell an affordable used car on Autosouq
               </h2>
             </div>
           </div>
@@ -38,19 +39,18 @@ export default function Cta() {
                   </svg>
                 </div>
                 <h3>
-                  <a href="#">Are you looking for a car?</a>
+                  <Link href="/listing-grid">Are you looking for a car?</Link>
                 </h3>
               </div>
               <div className="content">
                 <p>
-                  Save time and effort as you no longer need to visit multiple
-                  stores to find the right car.
+                  Every car is between OMR 1,500 and 6,000, checked before it goes live, with GCC spec or import stated up front.
                 </p>
                 <div className="meta style">
-                  <a href="#" className="sc-button btn-svg btn-55">
+                  <Link href="/listing-grid" className="sc-button btn-svg btn-55">
                     <span>Find cars</span>
                     <i className="icon-autodeal-search" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -93,19 +93,18 @@ export default function Cta() {
                   </svg>
                 </div>
                 <h3>
-                  <a href="#">Do you want to sell a car?</a>
+                  <Link href="/add-listing">Do you want to sell a car?</Link>
                 </h3>
               </div>
               <div className="content">
                 <p>
-                  Find your perfect car match and sell your car quickly with our
-                  user-friendly online service.
+                  List your car with its real asking price and its spec stated honestly. Buyers reach you on WhatsApp.
                 </p>
                 <div className="meta style">
-                  <a href="#" className="sc-button btn-svg btn-55">
+                  <Link href="/add-listing" className="sc-button btn-svg btn-55">
                     <span>Sell a car</span>
                     <i className="icon-autodeal-next" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

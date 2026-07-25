@@ -5,6 +5,16 @@ import { useEffect, useRef, useState } from "react";
 import DropdownSelect from "./DropDownSelect";
 import Pricing from "./Pricing";
 const carTypes = ["All Car", "Used Car"];
+// Slider bounds. The template shipped a 40,000-100,000 track defaulting to
+// 60,000-90,000, which on the home page advertised "Price: 60,000 OMR -
+// 90,000 OMR" — 15x the ceiling on a site whose promise is that nothing above
+// OMR 6,000 exists. Price bounds mirror the band enforced in
+// apps/cms/.../listing/lifecycles.ts; km is a realistic used-car range.
+const PRICE_MIN = 1000;
+const PRICE_MAX = 6000;
+const KM_MIN = 0;
+const KM_MAX = 400000;
+
 export default function FlatFilter2({
   styleClass = "",
   justifyClass = "",
@@ -46,8 +56,8 @@ export default function FlatFilter2({
     setActiveIndex(index); // Update the active index when clicked
   };
 
-  const [priceRange, setPriceRange] = useState([60000, 90000]);
-  const [km, setkm] = useState([60000, 90000]);
+  const [priceRange, setPriceRange] = useState([PRICE_MIN, PRICE_MAX]);
+  const [km, setkm] = useState([KM_MIN, KM_MAX]);
   const [year, setyear] = useState([2016, 2025]);
   return (
     <>
@@ -215,13 +225,13 @@ export default function FlatFilter2({
                       <div className="caption flex-two">
                         <div>
                           <span className="fw-6">
-                            kms: {km[0]} kms - ${km[1]} kms
+                            kms: {km[0].toLocaleString("en-US")} - {km[1].toLocaleString("en-US")} km
                           </span>
                         </div>
                       </div>
                       <Pricing
-                        MIN={40000}
-                        MAX={100000}
+                        MIN={KM_MIN}
+                        MAX={KM_MAX}
                         setPriceRange={setkm}
                         priceRange={km}
                       />
@@ -238,8 +248,8 @@ export default function FlatFilter2({
                         </div>
                       </div>
                       <Pricing
-                        MIN={40000}
-                        MAX={100000}
+                        MIN={PRICE_MIN}
+                        MAX={PRICE_MAX}
                         setPriceRange={setPriceRange}
                         priceRange={priceRange}
                       />
@@ -251,7 +261,7 @@ export default function FlatFilter2({
                       <div className="caption flex-two">
                         <div>
                           <span className="fw-6">
-                            year: {year[0]} - ${year[1]}
+                            Year: {year[0]} - {year[1]}
                           </span>
                         </div>
                       </div>
@@ -304,7 +314,7 @@ export default function FlatFilter2({
                   <div className="box2 grid-5">
                     <div className="form-group wg-box4">
                       <div className="title fs-16 fw-5 lh-20 text-color-2">
-                        Request Price Label
+                        Comfort
                       </div>
                       <div className="tf-amenities bg-white">
                         <label className="flex-three">
@@ -435,31 +445,31 @@ export default function FlatFilter2({
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            Premium leather seats
+                            Working A/C
                           </span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
-                          <span className="text-color-2 font-2">Wood trim</span>
+                          <span className="text-color-2 font-2">Rear A/C vents</span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
-                          <span className="text-color-2 font-2">Mini bar</span>
+                          <span className="text-color-2 font-2">Power windows</span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            Rear seat ventilation system
+                            Bluetooth / USB
                           </span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            Large infotainment screen
+                            Touchscreen head unit
                           </span>
                         </label>
                       </div>
@@ -473,35 +483,35 @@ export default function FlatFilter2({
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            Chrome-plated grill
+                            No accident damage
                           </span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            Smart headlight cluster
+                            Working headlights
                           </span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            Premium wheels
+                            Alloy wheels
                           </span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            Body character lines
+                            Tyres with tread left
                           </span>
                         </label>
                         <label className="flex-three">
                           <input name="newsletter" type="checkbox" />
                           <span className="btn-checkbox" />
                           <span className="text-color-2 font-2">
-                            High-quality paint
+                            Original paint
                           </span>
                         </label>
                       </div>

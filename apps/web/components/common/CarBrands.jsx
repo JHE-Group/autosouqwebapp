@@ -92,7 +92,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       Sedan
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -120,7 +119,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       Hatchback
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -148,7 +146,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       SUV
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -176,7 +173,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       Pickup Truck
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -204,7 +200,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       Minivan
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -233,7 +228,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       Pickup Truck
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -261,7 +255,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       Minivan
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -289,7 +282,6 @@ export default function CarBrands() {
                     <div className="fs-16 fw-6 title text-color-2 font-2">
                       Crossover
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>
@@ -315,9 +307,8 @@ export default function CarBrands() {
                   </div>
                   <div className="content center">
                     <div className="fs-16 fw-6 title text-color-2 font-2">
-                      MVP
+                      MPV
                     </div>
-                    <span className="sub-title fs-12 fw-4 font-2">271 Car</span>
                   </div>
                 </a>
               </SwiperSlide>

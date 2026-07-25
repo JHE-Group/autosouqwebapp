@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from "@/lib/locale";
 /**
  * Bilingual labels and styling for the two niche-critical listing signals.
  *
@@ -24,7 +25,7 @@ const NOT_STATED = {
  * lose the disclosure entirely. Honest disclosure requires that disclosing is
  * never punished; only *withholding* is marked (amber).
  */
-export function importOriginLabel(origin, locale = "ar") {
+export function importOriginLabel(origin, locale = DEFAULT_LOCALE) {
   if (!origin || !IMPORT_ORIGIN[origin]) {
     return { text: NOT_STATED[locale] ?? NOT_STATED.ar, stated: false };
   }

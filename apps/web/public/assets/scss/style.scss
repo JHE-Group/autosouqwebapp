@@ -6,14 +6,27 @@
   * Author: Themesflat
   * Author URI: http://www.themesflat.com
 */
-@import "../css/font-awesome.css";
-@import "../css/animate.css";
-@import "../css/jquery.fancybox.min.css";
-@import "../css/magnific-popup.css";
+// Inter and Outfit are loaded by next/font in app/layout.js, which self-hosts
+// them and exposes --font-inter / --font-outfit. Do not re-add a Google Fonts
+// @import here: it sat after seven other @imports, which is invalid CSS, and
+// Next strips remote @import from the bundle regardless.
+// jquery.fancybox.min.css (13,735 B) and magnific-popup.css (10,298 B) used to
+// be imported here. Both style jQuery lightbox plugins that are not in
+// package.json and never loaded; all 69 Fancybox and 40 Magnific class tokens
+// were checked against app/, components/, lib/, data/, reducer/ and the SCSS —
+// zero references. Deleted along with the files themselves.
+//
+// nice-select.css and swiper-bundle.min.css look equally orphaned and are NOT:
+//   - components/common/DropDownSelect.jsx reproduces the Nice Select markup
+//     (.nice-select / .current / .list / .option / .selected / .open) in React,
+//     so nice-select.css is the only thing styling every dropdown on the site.
+//   - app/layout.js imports only swiper/css/effect-fade and swiper/css/grid,
+//     not the core sheet, so this file is the sole source of .swiper /
+//     .swiper-wrapper / .swiper-slide. Removing it breaks every carousel.
+//
 @import "../css/swiper-bundle.min.css";
 @import "../css/nice-select.css";
 @import "../../assets/fonts/style.css";
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Outfit:wght@100..900&display=swap");
 @import "../css/bootstrap.css";
 
 /**
@@ -148,7 +161,7 @@ section {
 -------------------------------------------------------------- */
 
 html {
-  margin-right: 0 !important;
+  margin-inline-end: 0 !important;
 }
 
 * {
@@ -158,9 +171,16 @@ html {
 }
 
 body {
-  font-family: $font-1;
-  font-size: 14px;
-  line-height: 19.6px;
+  // Inter, not Outfit. Outfit is the display face — it is drawn for headings and
+  // its lowercase is noticeably harder to read at body sizes on a low-DPI panel.
+  // The theme set the *whole document* in it at 14px/1.4, and only `p` opted back
+  // into Inter, so every label, link, table cell and form field on the site was
+  // running the display face at a size NICHE.md's audience — budget Android, in
+  // direct sun — can least afford. 16/26 is the reading default; headings below
+  // opt back into Outfit explicitly.
+  font-family: $font-2;
+  font-size: $fs-base;
+  line-height: $lh-base;
   font-weight: 400;
   color: $color-4;
   background-color: $color-1;
@@ -175,15 +195,15 @@ img {
 }
 
 .row {
-  margin-right: -15px;
-  margin-left: -15px;
+  margin-inline-end: -15px;
+  margin-inline-start: -15px;
 }
 
 ul,
 li {
   list-style-type: none;
   margin-bottom: 0;
-  padding-left: 0;
+  padding-inline-start: 0;
   list-style: none;
 }
 
@@ -192,7 +212,7 @@ li {
 }
 
 .right {
-  text-align: right;
+  text-align: end;
 }
 
 .container2 {
@@ -212,8 +232,8 @@ li {
 .container2,
 .container-fluid,
 .container {
-  padding-left: 15px;
-  padding-right: 15px;
+  padding-inline-start: 15px;
+  padding-inline-end: 15px;
 }
 
 // form //
@@ -234,15 +254,22 @@ input[type="tel"],
 input[type="color"] {
   border: 1px solid $color-6;
   font-family: $font-2;
-  outline: 0;
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
   box-shadow: none;
-  font-size: 14px;
+  // 16px is not a style choice here. iOS Safari zooms the viewport on focus for
+  // any field under 16px and does not zoom back out — the reader is left with a
+  // horizontally-scrolled page and has to pinch out to find the next field. At
+  // 14px that happened on every input on the site.
+  font-size: $fs-base;
   font-weight: 400;
-  line-height: 19.6px;
-  border-radius: 14px;
-  padding: 17px 44px 17px 18px;
+  line-height: $lh-sm;
+  border-radius: $radius-control;
+  // Logical, not physical. The 44px is the gutter for the trailing icon several
+  // fields carry; under dir="rtl" that icon moves to the other side, and with
+  // `padding: … 44px … 18px` the text ran straight underneath it in Arabic.
+  padding-block: 15px;
+  padding-inline: 18px 44px;
   width: 100%;
   background: $color-1;
   color: $color-4;
@@ -250,7 +277,10 @@ input[type="color"] {
 
 textarea:focus,
 input:focus {
-  border: 1px solid $color-3;
+  // Terracotta on white is 2.97:1 — under the 3:1 WCAG 1.4.11 requires of a
+  // control's only boundary. $color-3-text is the same hue at 4.99:1. The focus
+  // *ring* is separate and comes from the :focus-visible net in abstracts/_base.
+  border: 1px solid $color-3-text;
 }
 
 textarea::placeholder,
@@ -269,25 +299,38 @@ input[type="search"]::placeholder,
 input[type="tel"]::placeholder,
 input[type="color"]::placeholder {
   font-family: $font-2;
-  color: $color-4;
-  line-height: 19.6px;
-  font-size: 14px;
+  // $color-4 is the same colour as the typed value, so a filled field and an
+  // empty one looked identical at a glance. $color-7 is 6.11:1 on white — still
+  // comfortably AA, but visibly lighter than the value.
+  color: $color-7;
+  // Matched to the input above; a placeholder set 2px smaller than the text that
+  // replaces it makes the field jump as soon as you type.
+  line-height: $lh-sm;
+  font-size: $fs-base;
   font-weight: 400;
   @include transition3;
 }
 
 /* Placeholder color */
+// These sit after the ::placeholder rule above and were re-setting #8a8aa0,
+// which is 3.38:1 on white — under the 4.5:1 AA needs. They now carry the same
+// $color-7 (6.11:1) so the prefixed and standard selectors agree instead of the
+// prefixed one silently winning.
 ::-webkit-input-placeholder {
-  color: #8a8aa0;
+  color: $color-7;
 }
 
 :-moz-placeholder {
-  color: #8a8aa0;
+  color: $color-7;
 }
 
 ::-moz-placeholder {
-  color: #8a8aa0;
+  color: $color-7;
   opacity: 1;
+}
+
+:-ms-input-placeholder {
+  color: $color-7;
 }
 
 .error {
@@ -299,17 +342,12 @@ input[type="color"]::placeholder {
   transition: all ease 0.3s;
 }
 
-/* Since FF19 lowers the opacity of the placeholder by default */
-
-:-ms-input-placeholder {
-  color: #8a8aa0;
-}
 
 .text-p,
 p {
   font-weight: 400;
-  font-size: 14px;
-  line-height: 19.6px;
+  font-size: $fs-base;
+  line-height: $lh-base;
   color: $color-4;
   font-family: $font-2;
 }
@@ -323,45 +361,54 @@ h3,
 h4,
 h5,
 h6 {
+  // Now stated explicitly: body is Inter, so headings have to ask for the
+  // display face rather than inheriting it as they did when body was Outfit.
+  font-family: $font-1;
   font-weight: 600;
   text-rendering: optimizeLegibility;
   color: $color-2;
+  // Arabic sits taller than Latin in the same point size — the ascenders and the
+  // dots above ب/ت/ث need room the Latin metrics don't reserve. Every heading
+  // below ran a ratio between 1.20 and 1.26, tight enough that Arabic clipped.
+  // The $lh-* values restore that headroom; this guards anything overriding
+  // font-size without also overriding line-height.
+  text-wrap: balance;
 }
 
 h1 {
-  font-size: 40px;
-  line-height: 48px;
+  font-size: $fs-3xl;
+  line-height: $lh-3xl;
   font-weight: 600;
 }
 
 h2 {
-  font-size: 30px;
-  line-height: 37.8px;
+  font-size: $fs-2xl;
+  line-height: $lh-2xl;
   font-weight: 500;
 }
 
 h3 {
-  font-size: 24px;
-  line-height: 30.24px;
+  font-size: $fs-xl;
+  line-height: $lh-xl;
   font-weight: 500;
 }
 
 h4 {
-  font-size: 20px;
-  line-height: 25.2px;
+  font-size: $fs-lg;
+  line-height: $lh-lg;
   font-weight: 500;
 }
 
 h5 {
-  font-size: 18px;
-  line-height: 22.68px;
+  font-size: $fs-md;
+  line-height: $lh-md;
   font-weight: 500;
 }
 
 h6 {
-  font-size: 16px;
+  font-size: $fs-base;
   font-weight: 400;
-  line-height: 22.4px;
+  line-height: $lh-base;
 }
 
 .title-16 {
@@ -734,7 +781,7 @@ button {
           img {
             width: 60px;
             height: 60px;
-            margin-right: 12px;
+            margin-inline-end: 12px;
           }
         }
       }
@@ -760,8 +807,8 @@ button {
 
 .mt--5 {
   margin-top: -8.5em;
-  margin-left: 51px;
-  margin-right: 51px;
+  margin-inline-start: 51px;
+  margin-inline-end: 51px;
 }
 
 .mt--3 {
@@ -829,7 +876,7 @@ button {
 }
 
 .bg-2 {
-  background-color: $color-2;
+  background-color: $brand-indigo;
 }
 
 .bg-white {
@@ -875,7 +922,6 @@ a {
   &:hover {
     @include transition3;
     text-decoration: none;
-    outline: 0;
     color: unset;
   }
 }
@@ -902,9 +948,8 @@ a {
 
   &:focus,
   &:hover {
-    color: $color-3;
+    color: $color-3-text;
     text-decoration: none;
-    outline: 0;
     @include transition3;
   }
 }
@@ -918,7 +963,6 @@ a {
   &:hover {
     color: $color-2;
     text-decoration: none;
-    outline: 0;
     @include transition3;
   }
 }
@@ -930,6 +974,10 @@ a {
 
   &:focus,
   &:hover {
+    // stays $color-3, NOT $color-3-text: .link-style-3 only renders in the home
+    // hero filter strips over the dark hero image (its resting colour is
+    // $color-1 white, and its siblings carry .text-color-1). Terracotta reads on
+    // dark; #BD4B2B would not.
     color: $color-3;
     text-decoration: none;
     @include transition3;
@@ -958,7 +1006,6 @@ a {
   &:hover {
     color: $color-1;
     text-decoration: none;
-    outline: 0;
     @include transition3;
   }
 }
@@ -972,7 +1019,7 @@ a {
 }
 
 .text-color-3 {
-  color: $color-3 !important;
+  color: $color-3-text !important;
 }
 
 .text-color-4 {
@@ -984,21 +1031,21 @@ path {
 }
 
 .form-wg {
-  margin-left: -30px;
+  margin-inline-start: -30px;
 
   .wg-box {
     width: calc(50% - 30px) !important;
-    margin-left: 30px;
+    margin-inline-start: 30px;
   }
 
   .wg-box2 {
     width: calc(33.333% - 30px) !important;
-    margin-left: 30px;
+    margin-inline-start: 30px;
   }
 
   .wg-box3 {
     width: calc(25% - 30px);
-    margin-left: 30px;
+    margin-inline-start: 30px;
   }
 }
 
@@ -1025,11 +1072,12 @@ path {
       background: $color-3;
     }
 
-    &.search-icon::after {
-      content: "\f002";
-      font-family: "Font Awesome 5 Pro";
-      color: $color-1;
-    }
+    // The Font Awesome magnifier pinned here has been removed. font-awesome.css
+    // is never imported — style.scss loads bootstrap, swiper, nice-select and
+    // the `autodeal` icon font, not that one — so `\f002` resolved to a
+    // private-use codepoint in Inter and drew a blank box. The element already
+    // carries `icon-autodeal-plus` from the loaded font, so there was a real
+    // glyph underneath the broken one the whole time.
   }
 }
 
@@ -1080,7 +1128,7 @@ path {
 }
 
 #header.style-absolute.is-fixed {
-  background: $color-2;
+  background: $brand-indigo;
 }
 
 /* Pagination
@@ -1110,41 +1158,68 @@ path {
       margin: -3px 3.5px;
 
       &:last-child {
-        margin-right: 0;
+        margin-inline-end: 0;
       }
 
+      // These are <button> elements now, not <a>. The template's markup used
+      // hrefless anchors, which are not focusable — the whole pager was
+      // keyboard-unreachable. The resets below are what a button needs and an
+      // anchor didn't: the UA background, border-radius and font are all
+      // inherited rather than assumed.
       .page-numbers {
-        display: inline-block;
+        appearance: none;
+        background: none;
+        font-family: inherit;
+        // Centring is flex now. `line-height: 44px` only centres a line of text;
+        // it left the inline SVG chevrons sitting off-centre in the prev/next
+        // buttons, which is why the old rule needed a separate 42px override.
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-size: 16px;
         font-weight: 600;
         color: $color-2;
         text-align: center;
         width: 44px;
         height: 44px;
-        line-height: 44px;
         border-radius: 10px;
-        object-fit: cover;
         position: relative;
         @include transition3;
-        overflow: hidden;
         border: 1px solid $color-6;
+        cursor: pointer;
 
         &:hover,
         &.current {
           background-color: $color-3;
-          color: #fff;
+          color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
           border-color: $color-3;
         }
 
-        &.style {
-          line-height: 42px;
-
-          i {
-            font-size: 22px;
-            font-weight: 400;
-            vertical-align: middle;
-          }
+        // Prev on page 1 and next on the last page. Previously these stayed
+        // fully styled and swallowed the click, so the pager looked like it had
+        // somewhere to go and then didn't move.
+        &:disabled {
+          color: $color-7;
+          border-color: $color-6;
+          background: none;
+          cursor: default;
+          opacity: 0.55;
         }
+
+        &.dot {
+          border-color: transparent;
+          cursor: default;
+        }
+      }
+
+      // "Previous" points towards the start of the line — which is the right
+      // edge in Arabic. Mirrored rather than swapped so there is one icon.
+      .pagination-chevron {
+        flex-shrink: 0;
+      }
+
+      [dir="rtl"] & .pagination-chevron {
+        transform: scaleX(-1);
       }
     }
   }
@@ -1273,7 +1348,11 @@ path {
   background-repeat: no-repeat;
   background-position: center center;
   background-size: contain;
-  content: url(../../assets/images/logo/preload.png);
+  // Brand mark, not the AutoDeal template graphic. Also switched from the
+  // ../../assets/ relative path (which does not resolve once Next emits the
+  // CSS under /_next/static/css/) to the root-absolute /assets/ form the rest
+  // of this stylesheet already uses. SVG so it costs ~3KB and scales.
+  content: url(/assets/images/brand/icon-terracotta.svg);
   animation: jackInTheBox 1.2s linear infinite alternate;
 }
 
@@ -1358,8 +1437,8 @@ body {
   background-color: $color-1;
   border-radius: 16px;
   margin-top: -16.3em;
-  margin-left: -30px;
-  margin-right: -30px;
+  margin-inline-start: -30px;
+  margin-inline-end: -30px;
   z-index: 3;
   position: relative;
   padding: 30px 30px 0px 30px;
@@ -1384,13 +1463,13 @@ body {
   i {
     font-size: 8px;
     font-weight: 800;
-    margin-left: 6px;
+    margin-inline-start: 6px;
   }
 
   &:hover {
     border: 1px solid $color-3;
     background-color: $color-3;
-    color: $color-1;
+    color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   }
 }
 
@@ -1411,16 +1490,22 @@ body {
   @include transition3;
   z-index: 10;
 
+  // Chevron drawn from borders rather than the Font Awesome `\f078` that was
+  // here — that sheet is never imported, so this was a blank box on every
+  // select on the site. Deliberately still physical-ish in one respect: a
+  // downward chevron points down in both scripts, so only its *inline
+  // position* flips, not its rotation.
   &::after {
-    font-family: "Font Awesome 5 Pro";
-    font-size: 10px;
-    font-weight: 500;
-    content: "\f078";
+    content: "";
     position: absolute;
-    color: #fff;
-    right: 0px;
-    top: 40%;
-    @include transitionY;
+    inset-inline-end: 2px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-70%) rotate(45deg);
+    @include transition3;
   }
 
   ul {
@@ -1459,7 +1544,7 @@ body {
   .country {
     position: absolute;
     z-index: 99;
-    margin-left: 13px;
+    margin-inline-start: 13px;
     margin-top: 5px;
     color: #818089;
   }
@@ -1538,7 +1623,7 @@ body {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   text-align: center;
-  color: $color-1;
+  color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
   z-index: 100;
   background: $color-3;
   border: 2px solid $color-1;
@@ -1557,7 +1642,7 @@ body {
     &::after {
       -ms-box-shadow: 0 0 0 50px $color-9;
       -o-box-shadow: 0 0px 0 50px $color-9;
-      box-shadow: 0px 0px 0px 20px rgba(255 113 1 / 20%);
+      box-shadow: 0px 0px 0px 20px rgba(233 116 81 / 20%);
     }
   }
 }
@@ -1578,7 +1663,7 @@ body {
   transform: translate(-50%, -50%);
   -ms-box-shadow: 0 0 0 50px $bg-color4;
   -o-box-shadow: 0 0px 0 50px $bg-color4;
-  box-shadow: 0px 0px 0px 20px rgba(255 113 1 / 20%);
+  box-shadow: 0px 0px 0px 20px rgba(233 116 81 / 20%);
   -webkit-animation: ripple 2s infinite;
   animation: ripple 2s infinite;
 }
@@ -1621,7 +1706,7 @@ body {
 }
 
 #map .infoBox {
-  margin-left: 170px;
+  margin-inline-start: 170px;
   margin-bottom: -100px;
 }
 
@@ -1648,7 +1733,7 @@ body {
 
 .map-listing-item .infoBox-close:hover {
   font-weight: 700;
-  color: $color-3;
+  color: $color-3-text;
 }
 
 .map-listing-item .inner-box {
@@ -1677,7 +1762,7 @@ body {
 .map-listing-item .title {
   color: #ffffff;
   opacity: 0.6;
-  margin-left: 3px;
+  margin-inline-start: 3px;
 }
 
 .map-listing-item h4 {
@@ -1691,7 +1776,7 @@ body {
 }
 
 .map-listing-item h4 a:hover {
-  color: $color-3;
+  color: $color-3-text;
 }
 
 .map-listing-item h3 {
@@ -1699,7 +1784,7 @@ body {
   font-weight: 700;
   font-size: 20px;
   line-height: 28px;
-  color: $color-3;
+  color: $color-3-text;
 }
 
 .map-listing-item {
@@ -1711,7 +1796,7 @@ body {
 
   .location {
     i {
-      margin-right: 5px;
+      margin-inline-end: 5px;
       font-size: 12px;
     }
   }
@@ -1745,8 +1830,8 @@ body {
   line-height: 22px;
   color: #696969;
   font-weight: 400;
-  padding-left: 25px;
-  margin-right: 20px;
+  padding-inline-start: 25px;
+  margin-inline-end: 20px;
 }
 
 .map-listing-item .job-info li .icon {
@@ -1969,7 +2054,7 @@ body {
   top: 0;
   left: 0;
   z-index: 1;
-  margin-right: 0px;
+  margin-inline-end: 0px;
   margin-bottom: 0px;
 }
 
@@ -1986,7 +2071,7 @@ body {
   top: 0;
   left: 0;
   z-index: 1;
-  margin-right: 0px;
+  margin-inline-end: 0px;
   margin-bottom: 0px;
 }
 
@@ -1997,14 +2082,26 @@ body {
   background-color: $color-1;
   border-radius: 6px;
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-right: 10px;
+  // Physical margin flipped the gap to the wrong side of the box in Arabic.
+  margin-inline-end: 10px;
+  flex-shrink: 0;
 }
 
-.btn-checkbox:after {
-  content: "\f00c";
-  font-family: "Font Awesome 5 Pro";
-  color: $color-1;
+// The tick, drawn from two borders. It was `\f00c` in Font Awesome, a sheet
+// this project never imports — so the checked state was distinguished *only*
+// by the box turning terracotta. That is colour as the sole carrier of state
+// (WCAG 1.4.1) and it read as a rendering fault besides.
+.btn-checkbox::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  // Ink, not white. White on terracotta is 2.97:1 — under the 3:1 WCAG 1.4.11
+  // requires of a graphic that conveys state. Ink on terracotta is 5.50:1.
+  border-right: 2px solid $color-on-accent;
+  border-bottom: 2px solid $color-on-accent;
+  transform: translateY(-1px) rotate(45deg);
   display: none;
 }
 
@@ -2013,7 +2110,7 @@ label input:checked ~ .btn-checkbox {
   border: 1px solid $color-3;
 }
 
-label input:checked ~ .btn-checkbox:after {
+label input:checked ~ .btn-checkbox::after {
   display: block;
 }
 
@@ -2058,7 +2155,7 @@ fieldset {
 [type="radio"]:checked + label,
 [type="radio"]:not(:checked) + label {
   position: relative;
-  padding-left: 28px;
+  padding-inline-start: 28px;
   cursor: pointer;
   line-height: 20px;
   display: inline-block;
@@ -2309,7 +2406,7 @@ body {
 }
 
 .rc-slider .rc-slider-handle {
-  border: solid 2px #ff7101;
+  border: solid 2px $color-3;
   opacity: 1 !important;
   background-color: #fff !important;
   width: 16px;
@@ -2318,17 +2415,17 @@ body {
 }
 
 .rc-slider .rc-slider-handle:hover {
-  border-color: #ff7101;
+  border-color: $color-3;
 }
 
 .rc-slider .rc-slider-handle-dragging {
-  border-color: #ff7101 !important;
+  border-color: $color-3 !important;
   box-shadow: none !important;
 }
 
 .rc-slider .rc-slider-track,
 .rc-slider .rc-slider-tracks {
-  background-color: #ff7101;
+  background-color: $color-3;
 }
 .nice-select {
   span.current {
@@ -2367,7 +2464,7 @@ body {
     margin-top: 0px;
   }
   .listing-infor-box {
-    padding-left: 5px;
+    padding-inline-start: 5px;
   }
   .action-icon.style-1 .icon {
     width: 45px;
@@ -2387,5 +2484,45 @@ body {
 @media (max-width: 991.98px) {
   body:has(.autosouq-sticky-contact) #pagee {
     padding-bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Bootstrap directional utilities under dir="rtl"
+--------------------------------------------------------------
+   public/assets/css/bootstrap.css is the LTR build. Bootstrap 5 names these
+   utilities logically (`start`/`end`) but compiles them to physical `left` /
+   `right` / `text-align: left` — the flip lives in a separate bootstrap.rtl.css
+   that this project does not ship. So on /ar, which renders dir="rtl", every one
+   of them pointed the wrong way.
+
+   Shipping the second 200 KB build to fix four classes is not a trade worth
+   making on a site built for metered data. These are the only direction-
+   sensitive Bootstrap utilities that appear anywhere in components/ or app/
+   (verified by grep over every m/p/text/float/border/rounded/offset/inset
+   variant); `px-*` and the rest are symmetric and need nothing.
+
+   If someone later reaches for `ms-*`, `me-*`, `float-start`, `offset-*` or the
+   `dropdown-menu-end` family, they need adding here too — or the whole thing
+   swapped for a locale-conditional bootstrap.rtl.css link in the layout.
+
+   `!important` matches Bootstrap's own; the attribute selector supplies the
+   extra specificity that decides it. */
+[dir="rtl"] {
+  .text-start {
+    text-align: right !important;
+  }
+
+  .text-end {
+    text-align: left !important;
+  }
+
+  .start-0 {
+    right: 0 !important;
+    left: auto !important;
+  }
+
+  .end-0 {
+    left: 0 !important;
+    right: auto !important;
   }
 }

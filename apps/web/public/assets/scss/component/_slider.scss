@@ -16,56 +16,82 @@
   content: "\e947";
 }
 
+
+// Carousel arrows, drawn from borders.
+//
+// These were Font Awesome `\f054` / `\f053`. font-awesome.css is never
+// imported (style.scss loads bootstrap, swiper, nice-select and the `autodeal`
+// icon font, not that sheet), so both arrows were blank boxes wherever a
+// carousel shipped them — /about-us renders two of them today.
+//
+// Positioning is logical so the pair swaps ends under dir="rtl"; the glyph is
+// mirrored too, because "next" means the direction the content flows.
+@mixin swiper-chevron($forward: true) {
+  content: "";
+  border: 0;
+  width: 9px;
+  height: 9px;
+  border-top: 1.8px solid $color-2;
+  border-right: 1.8px solid $color-2;
+  @if $forward {
+    transform: rotate(45deg);
+  } @else {
+    transform: rotate(-135deg);
+  }
+}
+
 .swiper-button-next {
   &.style-1 {
-    right: -10px;
+    inset-inline-end: -10px;
 
     &:after {
-      content: "\f054";
-      color: $color-2;
-      font-family: "Font Awesome 5 Pro";
+      @include swiper-chevron(true);
     }
   }
 
   &.style-2 {
-    right: -25px;
+    inset-inline-end: -25px;
 
     &:after {
-      content: "\f054";
-      color: $color-2;
-      font-family: "Font Awesome 5 Pro";
+      @include swiper-chevron(true);
     }
   }
 
   &.style-3 {
-    right: 20px;
+    inset-inline-end: 20px;
   }
+}
+
+[dir="rtl"] .swiper-button-next.style-1:after,
+[dir="rtl"] .swiper-button-next.style-2:after {
+  transform: rotate(-135deg);
 }
 
 .swiper-button-prev {
   &.style-1 {
-    left: -10px;
+    inset-inline-start: -10px;
 
     &:after {
-      content: "\f053";
-      color: $color-2;
-      font-family: "Font Awesome 5 Pro";
+      @include swiper-chevron(false);
     }
   }
 
   &.style-2 {
-    left: -25px;
+    inset-inline-start: -25px;
 
     &:after {
-      content: "\f053";
-      color: $color-2;
-      font-family: "Font Awesome 5 Pro";
+      @include swiper-chevron(false);
     }
   }
 
   &.style-3 {
-    left: 20px;
+    inset-inline-start: 20px;
   }
+}
+
+[dir="rtl"] .swiper-button-prev.style-1:after,
+[dir="rtl"] .swiper-button-prev.style-2:after {
+  transform: rotate(45deg);
 }
 
 .swiper-button-next,
@@ -359,7 +385,7 @@
 
         span,
         svg {
-          color: $color-3;
+          color: $color-3-text;
         }
       }
     }
@@ -663,7 +689,7 @@
       cursor: pointer;
       width: 115px;
       height: 40px;
-      background-color: #fff5e0;
+      background-color: $brand-cream;
       @include flex-center;
       @include transition3;
 
@@ -783,8 +809,8 @@
         &:hover,
         &.active {
           color: $color-1;
-          background-color: $color-2;
-          border: 1px solid $color-2;
+          background-color: $brand-indigo;
+          border: 1px solid $brand-indigo;
           position: relative;
 
           &::before {
@@ -822,7 +848,7 @@
 
           &:hover,
           &.active {
-            color: $color-1;
+            color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
             background-color: $color-3;
             border: 1px solid $color-3;
             position: relative;
@@ -940,8 +966,8 @@
           &:hover,
           &.active {
             color: $color-1;
-            background-color: $color-2;
-            border: 1px solid $color-2;
+            background-color: $brand-indigo;
+            border: 1px solid $brand-indigo;
           }
         }
       }
@@ -1023,7 +1049,7 @@
         &.active {
           background-color: $color-3 !important;
           border: 1px solid $color-3;
-          color: $color-1;
+          color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
         }
       }
     }
@@ -1091,7 +1117,7 @@
       }
 
       &:hover {
-        color: $color-3 !important;
+        color: $color-3-text !important;
       }
     }
   }
@@ -1304,11 +1330,11 @@
   @include transition3;
 
   svg {
-    color: $color-3;
+    color: $color-3-text;
   }
   i {
     rotate: 45deg;
-    color: $color-3;
+    color: $color-3-text;
     display: none;
   }
   &.active {
@@ -1514,7 +1540,11 @@
 .fade-item.fade-item-3 {
   transition-delay: 0.3s;
 }
-.slider.home2 video {
+// Was `.slider.home2 video`. The 103 MB autoplaying background video is gone;
+// the hero is a static <Image className="hero-media"> now. `video` is kept in
+// the selector list only so the rule still applies if the markup is reverted.
+.slider.home2 video,
+.slider.home2 .hero-media {
   width: 100%;
   height: 900px;
   object-fit: cover;
@@ -1584,4 +1614,576 @@
 }
 
 @media only screen and (max-width: 767px) {
+}
+
+
+/* ==========================================================================
+   Home page
+   --------------------------------------------------------------------------
+   The hero, the vertical rhythm and the four homepage sections.
+
+   These live in _slider.scss because the hero is a slider component in the
+   theme's file layout and this is the partial the homepage owns; the page-level
+   rhythm (`.hp-section`, `.hp-band`) would sit more naturally in
+   `component/_section.scss`, which belongs to the design-system pass. Moving it
+   there is a lift-and-shift with no rule changes — see the report.
+
+   Colour, all computed against WCAG 2.1:
+     white  on the indigo scrim   9.2:1 worst case (over a white photo region)
+     cream  on the indigo scrim   7.3:1 worst case
+     ink    on terracotta         5.50:1   (white on terracotta is 2.97:1 - never)
+     ink    on cream             12.93:1
+     $color-7 on cream            4.84:1
+     indigo on cream             11.19:1
+     $color-3-text on white       4.99:1
+   ========================================================================== */
+
+// One vertical unit for the whole page. Sections on the same surface sit one
+// unit apart; a change of surface gets a unit on each side, so the background
+// change is the thing that reads as the bigger break.
+$hp-space: clamp(3.5rem, 7vw, 6.5rem);
+
+.hp-section {
+  padding-block: $hp-space;
+}
+
+// Same surface, so half the separation: the previous section's bottom padding
+// is the whole gap.
+.hp-section + .hp-section {
+  padding-block-start: 0;
+}
+
+.hp-band {
+  padding-block: $hp-space;
+}
+
+.hp-band--cream {
+  background-color: $brand-cream;
+}
+
+/* --- section furniture --------------------------------------------------- */
+
+.hp-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: clamp(1.75rem, 3.5vw, 2.5rem);
+}
+
+.hp-section-title {
+  font-family: $font-1;
+  font-weight: 600;
+  font-size: clamp(1.625rem, 3.4vw, 2.375rem);
+  line-height: 1.15;
+  color: $color-2;
+  margin-bottom: 0;
+}
+
+.hp-section-lede {
+  font-family: $font-2;
+  font-size: 16px;
+  line-height: 1.6;
+  color: $color-7;
+  max-width: 58ch;
+  margin-block: 10px 0;
+}
+
+.hp-link {
+  font-family: $font-2;
+  font-weight: 600;
+  font-size: 15px;
+  color: $color-3-text; // 4.99:1 on white
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover,
+  &:focus-visible {
+    color: $color-2;
+  }
+}
+
+// #BD4B2B on cream is only 3.96:1, so the accent text step is not available on
+// the cream band. Indigo on cream is 11.19:1.
+.hp-band--cream .hp-link {
+  color: $brand-indigo;
+}
+
+.hp-link--btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 20px;
+  border: 1px solid $color-6;
+  border-radius: 14px;
+  color: $color-2;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    border-color: $color-3;
+    background-color: $color-3;
+    color: $color-on-accent; // ink on terracotta, 5.50:1
+  }
+}
+
+.hp-empty {
+  font-family: $font-2;
+  font-size: 16px;
+  line-height: 1.6;
+  color: $color-7;
+  border: 1px dashed $color-8;
+  border-radius: 14px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  margin-bottom: 0;
+  text-align: center;
+}
+
+/* --- hero ---------------------------------------------------------------- */
+
+// Stops of the scrim, shared by both directions. Kept in a mixin so the LTR
+// and RTL gradients cannot drift apart.
+// The header (`main-header.style2`) is transparent and absolutely positioned
+// over this section, and its cream wordmark, nav and outlined CTA have no
+// surface of their own. This band is what they sit on: cream on 0.62 indigo
+// over the brightest part of this photograph is 5.91:1. It fades out over
+// 170px so it costs the picture almost nothing.
+$hp-hero-scrim-top: linear-gradient(
+  to bottom,
+  rgba($brand-indigo, 0.62) 0,
+  rgba($brand-indigo, 0) 170px
+);
+
+@mixin hp-hero-scrim-x($to) {
+  background-image:
+    $hp-hero-scrim-top,
+    linear-gradient(
+      to $to,
+      rgba($brand-indigo, 0.94) 0%,
+      rgba($brand-indigo, 0.88) 42%,
+      rgba($brand-indigo, 0.45) 70%,
+      rgba($brand-indigo, 0.1) 100%
+    );
+}
+
+.hp-hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  min-height: clamp(30rem, 76vh, 42rem);
+  // Painted before the photo decodes, so the header's cream logo and the
+  // headline are never light-on-white for a frame.
+  background-color: $brand-indigo;
+}
+
+.hp-hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.hp-hero__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  // The car sits right of centre in the frame. On a narrow viewport `cover`
+  // crops the sides, and centring would cut it in half.
+  object-position: 62% center;
+}
+
+// Mobile: no horizontal room for a side scrim, so it runs bottom-up and the
+// panel is bottom-anchored. 0.90 alpha at the text is >=10:1 for white even
+// over the brightest part of the photograph.
+.hp-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    $hp-hero-scrim-top,
+    linear-gradient(
+      to top,
+      rgba($brand-indigo, 0.96) 0%,
+      rgba($brand-indigo, 0.9) 45%,
+      rgba($brand-indigo, 0.55) 74%,
+      rgba($brand-indigo, 0.22) 100%
+    );
+}
+
+.hp-hero__container {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.hp-hero__panel {
+  // The top figure clears the transparent `main-header.style2`, which is
+  // absolutely positioned over this section.
+  padding-block: clamp(8rem, 21vw, 10.5rem) clamp(2.75rem, 6vw, 4.5rem);
+  max-width: 36rem;
+}
+
+.hp-hero__eyebrow {
+  font-family: $font-2;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $brand-cream;
+  margin-bottom: 14px;
+}
+
+.hp-hero__title {
+  font-family: $font-1;
+  font-weight: 600;
+  font-size: clamp(2rem, 6.2vw, 3.5rem);
+  line-height: 1.06;
+  color: $color-1;
+  margin-bottom: 16px;
+}
+
+.hp-hero__lede {
+  font-family: $font-2;
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  line-height: 1.6;
+  color: $brand-cream;
+  margin-bottom: 22px;
+  max-width: 34rem;
+}
+
+.hp-hero__facts {
+  list-style: none;
+  margin: 0 0 30px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: $font-2;
+    font-size: 15px;
+    font-weight: 500;
+    color: $color-1;
+
+    // Decorative marker, direction-agnostic: a flex gap, not a float or a
+    // ::before margin that would need flipping in RTL.
+    &::before {
+      content: "";
+      flex: 0 0 auto;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: $color-3;
+    }
+  }
+}
+
+.hp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hp-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding-inline: 28px;
+  border-radius: 14px;
+  border: 2px solid $color-3;
+  background-color: $color-3;
+  color: $color-on-accent; // ink on terracotta, 5.50:1
+  font-family: $font-1;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  @include transition3;
+
+  &:hover,
+  &:focus-visible {
+    border-color: $brand-terracotta-dark;
+    background-color: $brand-terracotta-dark;
+    color: $color-1; // white on #C9502E is 4.50:1
+  }
+}
+
+.hp-hero__cta--ghost {
+  background-color: transparent;
+  border-color: rgba($brand-cream, 0.7);
+  color: $brand-cream;
+
+  &:hover,
+  &:focus-visible {
+    background-color: $brand-cream;
+    border-color: $brand-cream;
+    color: $brand-indigo; // 11.19:1
+  }
+}
+
+@media only screen and (min-width: 992px) {
+  .hp-hero {
+    align-items: center;
+  }
+
+  .hp-hero::after {
+    @include hp-hero-scrim-x(right);
+  }
+
+  [dir="rtl"] .hp-hero::after {
+    @include hp-hero-scrim-x(left);
+  }
+
+  // The photograph is composed for a left-hand text column. Until an RTL crop
+  // exists, keep the car out from under the Arabic panel by pulling the crop
+  // the other way.
+  [dir="rtl"] .hp-hero__img {
+    object-position: 38% center;
+  }
+
+  .hp-hero__panel {
+    padding-block: clamp(9rem, 12vw, 11rem) clamp(4rem, 8vw, 6rem);
+  }
+}
+
+/* --- the four promises --------------------------------------------------- */
+
+.hp-promises__head {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.hp-promises__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(1.75rem, 3vw, 2.25rem);
+  grid-template-columns: 1fr;
+}
+
+.hp-promise {
+  // The rule is the spine: four segments of one line across the band.
+  border-top: 3px solid $brand-indigo;
+  padding-top: 20px;
+}
+
+.hp-promise__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background-color: $color-3;
+  color: $color-on-accent; // ink on terracotta, 5.50:1
+  font-family: $font-1;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.hp-promise__title {
+  font-family: $font-1;
+  font-size: clamp(1.0625rem, 1.8vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.3;
+  color: $color-2; // 12.93:1 on cream
+  margin-block: 16px 8px;
+}
+
+.hp-promise__body {
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: 1.65;
+  color: $color-7; // 4.84:1 on cream
+  margin-bottom: 0;
+}
+
+.hp-promises__foot {
+  margin-block: clamp(2rem, 4vw, 2.75rem) 0;
+}
+
+@media only screen and (min-width: 600px) {
+  .hp-promises__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media only screen and (min-width: 1100px) {
+  .hp-promises__list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* --- listings ------------------------------------------------------------ */
+
+// One column below 520px so a card is never narrower than its own photo needs
+// on a 360px phone; three at most, so the tiles never get so small that the
+// photograph stops being usable condition evidence. Six cards fill 1, 2 and 3
+// columns exactly - no orphan row at any width, which is what makes a thin
+// catalogue look broken.
+.hp-cars__grid {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 1.875rem);
+  grid-template-columns: 1fr;
+}
+
+// 640px, not 576: at the two-column step a card must still be wide enough for
+// "Message seller on WhatsApp" and a row of disclosure pills without either
+// wrapping to three lines. 640 - gutters - gap leaves ~298px a card.
+@media only screen and (min-width: 640px) {
+  .hp-cars__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media only screen and (min-width: 992px) {
+  .hp-cars__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.hp-card__title {
+  font-family: $font-1;
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* --- guides -------------------------------------------------------------- */
+
+.hp-guides__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(1.75rem, 3vw, 2.25rem);
+  grid-template-columns: 1fr;
+}
+
+.hp-guide {
+  border-top: 1px solid $color-6;
+  padding-top: 20px;
+}
+
+.hp-guide__title {
+  font-family: $font-1;
+  font-size: clamp(1.0625rem, 1.8vw, 1.1875rem);
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 10px;
+
+  a {
+    color: $color-2;
+    @include transition3;
+
+    &:hover,
+    &:focus-visible {
+      color: $color-3-text; // 4.99:1 on white
+    }
+  }
+}
+
+.hp-guide__summary {
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: 1.65;
+  color: $color-7;
+  margin-bottom: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .hp-guides__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* --- buy / sell ---------------------------------------------------------- */
+
+.hp-banner__row {
+  row-gap: 30px;
+}
+
+.hp-banner__card {
+  height: 100%;
+}
+
+// The indigo half of the pair, without `.bg-black` (see Banner.jsx). White on
+// #262262 is 14.12:1; the button is ink on terracotta at 5.50:1.
+.hp-banner__card--indigo {
+  background-color: $brand-indigo;
+
+  .find-cars {
+    background-color: $color-3;
+    color: $color-on-accent;
+  }
+}
+
+.hp-banner__title {
+  font-family: $font-1;
+  font-size: clamp(1.375rem, 2.8vw, 1.875rem);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+// The theme's 55.5px side padding overflows the card on a 360px screen.
+.hp-banner .find-cars {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding-block: 0;
+  padding-inline: clamp(1.5rem, 8vw, 3.47rem);
+}
+
+// The card itself. `.box-car-list` (component/_widget.scss) supplies the
+// border, radius and inner spacing; this adds only what the home grid needs -
+// equal-height tiles with the "View car" row pinned to the bottom, and a hover
+// state that is a border rather than the theme's 60%-black photo wash.
+.hp-card {
+  display: flex;
+  flex-direction: column;
+  background-color: $color-1;
+  @include transition3;
+
+  .img-style {
+    overflow: hidden;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  .content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .days-box {
+    margin-block-start: auto;
+  }
+
+  // `.icon-box i { margin-right: 4px }` in component/_widget.scss is physical
+  // and puts the km / gearbox / city glyphs on the wrong side of their label in
+  // Arabic. Neutralised here; the fix belongs in that partial.
+  .icon-box i {
+    margin-right: 0;
+    margin-inline-end: 4px;
+  }
+
+  &:hover,
+  &:focus-within {
+    border-color: $color-3;
+  }
 }

@@ -1,0 +1,158 @@
+@use './variables' as *;
+@use './mixin' as *;
+
+// ==========================================================================
+// abstracts/_base.scss
+//
+// The ONLY file in abstracts/ that emits CSS. Everything else here is
+// variables and mixins. Three things live here because they are global
+// guarantees rather than component styling:
+//
+//   1. the design tokens republished as CSS custom properties, so JSX inline
+//      styles and any future non-SCSS surface can read them instead of
+//      retyping hexes (see design/tokens.md, follow-up 3);
+//   2. the prefers-reduced-motion kill switch;
+//   3. a focus-visible safety net.
+//
+// NOTE ON CASCADE POSITION: Sass emits a module's CSS at its first load point.
+// component/_header.scss is the first file to `@use '../abstracts/'`, so this
+// block lands at the very TOP of the compiled bundle - before component/,
+// style.scss and responsive.scss. Rules here therefore have to win on
+// specificity, not source order. That is why the focus net is written with
+// :is() (see below) and why the reduced-motion block uses !important.
+// ==========================================================================
+
+:root {
+  // Brand
+  --as-terracotta      : #{$brand-terracotta};
+  --as-terracotta-text : #{$color-3-text};      // accent as TEXT on light. 4.99:1 on white.
+  --as-terracotta-soft : #{$brand-terracotta-soft};
+  --as-indigo          : #{$brand-indigo};
+  --as-cream           : #{$brand-cream};
+  --as-ink             : #{$brand-ink};
+  --as-white           : #{$brand-white};
+  --as-on-accent       : #{$color-on-accent};   // text/icons on a terracotta fill. 5.50:1.
+  --as-success         : #{$color-9};
+  --as-success-text    : #{$color-9-text};      // success as TEXT on light. 5.08:1 on white.
+  --as-body            : #{$color-4};
+  --as-meta            : #{$color-7};
+  --as-border          : #{$color-6};
+  --as-surface         : #{$bg-color2};
+
+  // Type
+  --as-font-display: #{$font-1};
+  --as-font-ui     : #{$font-2};
+  --as-fs-micro    : #{$fs-micro};
+  --as-fs-sm       : #{$fs-sm};
+  --as-fs-base     : #{$fs-base};
+  --as-fs-md       : #{$fs-md};
+  --as-fs-lg       : #{$fs-lg};
+  --as-fs-xl       : #{$fs-xl};
+
+  // Space
+  --as-space-1 : #{$space-1};
+  --as-space-2 : #{$space-2};
+  --as-space-3 : #{$space-3};
+  --as-space-4 : #{$space-4};
+  --as-space-5 : #{$space-5};
+  --as-space-6 : #{$space-6};
+  --as-space-8 : #{$space-8};
+  --as-space-10: #{$space-10};
+  --as-space-12: #{$space-12};
+
+  // Shape
+  --as-radius-sm     : #{$radius-sm};
+  --as-radius-control: #{$radius-control};
+  --as-radius-card   : #{$radius-card};
+  --as-radius-lg     : #{$radius-lg};
+  --as-radius-pill   : #{$radius-pill};
+
+  // Motion
+  --as-dur-fast  : #{$dur-fast};
+  --as-dur-base  : #{$dur-base};
+  --as-dur-slow  : #{$dur-slow};
+  --as-ease      : #{$ease-standard};
+
+  // Focus
+  --as-focus-ring        : #{$focus-ring-color};
+  --as-focus-ring-inverse: #{$focus-ring-color-inverse};
+  --as-focus-width       : #{$focus-ring-width};
+  --as-focus-offset      : #{$focus-ring-offset};
+}
+
+
+// --------------------------------------------------------------------------
+// 2. Reduced motion
+//
+// The theme animates on hover in ~500 places and runs several infinite
+// keyframe loops (.ripple, the marquee brand strip, the pulse on map pins).
+// For a user who has asked their OS to reduce motion, none of that should
+// run. Durations collapse to 1ms rather than 0 so transitionend still fires
+// and any JS waiting on it does not hang.
+// --------------------------------------------------------------------------
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration       : 1ms !important;
+    animation-delay          : 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration      : 1ms !important;
+    transition-delay         : 0ms !important;
+    scroll-behavior          : auto !important;
+  }
+}
+
+
+// --------------------------------------------------------------------------
+// 3. Focus safety net
+//
+// The ported theme suppressed focus in ~12 places (`outline: 0` on the reset,
+// on every input, and inside .link-style-1..5) and defined a visible focus
+// indicator in exactly three - all of them added by hand in _header.scss.
+// Keyboard and switch users had no way to tell where they were on the page.
+//
+// This is the floor, not the design: components should still declare their own
+// ring with @include focusable so it can be tuned (inset for flush rows,
+// inverse on dark). Specificity is deliberate:
+//
+//   :is(a, button, [tabindex], ...):focus-visible  ->  (0,2,0)
+//
+// :is() inherits the specificity of its most specific argument ([tabindex],
+// (0,1,0)), which beats the worst suppressor in style.scss
+// (.link-style-1 a:focus, (0,1,2)) without !important - and a component rule
+// like `.sc-button:focus-visible` is also (0,2,0) and comes later in the
+// bundle, so components can still override this cleanly.
+// --------------------------------------------------------------------------
+
+:is(
+    a[href],
+    area[href],
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    iframe,
+    [tabindex],
+    [contenteditable="true"],
+    [role="button"],
+    [role="tab"],
+    [role="link"],
+    [role="checkbox"],
+    [role="radio"],
+    [role="menuitem"],
+    [role="option"],
+    [role="switch"]
+  ):focus-visible {
+  @include focus-ring;
+}
+
+// Same net, flipped, wherever the surface underneath is indigo or a dark
+// photographic hero - indigo-on-indigo is 1.00:1 and cream-on-indigo is
+// 11.19:1. These are the theme's dark containers.
+:is(.footer, .dark-section, .header-fixed, .side-bar-dashboard, .sidebar-menu-dashboard)
+  :is(a[href], button, input, select, textarea, summary, [tabindex], [role="button"], [role="tab"]):focus-visible {
+  @include focus-ring($focus-ring-color-inverse);
+}

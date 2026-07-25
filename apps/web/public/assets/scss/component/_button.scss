@@ -1,100 +1,229 @@
 @use '../abstracts/' as *;
 
-/* button 
---------------------------------------------------*/
+// ==========================================================================
+// BUTTONS
+//
+// Three tiers, and only three. They differ in FILL first and colour second, so
+// they stay distinguishable in bright sun on a cheap LCD where subtle colour
+// differences wash out:
+//
+//   Primary   .sc-button          solid terracotta       "do the main thing"
+//   Secondary .sc-button.btn-1    outlined terracotta    "do the other thing"
+//   Tertiary  .view-car           outlined ink           "go look at this"
+//
+// Shared: $radius-control (14px), $font-1 label, $lh-tight so the label never
+// inflates the control, 250ms/$ease-standard on every state change, a
+// :focus-visible ring, and a 48px minimum height (44px for tertiary, which
+// lives inside listing cards). NICHE.md's audience is one-handed on a phone.
+//
+// RADIUS DECISION: 14px, not the 10px design/tokens.md used to specify. 10px
+// was documented but never shipped anywhere except lib/whatsapp.js; buttons,
+// text inputs, textareas and .view-car are all 14px today (38 sites). The
+// deciding argument is that a CTA sits directly beside a search field, and
+// style.scss gives inputs 14px - matching radii is what makes the search bar
+// and its button read as one control. tokens.md now says 14px.
+//
+// CONTRAST (computed, WCAG 2.1):
+//   primary rest    ink #231F20 on terracotta #E97451   5.50:1  AA
+//   primary hover   white on indigo #262262            14.12:1  AAA
+//   secondary rest  #BD4B2B text and border on white    4.99:1  AA (>3:1 boundary)
+//   secondary hover ink on terracotta                   5.50:1  AA
+//   tertiary rest   ink text and border on white       16.30:1  AAA
+//   tertiary hover  #BD4B2B text and border on white    4.99:1  AA
+//   focus ring      indigo on white                    14.12:1
+//                   indigo on the terracotta fill       4.76:1
+//   disabled        #5C6368 on #EDEDED                  5.21:1  (exempt, but legible)
+//
+// The border colours are $color-3-text, NOT $color-3: a terracotta border on
+// white is 2.97:1, under the 3:1 SC 1.4.11 needs for a boundary that is the
+// only thing defining the control. See design/tokens.md follow-up 2.
+// ==========================================================================
+
+//  Primary -----------------------------------------------------------------
 .sc-button {
-    display      : inline-block;
+    display        : inline-flex;
+    align-items    : center;
+    justify-content: center;
+    gap            : $space-2;
+    box-sizing     : border-box;
+    min-height     : 48px;
+    padding        : $space-3 $space-8;
+    border         : 1px solid transparent;
+    border-radius  : $radius-control;
     background-color: $color-3;
-    box-sizing   : border-box;
-    padding         : 15px 36.5px;
-    border-radius: 14px;
-    text-align: center;
+    text-align     : center;
     @include transition3;
+
     span {
-        color             : $color-1;
-        font-weight       : 500;
-        font-size         : 16px;
-        position          : relative;
-        // text-transform    : capitalize;
+        // Ink, not white: white on terracotta is 2.97:1 and fails AA at every
+        // size. Ink on terracotta is 5.50:1.
+        color: $color-on-accent;
+        @include type-label('base', $fw-medium);
+        position: relative;
         @include transition3;
     }
+
     i {
-      @include transition3;
+        color: $color-on-accent;
+        @include transition3;
     }
+
+    svg path {
+        @include transition3;
+    }
+
     &:hover,
     &.active {
-        border-color: transparent;
-        outline: 0 none;
-        background-color: $color-2;
-        svg {
-          animation: 0.3s link-icon2 linear;
-        }
-    }
-    i{
-      color : $color-1;
-      margin-left: 10px;
-    }
-    svg {
-      margin-right: 17px;
-      path {
-        @include transition3;
-      }
-    }
-    &.btn-55{
-      padding: 15px 55.5px !important;
+        border-color    : transparent;
+        background-color: $brand-indigo;
 
-    }
-    &.btn-svg {
-      svg,i {
-        margin-right: 0;
-      }
-    }
-    &.btn-1 {
-      background-color: transparent;
-      border: 1px solid $color-3;
-      padding: 14px 31.5px;
-      font-family: $font-1;
-      color             : $color-3;
-      span {
-        color             : $color-3;
-        font-size: 16px;
-      }
-      i {
-        margin-left: 10px;
-        font-size: 12px;
-      }
-      &:hover,
-      &.active {
-        background-color: $color-3;
-        span ,i{
-          color : $color-1;
+        // The fill goes dark on hover, so the label has to flip back to white
+        // in the same rule - ink on indigo is 1.15:1 and the label vanishes.
+        span,
+        i {
+            color: $color-1;
         }
-        svg,i {
-          animation: 0.3s link-icon2 linear;
-          
-        }
+
         svg,
         path {
-          fill: $color-1;
-          stroke: $color-1;
+            fill  : $color-1;
+            stroke: $color-1;
         }
-      }
+
+        svg {
+            animation: 0.3s link-icon2 linear;
+        }
     }
 
-}
-.view-car {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 17.64px;
-  font-family: $font-1;
-  color: $color-2;
-  border: 1px solid $color-2;
-  border-radius: 14px;
-  padding: 9px 15.5px;
-  @include transition3;
+    // Indigo ring on the terracotta fill = 4.76:1, on the page around it =
+    // 14.12:1. The old rule here was `outline: 0 none` on :hover, which also
+    // killed the ring for a keyboard user hovering the same control.
+    @include focusable;
 
-  &:hover {
-      color: $color-3;
-      border: 1px solid $color-3;
-  }
+    &[disabled],
+    &.disabled,
+    &[aria-disabled='true'] {
+        background-color: $color-6;
+        border-color    : transparent;
+        cursor          : not-allowed;
+        pointer-events  : none;
+
+        span,
+        i {
+            color: $color-7;
+        }
+    }
+
+    //  Sizes --------------------------------------------------------------
+    &.btn-55 {
+        // Legacy name for the wide CTA (components/common/Cta.jsx).
+        padding: $space-3 $space-12 !important;
+    }
+
+    &.sc-button--sm {
+        min-height: 40px;
+        padding   : $space-2 $space-5;
+
+        span { font-size: $fs-sm; }
+    }
+
+    &.sc-button--block {
+        display: flex;
+        width  : 100%;
+    }
+
+    &.btn-svg {
+        // gap: handles the spacing now; kept so existing markup is a no-op.
+        svg,
+        i { margin: 0; }
+    }
+
+    //  Secondary ----------------------------------------------------------
+    &.btn-1 {
+        background-color: transparent;
+        // $color-3-text, not $color-3: at 1px this border is the only thing
+        // defining the control, so it has to clear 3:1 (4.99 vs 2.97).
+        border          : 1px solid $color-3-text;
+        padding         : $space-3 $space-7;
+        font-family     : $font-1;
+        color           : $color-3-text;
+
+        span {
+            color: $color-3-text;
+        }
+
+        i {
+            color    : $color-3-text;
+            font-size: $fs-micro;
+        }
+
+        &:hover,
+        &.active {
+            background-color: $color-3;
+            border-color    : $color-3;
+
+            span,
+            i {
+                color: $color-on-accent; // 5.50:1 - white here would be 2.97:1
+            }
+
+            svg,
+            i {
+                animation: 0.3s link-icon2 linear;
+            }
+
+            svg,
+            path {
+                fill  : $color-on-accent;
+                stroke: $color-on-accent;
+            }
+        }
+
+        &[disabled],
+        &.disabled,
+        &[aria-disabled='true'] {
+            background-color: transparent;
+            border-color    : $color-6;
+
+            span,
+            i { color: $color-7; }
+        }
+    }
+}
+
+//  Tertiary ----------------------------------------------------------------
+// The "View details" affordance on a listing card. Lowest emphasis: no fill,
+// neutral border, so it never competes with the terracotta CTA beside it.
+.view-car {
+    display        : inline-flex;
+    align-items    : center;
+    justify-content: center;
+    gap            : $space-2;
+    min-height     : 44px;
+    padding        : $space-2 $space-4;
+    border         : 1px solid $color-2;
+    border-radius  : $radius-control;
+    font-family    : $font-1;
+    color          : $color-2;
+    @include type-label('sm', $fw-medium);
+    @include transition3;
+
+    &:hover,
+    &.active {
+        // Both colours move together so the control never sits at 2.97:1 - the
+        // old rule paired $color-3-text text with a $color-3 border.
+        color       : $color-3-text;
+        border-color: $color-3-text;
+    }
+
+    @include focusable;
+
+    &[disabled],
+    &.disabled,
+    &[aria-disabled='true'] {
+        color         : $color-7;
+        border-color  : $color-6;
+        cursor        : not-allowed;
+        pointer-events: none;
+    }
 }

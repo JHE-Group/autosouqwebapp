@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, pickLocale } from "./locale";
+
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
 
 /**
@@ -32,11 +34,26 @@ function absoluteUrl(url) {
   return url.startsWith("http") ? url : `${STRAPI_URL}${url}`;
 }
 
-// Taxonomy relations are `{ name, nameAr, slug }`. Arabic wins when present,
-// since the theme renders these straight into the card.
-function label(relation) {
+/**
+ * Which language CMS content renders in.
+ *
+ * NICHE.md wants Arabic first and English an equal second. This mapper used to
+ * implement that as `nameAr || name` on every field — but the app still ships a
+ * single English shell (`<html lang="en">` in app/layout.js), so the result was
+ * Arabic makes, models and cities set inside English page furniture. That is not
+ * Arabic-first; it is mixed-language, and it reads as broken to Arabic and
+ * English speakers alike.
+ *
+ * So: follow the document language. When the `[locale]` routing lands, pass
+ * "ar" down from the route segment and the whole page flips together.
+ */
+export { DEFAULT_LOCALE } from "./locale";
+const pick = pickLocale;
+
+// Taxonomy relations are `{ name, nameAr, slug }`.
+function label(relation, locale = DEFAULT_LOCALE) {
   if (!relation) return null;
-  return relation.nameAr || relation.name || null;
+  return pick(locale, relation.nameAr, relation.name);
 }
 
 /**
@@ -44,7 +61,7 @@ function label(relation) {
  * (see `data/cars.js`). Fields the CMS has no column for are left null so
  * the components fall through to their own empty states.
  */
-export function toCar(listing) {
+export function toCar(listing, locale = DEFAULT_LOCALE) {
   const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
   const images = gallery.map((img, i) => ({
     src: absoluteUrl(img.url),
@@ -58,23 +75,25 @@ export function toCar(listing) {
     id: listing.slug,
     documentId: listing.documentId,
 
-    title: listing.titleAr || listing.title,
-    description: listing.descriptionAr || listing.description || "",
+    title: pick(locale, listing.titleAr, listing.title),
+    description: pick(locale, listing.descriptionAr, listing.description) || "",
     price: Number(listing.price) || 0,
     currency: listing.currency || "OMR",
     year: listing.year,
     km: listing.mileage,
 
-    make: label(listing.make),
-    model: label(listing.model),
-    body: label(listing.bodyType),
-    type: label(listing.bodyType),
-    conditionType: label(listing.condition),
-    transmission: label(listing.transmission),
-    fuelType: label(listing.fuelType),
-    color: label(listing.color),
-    location: label(listing.city),
-    features: (listing.features ?? []).map(label).filter(Boolean),
+    make: label(listing.make, locale),
+    model: label(listing.model, locale),
+    body: label(listing.bodyType, locale),
+    type: label(listing.bodyType, locale),
+    conditionType: label(listing.condition, locale),
+    transmission: label(listing.transmission, locale),
+    fuelType: label(listing.fuelType, locale),
+    color: label(listing.color, locale),
+    location: label(listing.city, locale),
+    features: (listing.features ?? [])
+      .map((f) => label(f, locale))
+      .filter(Boolean),
 
     featured: Boolean(listing.featured),
     verified: Boolean(listing.verified),
@@ -125,12 +144,12 @@ async function strapiFetch(path) {
  * Published listings, newest first. Returns `[]` (never throws) when the CMS
  * is unreachable, so pages can fall back to the demo data in `data/cars.js`.
  */
-export async function getListings() {
+export async function getListings(locale = DEFAULT_LOCALE) {
   try {
     const json = await strapiFetch(
       `/api/listings?${LISTING_POPULATE}&sort=createdAt:desc&pagination[pageSize]=100`,
     );
-    return (json.data ?? []).map(toCar);
+    return (json.data ?? []).map((l) => toCar(l, locale));
   } catch (err) {
     console.warn(`[strapi] listings unavailable — using demo data. ${err.message}`);
     return [];
@@ -141,7 +160,7 @@ export async function getListings() {
  * One listing by slug, falling back to numeric id so the theme's demo links
  * (`/listing-detail-v1/3`) keep resolving. Returns null when not found.
  */
-export async function getListing(idOrSlug) {
+export async function getListing(idOrSlug, locale = DEFAULT_LOCALE) {
   const filter = /^\d+$/.test(String(idOrSlug))
     ? `filters[id][$eq]=${idOrSlug}`
     : `filters[slug][$eq]=${encodeURIComponent(idOrSlug)}`;
@@ -150,7 +169,7 @@ export async function getListing(idOrSlug) {
       `/api/listings?${LISTING_POPULATE}&${filter}&pagination[pageSize]=1`,
     );
     const listing = json.data?.[0];
-    return listing ? toCar(listing) : null;
+    return listing ? toCar(listing, locale) : null;
   } catch (err) {
     console.warn(`[strapi] listing "${idOrSlug}" unavailable. ${err.message}`);
     return null;

@@ -1,124 +1,78 @@
 "use client";
+
 import React from "react";
-import Link from "next/link";
-import { homepages, listingPages, otherPages } from "@/data/menu";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import { buildNavTree, isBranchCurrent, isCurrent } from "./navItems";
 
+/**
+ * Desktop navigation.
+ *
+ * What this replaces: the template's three-dropdown demo index — "Home" (whose
+ * list was empty once the ten demo home pages were deleted, so it rendered a
+ * labelled chevron opening onto nothing), "Listing Car" as a 750px-wide mega
+ * menu holding three links, and "Page" holding the entire real site, with
+ * "Contact" repeated both inside it and beside it.
+ *
+ * Now it renders the actual information architecture, flat: Browse (with the
+ * alternate views under it), Sell your car, Guides, About, FAQs, Contact.
+ *
+ * Accessibility notes:
+ *
+ * - Every item is a real `Link`. The template's parents were `href="#"`, which
+ *   scrolls to the top and cannot be reached by keyboard as a menu at all.
+ * - The submenu opens on `:focus-within` as well as `:hover` (see
+ *   _header.scss), so tabbing through Browse reveals its children.
+ * - `aria-current="page"` marks the current item, which is what a screen
+ *   reader announces; the `.current` class is only the colour.
+ */
 export default function Nav() {
+  const t = useTranslations("nav");
   const pathname = usePathname();
-  const isActive = (menus) => {
-    let active = false;
+  const items = buildNavTree(t);
 
-    menus.forEach((elm) => {
-      if (elm.links) {
-        elm.links.forEach((elm2) => {
-          if (elm2.href.split("/")[1] == pathname.split("/")[1]) {
-            active = true;
-          }
-        });
-      } else {
-        if (elm.href.split("/")[1] == pathname.split("/")[1]) {
-          active = true;
-        }
-      }
-    });
-    return active;
-  };
   return (
     <>
-      <li
-        className={`tf-megamenu dropdown2 ${
-          isActive(homepages) ? "current" : ""
-        } `}
-      >
-        <a href="#">Home</a>
-        <ul>
-          {homepages.map((page, index) => (
-            <li
-              key={index}
-              className={
-                page.href.split("/")[1] == pathname.split("/")[1]
-                  ? "current"
-                  : ""
-              }
+      {items.map((item) => {
+        const active = isBranchCurrent(item, pathname);
+        const hasChildren = Boolean(item.children?.length);
+
+        return (
+          <li
+            key={item.href}
+            className={`${hasChildren ? "dropdown2" : ""} ${
+              active ? "current" : ""
+            }`.trim()}
+          >
+            <Link
+              href={item.href}
+              aria-current={isCurrent(item.href, pathname) ? "page" : undefined}
             >
-              <Link href={page.href}>{page.text}</Link>
-            </li>
-          ))}
-        </ul>
-      </li>
-      <li
-        className={`tfcl-mega-menu dropdown2  ${
-          isActive(listingPages) ? "current" : ""
-        } `}
-      >
-        <a href="#">Listing Car</a>
-        <ul>
-          {listingPages.map((item, index) => (
-            <li key={index} className={item.className}>
-              <a href="#">{item.title}</a>
+              {item.label}
+            </Link>
+
+            {hasChildren ? (
               <ul>
-                {item.links.map((link, linkIndex) => (
+                {item.children.map((child) => (
                   <li
-                    key={linkIndex}
-                    className={`${link.className || ""} ${
-                      link.href.split("/")[1] == pathname.split("/")[1]
-                        ? "current"
-                        : ""
-                    }`}
+                    key={child.href}
+                    className={isCurrent(child.href, pathname) ? "current" : ""}
                   >
-                    <Link href={link.href}>{link.text}</Link>
+                    <Link
+                      href={child.href}
+                      aria-current={
+                        isCurrent(child.href, pathname) ? "page" : undefined
+                      }
+                    >
+                      {child.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
-              <div className="dropdown2-btn" />
-            </li>
-          ))}
-        </ul>
-      </li>
-      <li className={`dropdown2  ${isActive(otherPages) ? "current" : ""} `}>
-        <a href="#">Page</a>
-        <ul>
-          {otherPages.map((item, index) => (
-            <li
-              key={index}
-              className={`${item.className || ""}  ${
-                item.links ? (isActive(item.links) ? "current" : "") : ""
-              } ${
-                item.href?.split("/")[1] == pathname.split("/")[1]
-                  ? "current"
-                  : ""
-              }`}
-            >
-              {item.title ? (
-                <>
-                  <a href="#">{item.title}</a>
-                  <ul>
-                    {item.links.map((link, linkIndex) => (
-                      <li
-                        key={linkIndex}
-                        className={
-                          link.href.split("/")[1] == pathname.split("/")[1]
-                            ? "current"
-                            : ""
-                        }
-                      >
-                        <Link href={link.href}>{link.text}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="dropdown2-btn" />
-                </>
-              ) : (
-                <Link href={item.href}>{item.text}</Link>
-              )}
-            </li>
-          ))}
-        </ul>
-      </li>
-      <li className={"contact" == pathname.split("/")[1] ? "current" : ""}>
-        <Link href={`/contact`}>Contact</Link>
-      </li>
+            ) : null}
+          </li>
+        );
+      })}
     </>
   );
 }

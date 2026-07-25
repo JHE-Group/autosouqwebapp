@@ -1,74 +1,78 @@
 @use '../abstracts/' as *;
 
 
+// ==========================================================================
+// HOVER / MEDIA MOTION
+//
+// All movement here runs on the shared tokens ($dur-*, $ease-standard) and is
+// neutralised by the prefers-reduced-motion block in abstracts/_base.scss.
+//
+// Image zooms transition `transform` specifically rather than `all` - these
+// elements are large, and animating `all` on them forces the compositor to
+// watch every property on a card that is repeated 20+ times down a listing
+// page. Cheap Android hardware is exactly where that shows.
+// ==========================================================================
+
 // hover img
 
 .hover-img {
     .img-style {
-        overflow     : hidden; 
-        border-radius: 16px;
+        overflow     : hidden;
+        border-radius: $radius-card;
         img {
-            width             : 100%;
-            object-fit        : cover;
-            -webkit-transition: all 1s cubic-bezier(0.30, 1, 0.35, 1) 0s;
-            transition: all 1s cubic-bezier(0.30, 1, 0.35, 1) 0s;
-            transition: transform 500ms ease;
+            width     : 100%;
+            object-fit: cover;
+            @include motion(transform, $dur-slower, $ease-standard);
         }
     }
     &:hover {
         img {
-            -webkit-transform: scale3d(1.1, 1.1, 1.1);
             transform: scale3d(1.1, 1.1, 1.1);
-            -webkit-transition: all 2s cubic-bezier(0.30, 1, 0.35, 2) 0s;
-            transition: all 2s cubic-bezier(0.30, 1, 0.35, 2) 0s;   
         }
     }
 
     .img-style2 {
-        overflow     : hidden; 
-        border-radius: 10px;
+        overflow     : hidden;
+        border-radius: $radius-md;
         .img-hv {
-            width             : 100%;
-            object-fit        : cover;
-            -webkit-transition: all 1s cubic-bezier(0.30, 1, 0.35, 1) 0s;
-            transition: all 1s cubic-bezier(0.30, 1, 0.35, 1) 0s;
-            transition: transform 500ms ease;
+            width     : 100%;
+            object-fit: cover;
+            @include motion(transform, $dur-slower, $ease-standard);
         }
     }
-} 
+}
 
 .hover-img2 {
     .img-style2 {
-        overflow: hidden;
-        border-radius: 8px;
+        overflow     : hidden;
+        border-radius: $radius-sm;
         .img2 {
-            @include transition3;
+            @include motion(transform, $dur-slow, $ease-standard);
         }
     }
     &:hover {
         .img2 {
-            transform:  scale(1.1) rotate(3deg);
+            transform: scale(1.1) rotate(3deg);
         }
     }
-} 
+}
 
 
 .hover-img3 {
     .img-style3 {
-        border-radius: 12px;
-        overflow     : hidden; 
+        border-radius: $radius-md;
+        overflow     : hidden;
         img {
-            width : 100%;
-            @include transition3;
+            width: 100%;
+            @include motion(transform, $dur-slow, $ease-standard);
         }
     }
     &:hover {
         img {
-            transform:  scale(1.075);
-            @include transition3;
+            transform: scale(1.075);
         }
     }
-} 
+}
 
 
 .pagi2 .swiper-pagination2,
@@ -143,16 +147,12 @@
             bottom: 0;
             width: 100%;
             height: 100%;
-            -webkit-transition: all 0.4s ease-out 0s;
-            -moz-transition: all 0.4s ease-out 0s;
-            -ms-transition: all 0.4s ease-out 0s;
-            -o-transition: all 0.4s ease-out 0s;
-            transition: all 0.4s ease-out 0s;
+            @include motion(opacity visibility, $dur-slow, $ease-out);
             opacity: 0;
             visibility: hidden;
             background: rgba(0, 0, 0, 0.50);
             z-index: 1;
-            border-radius: 10px;
+            border-radius: $radius-md;
         }
     }
     
@@ -160,24 +160,28 @@
 
 
 // hv tool
+//
+// Tooltip. It now also opens on :focus-visible - previously the label was
+// hover-only, so a keyboard or switch user reached these icon controls
+// (compare, favourite, share) with no way to find out what they do.
+// ink #231F20 on white = 16.30:1.
 .hv-tool {
     position: relative;
-    transition: all 0.3s ease;
+    @include motion(z-index, $dur-fast);
 }
 
 .hv-tool::before {
     --translate-y: calc(-100% - var(--arrow-size));
     content: attr(data-tooltip);
     color: $color-2;
-    padding: 6px 11px;
+    padding: $space-2 $space-3;
     background: $color-1;
-    box-shadow: 0px 4px 26px 0px #42474C1F;
+    box-shadow: $shadow-md;
     width: max-content;
-    border-radius: 5px;
+    max-width: 220px;
+    border-radius: $radius-xs;
     text-align: center;
-    font-weight: 600;
-    font-size: 12px;
-    transition: all 0.3s ease;
+    @include type('micro', $fw-semibold, $font-2);
 }
 
 .hv-tool::after {
@@ -185,7 +189,6 @@
     content: "";
     border: 6px solid transparent;
     border-top-color: $color-1;
-    transition: all 0.3s ease;
 }
 
 .hv-tool::after,
@@ -196,26 +199,29 @@
     top: 0px;
     left: 45%;
     transform: translateX(-50%) translateY(var(--translate-y, 0));
-    transition: all 0.3s ease;
-    -webkit-transition-delay: 0ms;
-    transition-delay: 0ms;
+    @include motion(opacity top, $dur-fast, $ease-out);
+    pointer-events: none;
 }
 
 .hv-tool:hover::before,
-.hv-tool:hover::after {
+.hv-tool:hover::after,
+.hv-tool:focus-visible::before,
+.hv-tool:focus-visible::after,
+.hv-tool:focus-within::before,
+.hv-tool:focus-within::after {
     opacity: 1;
-    -webkit-transition-delay: 0.1s;
-    transition-delay: 0.1s;
+    transition-delay: 100ms;
     top: -5px;
 }
 
- .hv-tool:hover {
+.hv-tool:hover,
+.hv-tool:focus-within {
     z-index: 2;
 }
 
 .img-style-hover {
     overflow: hidden;
-    border-radius: 24px;
+    border-radius: $radius-lg;
 }
 .hover-img-wrap {
     position: relative;
@@ -227,7 +233,7 @@
         width: 50%;
         height: 100%;
         background: rgb(0 0 0);
-        transition: 0.25s;
+        @include motion(top, $dur-base, $ease-standard);
         z-index: 1;
         opacity: 0.1;
     }
@@ -239,14 +245,14 @@
         width: 50%;
         height: 100%;
         background: rgb(0 0 0);
-        transition: 0.25s;
+        @include motion(bottom, $dur-base, $ease-standard);
         z-index: 1;
         opacity: 0.1;
     }
     &:hover {
         &::after {
             bottom: 0;
-            transition-delay: 0.25s;
+            transition-delay: $dur-base;
         }
         &::before {
             top: 0;

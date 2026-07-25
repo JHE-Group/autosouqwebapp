@@ -114,7 +114,31 @@ export default function FlatFilter3({
               <div className="button-search sc-btn-top">
                 <a className="sc-button" href="#">
                   <span>Find cars</span>
-                  <i className="far fa-search text-color-1" />
+                  {/* Inline, not `far fa-search`: font-awesome.css is never
+                      imported, so that class drew a blank box inside the CTA. */}
+                  <svg
+                    width={16}
+                    height={16}
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                    focusable="false"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <circle
+                      cx="7.2"
+                      cy="7.2"
+                      r="4.7"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                    />
+                    <path
+                      d="m10.8 10.8 2.7 2.7"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </a>
               </div>
             </div>
@@ -170,13 +194,16 @@ export default function FlatFilter3({
                     <div className="caption flex-two">
                       <div>
                         <span className="fw-6">
-                          KM: {allProps.km[0]} km - {allProps.km[1]} km
+                          KM: {allProps.km[0].toLocaleString("en-US")} km -{" "}
+                          {allProps.km[1].toLocaleString("en-US")} km
                         </span>
                       </div>
                     </div>
+                    {/* Was bounds.price — same bug as FilterSidebar had: a
+                        price-scale track driving the kilometre filter. */}
                     <Pricing
-                      MIN={allProps.bounds.price[0]}
-                      MAX={allProps.bounds.price[1]}
+                      MIN={allProps.bounds.km[0]}
+                      MAX={allProps.bounds.km[1]}
                       priceRange={allProps.km}
                       setPriceRange={allProps.setKM}
                     />
@@ -262,7 +289,7 @@ export default function FlatFilter3({
                 <div className="box2 grid-5">
                   <div className="form-group wg-box4">
                     <div className="title fs-16 fw-5 lh-20 text-color-2">
-                      Request Price Label
+                      Comfort
                     </div>
                     <div className="tf-amenities bg-white">
                       {filterOptions.features.slice(0, 3).map((feature, index) => (

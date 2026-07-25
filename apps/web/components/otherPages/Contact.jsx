@@ -68,27 +68,18 @@ export default function Contact() {
           </div>
         </div>
       </section>
-      <section className="tf-section-map">
-        <div className="container-fluid">
-          <div className="map">
-            <iframe
-              className="map-content"
-              src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d7302.453092836291!2d90.47477022812872!3d23.77494577893369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1svi!2s!4v1627293157601!5m2!1svi!2s"
-              allowFullScreen=""
-              loading="lazy"
-            ></iframe>
-          </div>
-        </div>
-      </section>
+      {/* The theme embedded a Google map pinned outside Oman entirely. A map on
+          a contact page reads as "this is our office", and we have no address
+          to show yet, so the section is removed rather than faked. */}
       <section className="tf-section-contact">
         <div className="container">
           <div className="row">
             <div className="col-md-8 contact-left">
               <div className="heading-section mb-30">
-                <h2>Drop Us a Line</h2>
+                <h2>Send us a message</h2>
                 <p className="mt-12">
-                  Feel free to connect with us through our online channels for
-                  updates, news, and more.
+                  A question about a listing, a seller, or something that does
+                  not look right? Tell us and we will look into it.
                 </p>
               </div>
               <div id="comments" className="comments">
@@ -127,13 +118,13 @@ export default function Contact() {
                     <div className="grid-sw-2">
                       <fieldset className="email-wrap style-text">
                         <label className="font-1 fs-14 fw-5">
-                          Phone Numbers
+                          Phone number
                         </label>
                         <input
                           type="tel"
                           className="tb-my-input"
                           name="tel"
-                          placeholder="Phone Numbers"
+                          placeholder="Your phone number"
                           required
                         />
                       </fieldset>
@@ -143,7 +134,7 @@ export default function Contact() {
                           type="text"
                           className="tb-my-input"
                           name="subject"
-                          placeholder="Enter Keyword"
+                          placeholder="What is this about?"
                           required
                         />
                       </fieldset>
@@ -167,11 +158,11 @@ export default function Contact() {
                       }`}
                     >
                       {success ? (
-                        <p style={{ color: "rgb(52, 168, 83)" }}>
+                        <p style={{ color: "#15803D" }}>
                           Message has been sent successfully
                         </p>
                       ) : (
-                        <p style={{ color: "red" }}>Something went wrong</p>
+                        <p style={{ color: "#B42318" }}>Something went wrong</p>
                       )}
                     </div>
                     <div className="button-boxs">
@@ -186,23 +177,28 @@ export default function Contact() {
             <div className="col-md-4 contact-right">
               <div className="contact-info box-sd">
                 <h2 className="mb-30">Contact Us</h2>
+                {/* The theme shipped a US street address, a US phone number and
+                    a themesflat@gmail.com address. Autosouq is an Oman
+                    business and none of the real details have been supplied
+                    yet, so these are marked as placeholders — an obvious gap is
+                    safer than a plausible invention. */}
                 <div className="wrap-info">
                   <div className="box-info">
-                    <h5>Address</h5>
+                    <h5>Where we are</h5>
                     <p>
-                      101 E 129th St, East Chicago, IN 46312 <br />
-                      United States
+                      Autosouq is based in Oman. <br />
+                      [PLACEHOLDER — business address to be supplied]
                     </p>
                   </div>
                   <div className="box-info">
-                    <h5>Infomation:</h5>
-                    <p>1-333-345-6868</p>
-                    <p>themesflat@gmail.com</p>
+                    <h5>Get in touch</h5>
+                    <p>[PLACEHOLDER — WhatsApp number to be supplied]</p>
+                    <p>[PLACEHOLDER — support email to be supplied]</p>
+                    <p>Until then, the form on this page reaches us.</p>
                   </div>
                   <div className="box-info">
-                    <h5>Opentime:</h5>
-                    <p>Monay - Friday: 08:00 - 20:00</p>
-                    <p>Saturday - Sunday: 10:00 - 18:00</p>
+                    <h5>When we reply</h5>
+                    <p>[PLACEHOLDER — support hours to be supplied]</p>
                   </div>
                   <div className="box-info">
                     <h5>Follow Us:</h5>

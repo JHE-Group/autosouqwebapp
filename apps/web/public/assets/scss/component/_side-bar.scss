@@ -1,8 +1,22 @@
 @use '../abstracts/' as *;
 
+/*
+ * NOTE ON SCOPE: despite the filename, `.sidebar-dashboard` — the seller
+ * dashboard's navigation drawer — is NOT in this file. It lives in
+ * component/_dashboard.scss alongside the rest of the dashboard, and that is
+ * where its layout, active state and mobile drawer behaviour are maintained.
+ * What follows is the blog / listing-page side column.
+ *
+ * Physical offsets have been converted to logical ones throughout. /ar is
+ * served dir="rtl" (see app/[locale]/layout.js), so `margin-right` on a widget
+ * means "away from the reader" in English and "towards the reader" in Arabic —
+ * which is how a filter panel ends up mirrored against its own page. In LTR the
+ * two are identical, so this is a no-op on the English tree.
+ */
+
 /* side bar */
 .search-flat {
-    margin-right: 6px;
+    margin-inline-end: 6px;
 
     .search-form {
         .search-field {
@@ -34,7 +48,7 @@
             padding-bottom: 19px;
 
             .img-author {
-                margin-right: 17px;
+                margin-inline-end: 17px;
             }
 
             &:last-child {
@@ -58,7 +72,7 @@
             border-top: 1px solid $color-6;
 
             .img-listings {
-                margin-right: 3px;
+                margin-inline-end: 3px;
                 width: 112px;
                 flex: none;
             }
@@ -70,7 +84,7 @@
             }
 
             .content {
-                padding-left: 8px;
+                padding-inline-start: 8px;
 
                 a {
                     margin-bottom: 6px;
@@ -84,8 +98,8 @@
 
                     i {
                         font-size: 13px;
-                        margin-right: 5px;
-                        margin-left: 2px;
+                        margin-inline-end: 5px;
+                        margin-inline-start: 2px;
                     }
                 }
             }
@@ -107,7 +121,7 @@
         .form-newsletter {
             .button-submit {
                 position: absolute;
-                right: 0px;
+                inset-inline-end: 0px;
                 top: 50%;
                 transform: translateY(-50%);
 
@@ -118,7 +132,7 @@
                     padding: 0px 17px;
 
                     .icon {
-                        color: $color-3;
+                        color: $color-3-text;
                     }
                 }
             }
@@ -135,7 +149,7 @@
 
 
     .widget-marketing {
-        background-color: #FFE8CE;
+        background-color: $brand-cream;
         border: 0px;
         padding: 34px 34px 41px;
 
@@ -188,7 +202,7 @@
             &.active,
             &:hover {
                 a {
-                    color: $color-3;
+                    color: $color-3-text;
                 }
             }
 
@@ -205,21 +219,21 @@
                 display: inline-block;
                 padding: 9px 15px;
                 font-size: 14px;
-                margin-right: 7px;
+                margin-inline-end: 7px;
                 margin-bottom: 10px;
                 border: 1px solid $color-6;
-                font-family: "Inter", sans-serif;
+                font-family: var(--font-inter), sans-serif;
                 border-radius: 99px;
                 @include transition3;
 
                 &.active,
                 &:hover {
-                    color: $color-1;
+                    color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
                     background-color: $color-3;
                 }
 
                 &:last-child {
-                    margin-right: 0;
+                    margin-inline-end: 0;
                 }
             }
         }
@@ -239,7 +253,7 @@
         margin-bottom: 23px;
 
         .image-author {
-            margin-right: 17px;
+            margin-inline-end: 17px;
 
             img {
                 width: 65px;
@@ -271,7 +285,7 @@
 
     .comments .button-box {
         button {
-            margin-right: 10px;
+            margin-inline-end: 10px;
             padding: 16.5px 20px 16.5px 20px;
         }
 
@@ -285,7 +299,7 @@
             @include flex-center;
 
             span {
-                margin-right: 10px;
+                margin-inline-end: 10px;
                 flex: none;
             }
         }
@@ -305,12 +319,12 @@
         }
 
         .days-wrap {
-            margin-left: -10px;
+            margin-inline-start: -10px;
             margin-bottom: 24px;
 
             .day-box {
                 width: calc(25% - 10px);
-                margin-left: 10px;
+                margin-inline-start: 10px;
                 padding: 14px 5px;
                 border: 2px solid $color-5;
                 border-radius: 10px;
@@ -326,7 +340,7 @@
                     border: 2px solid $color-3;
 
                     .number {
-                        color: $color-3;
+                        color: $color-3-text;
                     }
                 }
             }
@@ -339,7 +353,7 @@
         .flat-tabs {
             .tab-title li {
                 svg {
-                    margin-right: 8px;
+                    margin-inline-end: 8px;
                 }
             }
 
@@ -358,7 +372,7 @@
                 width: 100%;
 
                 span {
-                    margin-right: 7px;
+                    margin-inline-end: 7px;
                 }
             }
 
@@ -376,7 +390,7 @@
             }
 
             .sub-title {
-                margin-right: 3px;
+                margin-inline-end: 3px;
                 margin-top: 1px;
             }
         }
@@ -386,7 +400,7 @@
 }
 
 .search-group {
-    margin-right: 10px;
+    margin-inline-end: 10px;
 
     .search-form {
         .search-field {
@@ -399,7 +413,7 @@
             position: absolute;
             color: #8E8E93;
             top: 15px;
-            left: 19px;
+            inset-inline-start: 19px;
             cursor: pointer;
         }
     }
@@ -417,7 +431,7 @@
             position: absolute;
             color: #8E8E93;
             top: 21px;
-            left: 19px;
+            inset-inline-start: 19px;
             cursor: pointer;
         }
     }
@@ -427,12 +441,12 @@
             width: 140px;
 
             &:nth-child(1) {
-                margin-right: 10px;
+                margin-inline-end: 10px;
             }
         }
 
         .box-tab {
-            margin-right: 0px;
+            margin-inline-end: 0px;
         }
     }
 
@@ -466,11 +480,11 @@
         }
 
         .inner {
-            margin-left: -20px;
+            margin-inline-start: -20px;
 
             .group-select {
                 width: calc(50% - 20px);
-                margin-left: 20px;
+                margin-inline-start: 20px;
             }
         }
     }
@@ -500,20 +514,22 @@
             }
 
             .content {
-                padding-left: 35px;
+                padding-inline-start: 35px;
                 padding-top: 5px;
 
                 .days {
                     font-size: 14px;
                     margin-bottom: 4.5px;
+                    // stays $color-3: .widget-menu only ever renders inside #footer
+                    // ($brand-indigo). Terracotta on indigo = 4.76:1; #BD4B2B = 2.83:1.
                     color: $color-3;
 
                     &::before {
                         content: "\f272";
                         font-family: "Font Awesome 5 Pro";
                         font-size: 16px;
-                        margin-right: 10px;
-                        font-weight: 300;
+                        margin-inline-end: 10px;
+                        font-weight: 400;
                         color: $color-3;
                     }
                 }
@@ -576,7 +592,7 @@
     .claer {
         i {
             rotate: 45deg;
-            margin-right: 6px;
+            margin-inline-end: 6px;
             display: inline-block;
         }
     }
@@ -599,7 +615,7 @@
             &:hover,
             &.active {
                 background-color: $color-3;
-                color: $color-1;
+                color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
             }
         }
 
@@ -623,7 +639,7 @@
     .nice-select {
 
         padding: 8px 17px;
-        text-align: left;
+        text-align: start;
 
         .current {
             color: $color-2 !important;
@@ -674,19 +690,19 @@
             .view-car {
                 font-size: 16px;
                 line-height: 20.16px;
-                color: $color-3;
+                color: $color-3-text;
                 border: 1px solid $color-3;
                 padding: 13px 38.5px;
                 text-align: center;
 
                 &:hover {
                     background-color: $color-3;
-                    color: $color-1;
+                    color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
                 }
 
                 i {
                     font-size: 8px;
-                    margin-left: 11px;
+                    margin-inline-start: 11px;
                 }
             }
 
@@ -705,15 +721,15 @@
                 margin-bottom: 60px;
 
                 .icon {
-                    margin-right: 4px;
+                    margin-inline-end: 4px;
                     color: $color-2;
                 }
             }
 
             .inner2 {
                 width: 209px;
-                padding-left: 30px;
-                border-left: 1px solid $color-6;
+                padding-inline-start: 30px;
+                border-inline-start: 1px solid $color-6;
             }
         }
     }
@@ -725,12 +741,12 @@
     line-height: 22px;
     padding: 9px 18px;
     background: $color-3;
-    color: $color-1;
+    color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
     border-radius: 10px;
 
     // margin-left: 10px;
     i {
-        margin-left: 10px;
+        margin-inline-start: 10px;
     }
 }
 
@@ -741,31 +757,29 @@
 .btn-siderbar-mobie-filter {
     position: fixed;
     top: 50%;
-    right: 0;
-    width: 45px;
-    height: 45px;
+    inset-inline-end: 0;
+    // 48px, not the theme's 45: the minimum touch target used everywhere else.
+    width: 48px;
+    height: 48px;
     display: flex;
     border: 0;
     z-index: 100;
     justify-content: center;
     align-items: center;
     background-color: $color-1;
-    color: $color-3;
+    color: $color-3-text;
     box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 6px 0px;
     cursor: pointer;
     display: none;
     &:hover{
         background-color: $color-3;
-        color: $color-1;
+        color: $color-on-accent; // was white - 2.97:1 on terracotta, fails AA
     }
 }
 .overlay-siderbar-mobie {
     z-index: 99;
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: 0;
+    inset: 0;
     opacity: 0;
     visibility: hidden;
     background-color: #0000008f;

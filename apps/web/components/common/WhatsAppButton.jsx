@@ -5,6 +5,7 @@ import {
   listingEnquiryMessage,
   WHATSAPP_BUTTON_STYLE,
 } from "@/lib/whatsapp";
+import { DEFAULT_LOCALE } from "@/lib/locale";
 
 function WhatsAppGlyph({ size = 20 }) {
   // Non-directional icon — must NOT be mirrored in RTL.
@@ -30,10 +31,21 @@ function WhatsAppGlyph({ size = 20 }) {
  */
 export default function WhatsAppButton({
   car,
-  locale = "ar",
+  locale = DEFAULT_LOCALE,
   variant = "full",
   className = "",
+  // The `full` variant hardcoded `w-100`, which is right inside a card column
+  // and wrong in a flex row beside another control (a list-layout card, a
+  // sticky bar) where it swallowed the row. Defaults to the old behaviour, so
+  // no existing call site changes.
+  fullWidth = true,
 }) {
+  // A sold car has nothing to sell. Sending a buyer into a seller's WhatsApp
+  // to be told "that went last month" is the top complaint about the
+  // incumbents; the card keeps the listing visible (proof that cars do sell
+  // here) but drops the tap.
+  if (car?.listingStatus === "sold") return null;
+
   const href = buildWhatsAppUrl(
     car?.whatsapp,
     listingEnquiryMessage(car ?? {}, { locale }),
@@ -66,7 +78,9 @@ export default function WhatsAppButton({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`d-inline-flex align-items-center justify-content-center gap-2 w-100 ${className}`}
+      className={`d-inline-flex align-items-center justify-content-center gap-2 ${
+        fullWidth ? "w-100" : ""
+      } ${className}`}
       style={{ ...WHATSAPP_BUTTON_STYLE, padding: "0 16px" }}
     >
       <WhatsAppGlyph size={20} />

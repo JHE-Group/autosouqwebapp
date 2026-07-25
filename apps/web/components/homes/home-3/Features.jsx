@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 export default function Features() {
   return (
     <section className="tf-section3 section-why-choose-us">
@@ -11,19 +12,19 @@ export default function Features() {
                 <li className="tf-icon-list ani5">
                   <i className="icon-autodeal-check" />
                   <span className="fs-18 fw-6 lh-25 text-color-2">
-                    Proven Expertise
+                    Only OMR 1,500 – 6,000
                   </span>
                 </li>
                 <li className="tf-icon-list ani4">
                   <i className="icon-autodeal-check" />
                   <span className="fs-18 fw-6 lh-25 text-color-2">
-                    1 million visits per day
+                    Every listing verified
                   </span>
                 </li>
                 <li className="tf-icon-list ani5">
                   <i className="icon-autodeal-check" />
                   <span className="fs-18 fw-6 lh-25 text-color-2">
-                    7,800 car sellers
+                    One WhatsApp tap to the seller
                   </span>
                 </li>
               </ul>
@@ -57,16 +58,16 @@ export default function Features() {
                   data-wow-delay="0.2s"
                   data-wow-duration="1000ms"
                 >
-                  Why Choose Auto Decar
+                  Why Choose Autosouq
                 </h2>
                 <p
                   className="mt-18 wow fadeInUpSmall"
                   data-wow-delay="0.2s"
                   data-wow-duration="1000ms"
                 >
-                  Our experienced team excels in car sales with many years of
-                  successfully navigating the market, delivering informed
-                  decisions and optimal results.
+                  The reasons to use Autosouq instead of the general classifieds: real
+                  prices, verified listings, GCC spec or import stated plainly,
+                  and one WhatsApp tap to the seller.
                 </p>
               </div>
               <div className="tf-icon-box-list">
@@ -102,11 +103,10 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <a href="#">New range rover, defender, discovery</a>
+                      <Link href="/listing-grid">Real prices</Link>
                     </h5>
                     <p>
-                      Experience the joy of owning a brand new Range Rover,
-                      Defender or Discovery today!
+                      The number on the card is the price the seller is asking, in OMR. No bait figures, no hidden prices, nothing above OMR 6,000.
                     </p>
                   </div>
                 </div>
@@ -142,10 +142,10 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <a href="#">Pre-Owned vehicles</a>
+                      <Link href="/faq">Verified listings</Link>
                     </h5>
                     <p>
-                      AutoDecar has a great selection of pre-owned vehicles.
+                      Every car is checked before it goes live. If we cannot verify it, we do not publish it.
                     </p>
                   </div>
                 </div>
@@ -182,11 +182,10 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <a href="#">Certified pre-owned vehicles</a>
+                      <Link href="/faq">GCC spec or import, stated</Link>
                     </h5>
                     <p>
-                      AutoDecar Demo has a great selection of certified
-                      pre-owned vehicles.
+                      Every listing shows whether the car is GCC spec, a US import or a Japan import, and says so plainly when the seller has not told us.
                     </p>
                   </div>
                 </div>
@@ -226,9 +225,10 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
+                      <Link href="/faq">One WhatsApp tap</Link>
                     </h5>
                     <p>
-                      Get approved today and drive off in a new or used vehicle.
+                      Message the seller straight from the listing. The car and its listed price are already written into the message.
                     </p>
                   </div>
                 </div>

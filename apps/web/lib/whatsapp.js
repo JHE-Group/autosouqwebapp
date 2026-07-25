@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from "@/lib/locale";
 // WhatsApp click-to-chat helpers for Omani numbers.
 // Spec: https://www.appsflyer.com/blog/deep-linking/whatsapp-deep-link/
 //
@@ -53,7 +54,7 @@ export function buildWhatsAppUrl(phone, message) {
  */
 export function listingEnquiryMessage(car, opts = {}) {
   const {
-    locale = "ar",
+    locale = DEFAULT_LOCALE,
     // Must be absolute — a relative path is useless in the seller's chat.
     origin = process.env.NEXT_PUBLIC_SITE_URL || "https://autosouq.om",
   } = opts;

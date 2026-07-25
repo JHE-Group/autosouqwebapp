@@ -5,7 +5,9 @@ import { carData } from "@/data/cars";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import ListingSignals from "@/components/common/ListingSignals";
+import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { useMemo, useState } from "react";
 const priceRanges = [
   { title: "Autosouq — all cars", isActive: true, range: null },
@@ -192,54 +194,59 @@ export default function Cars3() {
                             <div className="img-style">
                               <Image
                                 className="lazyload"
-                                alt="image"
+                                alt={car.imageAlt || car.title || ""}
                                 src={car.imgSrc}
                                 width={450}
                                 height={338}
+                                sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 33vw"
                               />
                             </div>
                           </div>
+                          {/* Order: identity -> price -> disclosures -> wear -> place ->
+                              contact. Price sat under the spec row, and the spec disclosure
+                              NICHE.md says is shown "always" was absent from this card
+                              entirely, as was the one-tap WhatsApp contact. */}
                           <div className="content">
-                            <div className="text-address">
-                              <p className="text-color-3 font">{car.type}</p>
-                            </div>
                             <h5 className="link-style-1">
-                              <Link href={`/listing-detail-v5/${car.id}`}>
+                              <Link href={`/listing-detail-v1/${car.id}`}>
                                 {car.title}
                               </Link>
                             </h5>
-                            <div className="icon-box flex flex-wrap">
-                              <div className="icons flex-three">
-                                <i className="icon-autodeal-km1" />
-                                <span>{car.km.toLocaleString("en-US")} kms</span>
-                              </div>
-                              <div className="icons flex-three">
-                                <i className="icon-autodeal-diesel" />
-                                <span>{car.fuelType}</span>
-                              </div>
-                              <div className="icons flex-three">
-                                <i className="icon-autodeal-automatic" />
-                                <span>{car.transmission}</span>
-                              </div>
-                            </div>
                             <div className="money fs-20 fw-5 lh-25 text-color-3">
                               {formatPrice(car.price, car.currency)}
                             </div>
-                            <div className="days-box flex justify-space align-center">
-                              <div className="img-author">
-                                <Image
-                                  className="lazyload"
-                                  alt="image"
-                                  src={car.authorImage}
-                                  width={120}
-                                  height={120}
-                                />
-                                <span className="font text-color-2 fw-5">
-                                  {car.authorName}
+                            <ListingSignals car={car} className="mt-2" />
+                            <div className="icon-box flex flex-wrap mt-2">
+                              <div className="icons flex-three">
+                                <i className="icon-autodeal-km1" />
+                                <span>
+                                  {Number.isFinite(car.km)
+                                    ? `${car.km.toLocaleString("en-US")} km`
+                                    : "km not stated"}
                                 </span>
                               </div>
+                              {car.transmission && (
+                                <div className="icons flex-three">
+                                  <i className="icon-autodeal-automatic" />
+                                  <span>{car.transmission}</span>
+                                </div>
+                              )}
+                              {car.location && (
+                                <div className="icons flex-three">
+                                  <i className="icon-autodeal-location" />
+                                  <span>{car.location}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-2">
+                              <WhatsAppButton car={car} />
+                            </div>
+                            {/* The author row was bound to authorName / authorImage,
+                                null on every record by deliberate policy, so it rendered
+                                an empty box on every card. */}
+                            <div className="days-box flex justify-space align-center">
                               <Link
-                                href={`/listing-detail-v5/${car.id}`}
+                                href={`/listing-detail-v1/${car.id}`}
                                 className="view-car"
                               >
                                 View car
