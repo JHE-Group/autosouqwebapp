@@ -1,5 +1,6 @@
 "use client";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { canSubmitListing, submitListing } from "@/lib/submitListing";
 import Image from "next/image";
 import React, {
   useCallback,
@@ -203,6 +204,7 @@ const isDirty = (form) =>
   );
 
 export default function AddListing() {
+  const locale = useLocale();
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing");
   const [step, setStep] = useState(0);
@@ -326,6 +328,23 @@ export default function AddListing() {
   }, [form, priceOk, msisdn]);
 
   const canPublish = missing.length === 0;
+
+  // null = nothing attempted. "sent" / "failed" / "not-configured" after.
+  const [submitState, setSubmitState] = useState(null);
+  const submitAvailable = canSubmitListing();
+
+  const handlePublish = () => {
+    if (!canPublish) return;
+    const result = submitListing(form, { locale, title: derivedTitle });
+    if (result.ok) {
+      setSubmitState("sent");
+      // The draft is deliberately NOT cleared: nothing is published yet, and a
+      // seller who closes WhatsApp without sending would otherwise lose
+      // everything they typed.
+    } else {
+      setSubmitState(result.reason === "not-configured" ? "not-configured" : "failed");
+    }
+  };
 
   /* ----------------------------------------------------------- stepping -- */
 
@@ -473,11 +492,14 @@ export default function AddListing() {
                     <button
                       type="button"
                       className="pre-btn"
-                      disabled={!canPublish}
+                      onClick={handlePublish}
+                      disabled={!canPublish || !submitAvailable}
                       title={
                         canPublish
-                          ? undefined
-                          : "Some required answers are still missing"
+                          ? submitAvailable
+                            ? t("publishHint")
+                            : t("notConfigured")
+                          : t("stillNeeded")
                       }
                     >
                       {t("publish")}
@@ -1117,6 +1139,9 @@ function StepReview({
   showExtras,
   setShowExtras,
   onGoTo,
+  onPublish,
+  submitState,
+  submitAvailable,
 }) {
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing.review");
@@ -1413,14 +1438,42 @@ function StepReview({
           nothing has succeeded.
         */}
         <div className="group-button-submit left">
-          <button type="button" className="pre-btn" disabled={!canPublish}>
-            Publish listing
+          <button
+            type="button"
+            className="pre-btn"
+            onClick={onPublish}
+            disabled={!canPublish || !submitAvailable}
+            title={submitAvailable ? tc("publishHint") : tc("notConfigured")}
+          >
+            {tc("publish")}
           </button>
         </div>
-        <p className="tfcl-amber" role="note">
-          Submitting is not switched on yet — there is no account system and no
-          endpoint to send this to. Your answers are kept on this phone only.
-        </p>
+
+        {/* One live region for the outcome. Nothing is claimed until the
+            handoff has actually happened. */}
+        <div aria-live="polite">
+          {submitState === "sent" && (
+            <div className="tfcl-notice" role="status">
+              <strong>{tc("submitted")}</strong>
+              <br />
+              {tc("submittedBody")}
+            </div>
+          )}
+          {submitState === "failed" && (
+            <p className="tfcl-amber" role="alert">
+              {tc("submitFailed")}
+            </p>
+          )}
+        </div>
+
+        {!submitAvailable && (
+          <p className="tfcl-amber" role="note">
+            {tc("notConfigured")}
+          </p>
+        )}
+        {submitAvailable && submitState === null && (
+          <p className="tfcl-hint">{tc("publishHint")}</p>
+        )}
       </div>
     </>
   );

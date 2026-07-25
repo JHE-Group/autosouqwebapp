@@ -397,6 +397,12 @@
     },
     "steps": "Listing steps",
     "stepOf": "Step {n} of {total}",
-    "bandNote": "Autosouq lists cars from {stdMin} to {max} only. Cars from {asisMin} to {asisMax} are accepted but are published with a “{label}” label. Anything above {max} we cannot publish — that is the whole point of the site, not a limit we can lift."
+    "bandNote": "Autosouq lists cars from {stdMin} to {max} only. Cars from {asisMin} to {asisMax} are accepted but are published with a “{label}” label. Anything above {max} we cannot publish — that is the whole point of the site, not a limit we can lift.",
+    "submitted": "Sent — check WhatsApp",
+    "submittedBody": "Your car has been sent to us on WhatsApp. Send the photos in that same chat and we will check the listing and put it live. Nothing is published until we have.",
+    "submitFailed": "That did not send. Nothing has reached us, so please do not assume we have your car — try again.",
+    "notConfigured": "Submitting is not switched on yet — there is no WhatsApp number configured to send this to. Your answers are kept on this phone only.",
+    "publishHint": "Opens WhatsApp with your answers as a message. You can read it before you send it.",
+    "startAnother": "List another car"
   }
 }
