@@ -77,8 +77,31 @@
     },
     "importOrigin": {
       "type": "enumeration",
-      "enum": ["gcc", "us-import", "japan-import", "other"],
-      "default": null
+      "enum": ["gcc", "us-import", "japan-import", "other"]
+    },
+    "cylinders": {
+      "type": "integer",
+      "min": 2,
+      "max": 12
+    },
+    "doors": {
+      "type": "integer",
+      "min": 2,
+      "max": 6
+    },
+    "seats": {
+      "type": "integer",
+      "min": 2,
+      "max": 9
+    },
+    "engineSize": {
+      "type": "decimal",
+      "min": 0.6,
+      "max": 8
+    },
+    "driveType": {
+      "type": "enumeration",
+      "enum": ["fwd", "rwd", "awd", "four_wd"]
     },
     "address": {
       "type": "string"

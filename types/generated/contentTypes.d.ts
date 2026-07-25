@@ -672,8 +672,33 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     currency: Schema.Attribute.Enumeration<['OMR']> &
       Schema.Attribute.DefaultTo<'OMR'>;
+    cylinders: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 12;
+          min: 2;
+        },
+        number
+      >;
     description: Schema.Attribute.RichText;
     descriptionAr: Schema.Attribute.RichText;
+    doors: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 6;
+          min: 2;
+        },
+        number
+      >;
+    driveType: Schema.Attribute.Enumeration<['fwd', 'rwd', 'awd', 'four_wd']>;
+    engineSize: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 8;
+          min: 0.6;
+        },
+        number
+      >;
     featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     features: Schema.Attribute.Relation<'manyToMany', 'api::feature.feature'>;
     fuelType: Schema.Attribute.Relation<
@@ -717,6 +742,14 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
         number
       >;
     publishedAt: Schema.Attribute.DateTime;
+    seats: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 9;
+          min: 2;
+        },
+        number
+      >;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
     soldAsIs: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     title: Schema.Attribute.String & Schema.Attribute.Required;

@@ -47,9 +47,20 @@ async function enablePublicPermissions(strapi: Core.Strapi) {
  * booting. That happens as soon as someone clears the demo listings but leaves
  * the cities/makes/models behind — the listing guard below would not catch it.
  */
+type TaxonomyUid =
+  | "api::city.city"
+  | "api::make.make"
+  | "api::model.model"
+  | "api::body-type.body-type"
+  | "api::condition.condition"
+  | "api::transmission.transmission"
+  | "api::fuel-type.fuel-type"
+  | "api::car-color.car-color"
+  | "api::feature.feature";
+
 async function findOrCreate(
   strapi: Core.Strapi,
-  uid: "api::city.city" | "api::make.make" | "api::model.model",
+  uid: TaxonomyUid,
   data: Record<string, unknown> & { slug: string },
 ) {
   const [existing] = await strapi.documents(uid).findMany({
@@ -122,6 +133,62 @@ async function seedDemoData(strapi: Core.Strapi) {
     });
   }
 
+  // Taxonomies, weighted to what this price band actually contains: almost
+  // everything is an automatic petrol sedan or hatchback in white or silver.
+  async function seedTaxonomy(
+    uid: TaxonomyUid,
+    rows: { name: string; nameAr: string; slug: string; hex?: string }[],
+  ) {
+    const docs: Record<string, string> = {};
+    for (const row of rows) docs[row.slug] = await findOrCreate(strapi, uid, row);
+    return docs;
+  }
+
+  const bodyTypeDocs = await seedTaxonomy("api::body-type.body-type", [
+    { name: "Sedan", nameAr: "سيدان", slug: "sedan" },
+    { name: "Hatchback", nameAr: "هاتشباك", slug: "hatchback" },
+    { name: "SUV", nameAr: "دفع رباعي", slug: "suv" },
+    { name: "Pickup", nameAr: "بيك أب", slug: "pickup" },
+  ]);
+
+  const conditionDocs = await seedTaxonomy("api::condition.condition", [
+    { name: "Used", nameAr: "مستعملة", slug: "used" },
+  ]);
+
+  const transmissionDocs = await seedTaxonomy("api::transmission.transmission", [
+    { name: "Automatic", nameAr: "أوتوماتيك", slug: "automatic" },
+    { name: "Manual", nameAr: "عادي", slug: "manual" },
+  ]);
+
+  const fuelTypeDocs = await seedTaxonomy("api::fuel-type.fuel-type", [
+    { name: "Petrol", nameAr: "بنزين", slug: "petrol" },
+    { name: "Diesel", nameAr: "ديزل", slug: "diesel" },
+  ]);
+
+  const colorDocs = await seedTaxonomy("api::car-color.car-color", [
+    { name: "White", nameAr: "أبيض", slug: "white", hex: "#FFFFFF" },
+    { name: "Silver", nameAr: "فضي", slug: "silver", hex: "#C0C0C0" },
+    { name: "Grey", nameAr: "رمادي", slug: "grey", hex: "#808080" },
+    { name: "Beige", nameAr: "بيج", slug: "beige", hex: "#D9C9A8" },
+    { name: "Black", nameAr: "أسود", slug: "black", hex: "#111111" },
+    { name: "Blue", nameAr: "أزرق", slug: "blue", hex: "#1F3A93" },
+  ]);
+
+  const featureDocs = await seedTaxonomy("api::feature.feature", [
+    { name: "Air conditioning", nameAr: "مكيف", slug: "air-conditioning" },
+    { name: "Power steering", nameAr: "مقود باور", slug: "power-steering" },
+    { name: "Power windows", nameAr: "زجاج كهربائي", slug: "power-windows" },
+    { name: "Central locking", nameAr: "قفل مركزي", slug: "central-locking" },
+    { name: "Driver airbag", nameAr: "وسادة هوائية للسائق", slug: "driver-airbag" },
+    { name: "ABS", nameAr: "مكابح ABS", slug: "abs" },
+    { name: "Rear camera", nameAr: "كاميرا خلفية", slug: "rear-camera" },
+    { name: "Alloy wheels", nameAr: "جنوط", slug: "alloy-wheels" },
+    { name: "Bluetooth", nameAr: "بلوتوث", slug: "bluetooth" },
+    { name: "Cruise control", nameAr: "مثبت سرعة", slug: "cruise-control" },
+    { name: "4WD", nameAr: "دفع رباعي", slug: "four-wd" },
+    { name: "Agency service history", nameAr: "صيانة وكالة", slug: "agency-service" },
+  ]);
+
   // Anchored to real listings observed on Hatla2ee / OpenSooq / YallaMotor Oman.
   // Realism rules that keep this from reading as fake to an Omani buyer:
   // mileage in this band is brutal (200k–400k km is normal), colours are white
@@ -130,6 +197,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "تويوتا كورولا 2015 — XLI",
       slug: "toyota-corolla-2015-xli",
+      cylinders: 4,
+      doors: 4,
+      seats: 5,
+      engineSize: 1.6,
+      driveType: "fwd",
+      bodyType: bodyTypeDocs["sedan"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["white"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["central-locking"], featureDocs["agency-service"]],
+      latitude: 23.5983,
+      longitude: 58.4103,
       importOrigin: "gcc",
       price: 2700, year: 2015, mileage: 216000,
       whatsapp: "96890000001", city: "muscat", make: "toyota", model: "corolla",
@@ -139,6 +219,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "تويوتا يارس 2016",
       slug: "toyota-yaris-2016",
+      cylinders: 4,
+      doors: 5,
+      seats: 5,
+      engineSize: 1.3,
+      driveType: "fwd",
+      bodyType: bodyTypeDocs["hatchback"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["silver"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["bluetooth"]],
+      latitude: 23.5992,
+      longitude: 58.3707,
       importOrigin: "gcc",
       price: 2300, year: 2016, mileage: 228000,
       whatsapp: "96890000002", city: "muscat", make: "toyota", model: "yaris",
@@ -148,6 +241,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "تويوتا كامري 2013 — GL",
       slug: "toyota-camry-2013-gl",
+      cylinders: 4,
+      doors: 4,
+      seats: 5,
+      engineSize: 2.5,
+      driveType: "fwd",
+      bodyType: bodyTypeDocs["sedan"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["white"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["central-locking"], featureDocs["driver-airbag"], featureDocs["abs"], featureDocs["agency-service"]],
+      latitude: 23.6703,
+      longitude: 58.1891,
       importOrigin: "gcc",
       price: 2450, year: 2013, mileage: 167000,
       whatsapp: "96890000003", city: "muscat", make: "toyota", model: "camry",
@@ -157,6 +263,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "نيسان صني 2019",
       slug: "nissan-sunny-2019",
+      cylinders: 4,
+      doors: 4,
+      seats: 5,
+      engineSize: 1.5,
+      driveType: "fwd",
+      bodyType: bodyTypeDocs["sedan"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["white"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["bluetooth"], featureDocs["rear-camera"]],
+      latitude: 23.5859,
+      longitude: 58.5486,
       importOrigin: "gcc",
       price: 1950, year: 2019, mileage: 141000,
       whatsapp: "96890000004", city: "muscat", make: "nissan", model: "sunny",
@@ -166,6 +285,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "هوندا سيفيك 2013",
       slug: "honda-civic-2013",
+      cylinders: 4,
+      doors: 4,
+      seats: 5,
+      engineSize: 1.8,
+      driveType: "fwd",
+      bodyType: bodyTypeDocs["sedan"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["silver"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["alloy-wheels"]],
+      latitude: 22.5667,
+      longitude: 59.5289,
       importOrigin: "us-import",
       price: 2200, year: 2013, mileage: 297000,
       whatsapp: "96890000005", city: "sur", make: "honda", model: "civic",
@@ -175,6 +307,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "هيونداي توسان 2018",
       slug: "hyundai-tucson-2018",
+      cylinders: 4,
+      doors: 5,
+      seats: 5,
+      engineSize: 2,
+      driveType: "awd",
+      bodyType: bodyTypeDocs["suv"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["grey"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["central-locking"], featureDocs["abs"], featureDocs["rear-camera"], featureDocs["bluetooth"], featureDocs["agency-service"]],
+      latitude: 23.5992,
+      longitude: 58.3707,
       importOrigin: "gcc",
       price: 4300, year: 2018, mileage: 222000,
       whatsapp: "96890000006", city: "muscat", make: "hyundai", model: "tucson",
@@ -184,6 +329,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "ميتسوبيشي باجيرو 2014 — 3.5",
       slug: "mitsubishi-pajero-2014",
+      cylinders: 6,
+      doors: 5,
+      seats: 7,
+      engineSize: 3.5,
+      driveType: "four_wd",
+      bodyType: bodyTypeDocs["suv"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["beige"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["four-wd"], featureDocs["alloy-wheels"], featureDocs["cruise-control"]],
+      latitude: 23.7086,
+      longitude: 57.8892,
       importOrigin: "gcc",
       price: 3650, year: 2014, mileage: 230000,
       whatsapp: "96890000007", city: "barka", make: "mitsubishi", model: "pajero",
@@ -193,6 +351,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "تويوتا برادو 2008 — VX",
       slug: "toyota-prado-2008-vx",
+      cylinders: 6,
+      doors: 5,
+      seats: 7,
+      engineSize: 4,
+      driveType: "four_wd",
+      bodyType: bodyTypeDocs["suv"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["silver"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"], featureDocs["four-wd"], featureDocs["alloy-wheels"]],
+      latitude: 24.3417,
+      longitude: 56.7094,
       importOrigin: "gcc",
       price: 5200, year: 2008, mileage: 310000,
       whatsapp: "96890000008", city: "sohar", make: "toyota", model: "prado",
@@ -202,6 +373,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "كيا بيكانتو 2016",
       slug: "kia-picanto-2016",
+      cylinders: 4,
+      doors: 5,
+      seats: 5,
+      engineSize: 1.2,
+      driveType: "fwd",
+      bodyType: bodyTypeDocs["hatchback"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["automatic"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["white"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"]],
+      latitude: 23.5933,
+      longitude: 58.5453,
       importOrigin: "us-import",
       price: 1250, year: 2016, mileage: 378000,
       whatsapp: "96890000009", city: "muscat", make: "kia", model: "picanto",
@@ -211,6 +395,19 @@ async function seedDemoData(strapi: Core.Strapi) {
     {
       title: "سوزوكي سويفت ديزاير 2016",
       slug: "suzuki-swift-dzire-2016",
+      cylinders: 4,
+      doors: 4,
+      seats: 5,
+      engineSize: 1.2,
+      driveType: "fwd",
+      bodyType: bodyTypeDocs["sedan"],
+      condition: conditionDocs["used"],
+      transmission: transmissionDocs["manual"],
+      fuelType: fuelTypeDocs["petrol"],
+      color: colorDocs["silver"],
+      features: [featureDocs["air-conditioning"], featureDocs["power-steering"], featureDocs["power-windows"]],
+      latitude: 23.545,
+      longitude: 58.175,
       importOrigin: "gcc",
       price: 1175, year: 2016, mileage: 224000,
       whatsapp: "96890000010", city: "muscat", make: "suzuki", model: "swift-dzire",
