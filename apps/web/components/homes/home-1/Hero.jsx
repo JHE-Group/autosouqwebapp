@@ -67,7 +67,7 @@ export default function Hero() {
             <Link href="/listing-grid" className="hp-hero__cta">
               Browse cars
             </Link>
-            <Link href="/sell-your-car" className="hp-hero__cta hp-hero__cta--ghost">
+            <Link href="/add-listing" className="hp-hero__cta hp-hero__cta--ghost">
               Sell your car
             </Link>
           </div>

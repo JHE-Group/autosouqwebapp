@@ -56,7 +56,7 @@ export default function Banner() {
                   List it with its real asking price and its spec stated
                   honestly. Buyers reach you on WhatsApp — no account needed.
                 </p>
-                <Link href="/sell-your-car" className="find-cars">
+                <Link href="/add-listing" className="find-cars">
                   <span>List your car</span>
                 </Link>
               </div>

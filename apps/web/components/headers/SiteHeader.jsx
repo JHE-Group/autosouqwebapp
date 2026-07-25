@@ -160,15 +160,21 @@ export default function SiteHeader({ variant = "solid" }) {
 
   const { className, logo, stickyLogo } = VARIANTS[variant] ?? VARIANTS.solid;
 
-  // The public CTA goes to /sell-your-car, not /add-listing. /add-listing is a
-  // dashboard route; sending a cold visitor straight into a listing form skips
-  // the page that tells them what we accept and what the OMR 1,500–6,000 band
-  // means. Inside the dashboard the shortcut is the right call, so the account
-  // variant keeps it.
+  // This used to point at /sell-your-car so a cold visitor met the OMR
+  // 1,500–6,000 band before the form. That was right when the form said nothing
+  // about the band — but the form now opens with it stated in full and checks
+  // the price in four states as it is typed, so the safeguard is inside the
+  // thing it was guarding.
+  //
+  // What was left was the site's most prominent button promising "Sell your
+  // car" and delivering ~700 words of rules. Supply is the binding constraint
+  // (NICHE.md), so the primary action does the thing it says. Anyone who wants
+  // the rules first still has "Sell your car" in the nav, which is the same
+  // label pointing at the page that explains it.
   const cta =
     variant === "account"
       ? { href: "/add-listing", label: "Add listing" }
-      : { href: "/sell-your-car", label: t("sellYourCar") };
+      : { href: "/add-listing", label: t("sellYourCar") };
 
   // The offcanvas is driven by a class on <body> because the backdrop, the
   // scroll lock and the close button all live outside this subtree in the

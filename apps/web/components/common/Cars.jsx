@@ -70,7 +70,7 @@ export default function Cars({
           <p className="hp-empty">
             No cars are listed at the moment. New ones go up as soon as they are
             checked —{" "}
-            <Link href="/sell-your-car" className="hp-link">
+            <Link href="/add-listing" className="hp-link">
               list yours
             </Link>
             .
