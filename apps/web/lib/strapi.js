@@ -1,7 +1,18 @@
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
 
-// Shown when a listing has no gallery images yet.
-const PLACEHOLDER_IMAGE = "/assets/images/car-list/car1.jpg";
+/**
+ * Placeholder imagery for listings whose gallery is still empty.
+ *
+ * These are AI-GENERATED stand-ins, not photographs of real cars — see
+ * public/assets/images/listings/README.md. A real gallery uploaded in Strapi
+ * always wins, so these disappear listing by listing as photos arrive.
+ */
+const PLACEHOLDER_DIR = "/assets/images/listings";
+const PLACEHOLDER_FALLBACK = "/assets/images/car-list/car1.jpg";
+
+function placeholderFor(slug) {
+  return slug ? `${PLACEHOLDER_DIR}/${slug}.jpg` : PLACEHOLDER_FALLBACK;
+}
 
 const LISTING_POPULATE = [
   "populate[gallery]=true",
@@ -93,9 +104,11 @@ export function toCar(listing) {
     authorName: null,
     authorImage: null,
 
-    imgSrc: images[0]?.src ?? PLACEHOLDER_IMAGE,
+    imgSrc: images[0]?.src ?? placeholderFor(listing.slug),
     imageAlt: images[0]?.alt ?? listing.title,
     images,
+    // True only while the listing is running on generated placeholder imagery.
+    hasPlaceholderImage: images.length === 0,
   };
 }
 

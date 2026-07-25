@@ -241,7 +241,7 @@ export default function Cars2({ listings }) {
                                   />
                                 </svg>
                               </div>
-                              {car?.images?.length ?? 0}
+                              {car?.images?.length || ""}
                             </li>
                           </ul>
                           <div className="year flag-tag">{car.year}</div>

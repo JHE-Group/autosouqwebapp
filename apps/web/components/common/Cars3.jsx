@@ -139,7 +139,7 @@ export default function Cars3() {
                                       />
                                     </svg>
                                   </div>
-                                  {car?.images?.length ?? 0}
+                                  {car?.images?.length || ""}
                                 </li>
                               </ul>
                               <div className="year flag-tag">2024</div>

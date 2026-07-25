@@ -91,7 +91,7 @@ export default function Cars2() {
                                     />
                                   </svg>
                                 </div>
-                                {elm?.images?.length ?? 0}
+                                {elm?.images?.length || ""}
                               </li>
                             </ul>
                             <div className="year flag-tag">{elm.year}</div>

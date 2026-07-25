@@ -86,7 +86,7 @@ export default function Cars({ parentClass = "tf-section" }) {
                                     />
                                   </svg>
                                 </div>
-                                {car?.images?.length ?? 0}
+                                {car?.images?.length || ""}
                               </li>
                             </ul>
                             <div className="year flag-tag">{car.year}</div>
