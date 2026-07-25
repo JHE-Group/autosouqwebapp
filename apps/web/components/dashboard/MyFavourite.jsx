@@ -10,6 +10,7 @@ import EmptyState from "./EmptyState";
 import Pagination2 from "../common/Pagination2";
 
 export default function MyFavourite() {
+  const tCommon = useTranslations("common");
   const t = useTranslations("dashboard.saved");
   const tPage = useTranslations("dashboard.page");
   // Stands in for the signed-in buyer's saved cars until auth is wired up.
@@ -153,7 +154,7 @@ function Labels({ car }) {
   return (
     <div className="tfcl-pill-row">
       {car.soldAsIs ? (
-        <span className="tfcl-pill tfcl-pill--as-is">{SOLD_AS_IS.en}</span>
+        <span className="tfcl-pill tfcl-pill--as-is">{tCommon("soldAsIs")}</span>
       ) : null}
       {spec ? (
         <span

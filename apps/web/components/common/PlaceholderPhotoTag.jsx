@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { PLACEHOLDER_NOTICE_STYLE } from "@/components/carDetails/sliders/gallery";
 import { DEFAULT_LOCALE } from "@/lib/locale";
 
@@ -13,9 +14,12 @@ import { DEFAULT_LOCALE } from "@/lib/locale";
  * Renders nothing when the listing has real photos.
  */
 export default function PlaceholderPhotoTag({ car, locale = DEFAULT_LOCALE }) {
+  // Before the early return, for the same hook-ordering reason as above.
+  const t = useTranslations("common");
+
   if (!car?.hasPlaceholderImage) return null;
 
-  const text = locale === "ar" ? "لا توجد صور بعد" : "No photos yet";
+  const text = t("noPhotos");
 
   return (
     <span

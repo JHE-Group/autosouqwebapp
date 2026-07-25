@@ -29,6 +29,7 @@ import Pagination2 from "../common/Pagination2";
  * broken promise as a link that goes nowhere.
  */
 export default function ListingsTable({ listings = [], title }) {
+  const tCommon = useTranslations("common");
   const t = useTranslations("dashboard.listings");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState(ALL_STATUSES);
@@ -327,7 +328,7 @@ function ListingLabels({ listing }) {
   return (
     <div className="tfcl-pill-row">
       {listing.soldAsIs ? (
-        <span className="tfcl-pill tfcl-pill--as-is">{SOLD_AS_IS.en}</span>
+        <span className="tfcl-pill tfcl-pill--as-is">{tCommon("soldAsIs")}</span>
       ) : null}
       {spec ? (
         <span

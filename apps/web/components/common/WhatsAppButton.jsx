@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   buildWhatsAppUrl,
   listingEnquiryMessage,
@@ -40,6 +41,7 @@ export default function WhatsAppButton({
   // no existing call site changes.
   fullWidth = true,
 }) {
+  const t = useTranslations("common");
   // A sold car has nothing to sell. Sending a buyer into a seller's WhatsApp
   // to be told "that went last month" is the top complaint about the
   // incumbents; the card keeps the listing visible (proof that cars do sell
@@ -55,7 +57,7 @@ export default function WhatsAppButton({
   if (!href) return null;
 
   const label =
-    locale === "ar" ? "راسل البائع على واتساب" : "Message seller on WhatsApp";
+    t("whatsapp");
 
   if (variant === "icon") {
     return (

@@ -203,6 +203,7 @@ const isDirty = (form) =>
   );
 
 export default function AddListing() {
+  const tCommon = useTranslations("common");
   const t = useTranslations("addListing");
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -367,7 +368,7 @@ export default function AddListing() {
                     max: money(BAND.MAX),
                     asisMin: money(BAND.ASIS_MIN),
                     asisMax: money(BAND.ASIS_MAX),
-                    label: SOLD_AS_IS.en,
+                    label: tCommon("soldAsIs"),
                   })}
                 </div>
 
@@ -790,6 +791,7 @@ function StepSpec({ form, set }) {
 /* ------------------------------------------------------------- step 3 -- */
 
 function StepPrice({ form, set, priceCheck }) {
+  const tCommon = useTranslations("common");
   const t = useTranslations("addListing.price");
 
   return (
@@ -823,11 +825,11 @@ function StepPrice({ form, set, priceCheck }) {
 
         {priceCheck.state === "as-is" ? (
           <div className="mt-2">
-            <span style={SOLD_AS_IS_STYLE}>{SOLD_AS_IS.en}</span>
+            <span style={SOLD_AS_IS_STYLE}>{tCommon("soldAsIs")}</span>
             <p className="tfcl-amber">
               {t("asIs", {
                 threshold: money(BAND.STANDARD_MIN),
-                label: SOLD_AS_IS.en,
+                label: tCommon("soldAsIs"),
               })}
             </p>
           </div>
@@ -844,7 +846,7 @@ function StepPrice({ form, set, priceCheck }) {
             {t("empty", {
               asisMin: money(BAND.ASIS_MIN),
               asisMax: money(BAND.ASIS_MAX),
-              label: SOLD_AS_IS.en,
+              label: tCommon("soldAsIs"),
               stdMin: money(BAND.STANDARD_MIN),
               max: money(BAND.MAX),
             })}
@@ -1116,6 +1118,7 @@ function StepReview({
   setShowExtras,
   onGoTo,
 }) {
+  const tCommon = useTranslations("common");
   const t = useTranslations("addListing.review");
   const tc = useTranslations("addListing");
   const spec = IMPORT_SPEC_OPTIONS.find((o) => o.value === form.importSpec);
@@ -1155,7 +1158,7 @@ function StepReview({
         </dl>
         {priceCheck.state === "as-is" ? (
           <p className="tfcl-amber">
-            This listing will carry the “{SOLD_AS_IS.en}” label, because of the
+            This listing will carry the “{tCommon("soldAsIs")}” label, because of the
             price. That is set by the band, not by you.
           </p>
         ) : null}

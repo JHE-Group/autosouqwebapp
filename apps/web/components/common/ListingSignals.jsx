@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import {
   importOriginLabel,
   SOLD_AS_IS,
@@ -21,20 +22,8 @@ import { DEFAULT_LOCALE } from "@/lib/locale";
  * scanning a grid sees what a buyer on a detail page sees.
  */
 
-const STATUS = {
-  sold: { en: "Sold", ar: "تم البيع" },
-  reserved: { en: "Reserved", ar: "محجوزة" },
-};
 
-const VERIFIED = {
-  en: "Autosouq checked this listing",
-  ar: "تحقّقنا من هذا الإعلان",
-};
 
-const UNVERIFIED = {
-  en: "Not checked yet",
-  ar: "لم نتحقق منه بعد",
-};
 
 /**
  * Compact wording for dense card layouts.
@@ -44,10 +33,6 @@ const UNVERIFIED = {
  * characters would give away the only thing that makes this badge worth more
  * than theirs.
  */
-const VERIFIED_SHORT = {
-  en: "Autosouq checked",
-  ar: "تحقّقنا منه",
-};
 
 // #2B2F33 on #E9EAEB is 11.20:1. Sold is a fact about availability, not a
 // warning about the car, so it is the loudest *neutral* we have — never red.
@@ -85,11 +70,17 @@ export default function ListingSignals({
    */
   compact = false,
 }) {
+  // Before the `!car` guard: hooks must run in the same order every render, and
+  // an early return above this one makes the call conditional.
+  const t = useTranslations("common");
+
   if (!car) return null;
 
-  const pick = (dict) => dict[locale] ?? dict.ar;
   const origin = importOriginLabel(car.importOrigin, locale);
-  const status = STATUS[car.listingStatus];
+  const status =
+    car.listingStatus === "sold" || car.listingStatus === "reserved"
+      ? car.listingStatus
+      : null;
 
   // 11px/600 still clears the 4.5:1 pairings above; only the box shrinks.
   const dense = compact ? { fontSize: 11, padding: "3px 8px" } : null;
@@ -100,18 +91,18 @@ export default function ListingSignals({
       className={`d-flex flex-wrap ${className}`}
       style={{ gap: compact ? 6 : 8 }}
     >
-      {status && <span style={style(STATUS_STYLE)}>{pick(status)}</span>}
+      {status && <span style={style(STATUS_STYLE)}>{t(status)}</span>}
       <span style={style(origin.stated ? SPEC_PILL_STYLE : SPEC_UNSTATED_STYLE)}>
         {origin.text}
       </span>
       {car.soldAsIs && (
-        <span style={style(SOLD_AS_IS_STYLE)}>{pick(SOLD_AS_IS)}</span>
+        <span style={style(SOLD_AS_IS_STYLE)}>{t("soldAsIs")}</span>
       )}
       {showVerification && (
         <span style={style(car.verified ? VERIFIED_STYLE : SPEC_UNSTATED_STYLE)}>
           {car.verified
-            ? pick(compact ? VERIFIED_SHORT : VERIFIED)
-            : pick(UNVERIFIED)}
+            ? t(compact ? "verifiedShort" : "verified")
+            : t("unverified")}
         </span>
       )}
     </div>

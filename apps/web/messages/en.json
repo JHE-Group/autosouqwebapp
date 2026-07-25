@@ -20,7 +20,15 @@
   "common": {
     "viewAll": "View all",
     "browseCars": "Browse cars",
-    "usedCarsForSale": "Used cars for sale"
+    "usedCarsForSale": "Used cars for sale",
+    "sold": "Sold",
+    "reserved": "Reserved",
+    "verified": "Autosouq checked this listing",
+    "verifiedShort": "Autosouq checked",
+    "unverified": "Not checked yet",
+    "noPhotos": "No photos yet",
+    "whatsapp": "Message seller on WhatsApp",
+    "soldAsIs": "Sold as-is"
   },
   "footer": {
     "tagline": "Oman’s marketplace for affordable used cars, in Arabic and English.",
