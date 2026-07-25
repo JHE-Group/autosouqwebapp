@@ -1,0 +1,15 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+shamefullyHoist: true
+strictPeerDependencies: false
+
+# Allow native/postinstall scripts needed by Next.js and Strapi
+onlyBuiltDependencies:
+  - sharp
+  - core-js-pure
+  - unrs-resolver
+  - esbuild
+  - "@swc/core"
+  - better-sqlite3

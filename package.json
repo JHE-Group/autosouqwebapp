@@ -1,0 +1,15 @@
+{
+  "name": "autosouq",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter @autosouq/web --filter @autosouq/cms dev",
+    "dev:web": "pnpm --filter @autosouq/web dev",
+    "dev:cms": "pnpm --filter @autosouq/cms develop",
+    "build": "pnpm --filter @autosouq/web --filter @autosouq/cms build",
+    "lint": "pnpm --filter @autosouq/web lint"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.12.1"
+}
