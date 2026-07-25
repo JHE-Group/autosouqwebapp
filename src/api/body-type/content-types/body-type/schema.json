@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "body_types",
+  "info": {
+    "singularName": "body-type",
+    "pluralName": "body-types",
+    "displayName": "Body Type",
+    "description": "Sedan, SUV, hatchback, etc."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "nameAr": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "icon": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "listings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::listing.listing",
+      "mappedBy": "bodyType"
+    }
+  }
+}

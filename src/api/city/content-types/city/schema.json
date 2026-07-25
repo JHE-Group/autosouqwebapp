@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cities",
+  "info": {
+    "singularName": "city",
+    "pluralName": "cities",
+    "displayName": "City",
+    "description": "Oman cities for listing location"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "nameAr": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "listings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::listing.listing",
+      "mappedBy": "city"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "transmissions",
+  "info": {
+    "singularName": "transmission",
+    "pluralName": "transmissions",
+    "displayName": "Transmission"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "nameAr": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "listings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::listing.listing",
+      "mappedBy": "transmission"
+    }
+  }
+}

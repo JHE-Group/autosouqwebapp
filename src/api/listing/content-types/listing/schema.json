@@ -1,0 +1,156 @@
+{
+  "kind": "collectionType",
+  "collectionName": "listings",
+  "info": {
+    "singularName": "listing",
+    "pluralName": "listings",
+    "displayName": "Listing",
+    "description": "Car listing for Autosouq.om"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "titleAr": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "description": {
+      "type": "richtext"
+    },
+    "descriptionAr": {
+      "type": "richtext"
+    },
+    "price": {
+      "type": "decimal",
+      "required": true,
+      "min": 1000,
+      "max": 6000
+    },
+    "currency": {
+      "type": "enumeration",
+      "enum": ["OMR"],
+      "default": "OMR"
+    },
+    "year": {
+      "type": "integer",
+      "required": true,
+      "min": 1980,
+      "max": 2100
+    },
+    "mileage": {
+      "type": "integer",
+      "required": true,
+      "min": 0
+    },
+    "whatsapp": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "soldAsIs": {
+      "type": "boolean",
+      "default": false
+    },
+    "listingStatus": {
+      "type": "enumeration",
+      "enum": ["available", "reserved", "sold"],
+      "default": "available"
+    },
+    "importOrigin": {
+      "type": "enumeration",
+      "enum": ["gcc", "us-import", "japan-import", "other"],
+      "default": null
+    },
+    "address": {
+      "type": "string"
+    },
+    "latitude": {
+      "type": "float"
+    },
+    "longitude": {
+      "type": "float"
+    },
+    "videoUrl": {
+      "type": "string"
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "make": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::make.make",
+      "inversedBy": "listings"
+    },
+    "model": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::model.model",
+      "inversedBy": "listings"
+    },
+    "bodyType": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::body-type.body-type",
+      "inversedBy": "listings"
+    },
+    "condition": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::condition.condition",
+      "inversedBy": "listings"
+    },
+    "transmission": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transmission.transmission",
+      "inversedBy": "listings"
+    },
+    "fuelType": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::fuel-type.fuel-type",
+      "inversedBy": "listings"
+    },
+    "color": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::car-color.car-color",
+      "inversedBy": "listings"
+    },
+    "city": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::city.city",
+      "inversedBy": "listings"
+    },
+    "features": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::feature.feature",
+      "inversedBy": "listings"
+    }
+  }
+}

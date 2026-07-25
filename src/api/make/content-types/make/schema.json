@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "makes",
+  "info": {
+    "singularName": "make",
+    "pluralName": "makes",
+    "displayName": "Make",
+    "description": "Car manufacturer (Toyota, Nissan, etc.)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "nameAr": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "models": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::model.model",
+      "mappedBy": "make"
+    },
+    "listings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::listing.listing",
+      "mappedBy": "make"
+    }
+  }
+}
