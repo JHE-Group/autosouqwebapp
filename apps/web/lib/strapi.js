@@ -80,9 +80,16 @@ export function toCar(listing) {
     latitude: listing.latitude ?? null,
     longitude: listing.longitude ?? null,
 
-    // Not in the content model — the theme reads them, so keep the keys.
-    cylinder: null,
-    door: null,
+    // The theme uses singular keys for these two.
+    cylinder: listing.cylinders ?? null,
+    door: listing.doors ?? null,
+    seats: listing.seats ?? null,
+    engineSize: listing.engineSize ?? null,
+    driveType: listing.driveType
+      ? { fwd: "FWD", rwd: "RWD", awd: "AWD", four_wd: "4WD" }[listing.driveType]
+      : null,
+
+    // No seller records in the content model yet — never invent one.
     authorName: null,
     authorImage: null,
 
