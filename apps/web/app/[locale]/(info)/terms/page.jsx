@@ -8,6 +8,12 @@ export const metadata = {
   title: "Terms & Conditions",
   description:
     "The terms for using Autosouq.om, Oman's marketplace for affordable used cars. Plain-language draft pending legal review before launch.",
+  // noindex until counsel signs this off. DraftNotice already tells a reader
+  // this is not in force, but an indexed legal page carrying
+  // "[COMPANY LEGAL NAME — TO CONFIRM]" is a trust problem the banner cannot
+  // fix: it surfaces in search results stripped of its own disclaimer. Remove
+  // this line in the same change that fills in the bracketed details.
+  robots: { index: false, follow: true },
 };
 
 export default function page() {

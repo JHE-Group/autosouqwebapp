@@ -18,9 +18,17 @@ export default function page() {
         your car is priced in the band below, buyers who are ready to buy at
         that price will find it — and they will message you on WhatsApp
         directly. The buyer pays you — Autosouq never handles the money.
-        {" "}
-        <em>[LISTING FEES AT LAUNCH — TO CONFIRM: state here whether listing is
-        free, and any charge, before this page goes live.]</em>
+      </p>
+
+      {/* The route to the form used to be one inline text link, three
+          screens down, after ~700 words. On the page whose only job is
+          converting a seller — and with supply the binding constraint per
+          NICHE.md — the action belongs where the decision is made, and again
+          at the end for anyone who read the rules first. */}
+      <p className="mb-40">
+        <Link className="sc-button" href="/add-listing">
+          <span>Add a listing</span>
+        </Link>
       </p>
 
       <h2 className="mb-20">The price band — please read this first</h2>
@@ -86,11 +94,13 @@ export default function page() {
           "You arrange the viewing, agree the deal and complete the ownership transfer directly with the buyer.",
         ]}
       />
-      <p className="font-2 fs-16 lh-26 mb-40">
-        <Link className="fw-6" href="/add-listing">
-          Add a listing
-        </Link>{" "}
-        when you are ready. It takes a few minutes.
+      <p className="font-2 fs-16 lh-26 mb-20">
+        It takes a few minutes from your phone.
+      </p>
+      <p className="mb-40">
+        <Link className="sc-button" href="/add-listing">
+          <span>Add a listing</span>
+        </Link>
       </p>
 
       <h2 className="mb-20">Selling safely</h2>
