@@ -9,9 +9,7 @@ import Filter from "@/components/homes/home-5/Filter";
 import Hero from "@/components/homes/home-5/Hero";
 import React from "react";
 import Banner from "@/components/common/Banner";
-import Agents from "@/components/common/Agents";
 import Brands from "@/components/common/Brands";
-import Blogs from "@/components/common/Blogs";
 import Footer1 from "@/components/footers/Footer1";
 
 export const metadata = {
@@ -34,9 +32,7 @@ export default function page() {
       <Cars />
       <CarBrands />
       <Banner />
-      <Agents />
       <Brands />
-      <Blogs parentClass="section-blog tf-section3" />
       <Footer1 />
     </>
   );

@@ -2,12 +2,8 @@ import Brands from "@/components/common/Brands";
 import Footer1 from "@/components/footers/Footer1";
 import Header2 from "@/components/headers/Header2";
 import Topbar from "@/components/headers/Topbar";
-import Agents from "@/components/common/Agents";
-import Blogs from "@/components/common/Blogs3";
-import CarReview from "@/components/homes/home-3/CarReview";
 import Cars from "@/components/homes/home-3/Cars";
 import Categories from "@/components/homes/home-3/Categories";
-import Compare from "@/components/homes/home-3/Compare";
 import DownloadApp from "@/components/common/DownloadApp";
 import Features from "@/components/homes/home-3/Features";
 import Filtering from "@/components/homes/home-3/Filtering";
@@ -31,12 +27,8 @@ export default function page() {
       <Categories />
       <Cars />
       <Features />
-      <Agents />
       <DownloadApp />
       <Testimonials />
-      <Compare />
-      <CarReview />
-      <Blogs />
       <Brands />
       <Footer1 />
     </>

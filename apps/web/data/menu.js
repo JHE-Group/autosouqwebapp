@@ -53,29 +53,7 @@ export const listingPages = [
 export const otherPages = [
   { href: "/about-us", text: "About Us" },
   { href: "/faq", text: "Faq's" },
-  { href: "/pricing", text: "Pricing" },
-  { href: "/compare", text: "Compare" },
-  {
-    className: "dropdown2",
-    title: "Dealer",
-    links: [
-      { href: "/dealer-listing", text: "Dealer listing" },
-      { href: "/dealer-detail/1", text: "Dealer detail" },
-    ],
-  },
-  {
-    className: "dropdown2",
-    title: "Agents",
-    links: [
-      { href: "/sale-agents", text: "Sale agents" },
-      { href: "/sale-agents-detail/1", text: "Sale agents detail" },
-    ],
-  },
   { href: "/dashboard", text: "Dashboard" },
 ];
 
-export const blogPages = [
-  { href: "/blog", text: "Blog List" },
-  { href: "/blog-grid", text: "Blog Grid" },
-  { href: "/blog-detail/1", text: "Blog Detail" },
-];
+export const blogPages = [];

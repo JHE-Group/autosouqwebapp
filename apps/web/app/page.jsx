@@ -1,10 +1,8 @@
 import Footer1 from "@/components/footers/Footer1";
 import Header1 from "@/components/headers/Header1";
 import Banner from "@/components/common/Banner";
-import Blogs from "@/components/common/Blogs";
 import Brands from "@/components/common/Brands";
 import CarBrands from "@/components/homes/home-1/CarBrands";
-import CarReview from "@/components/common/CarReview";
 import Cars from "@/components/common/Cars";
 import Cars2 from "@/components/homes/home-1/Cars2";
 import Categories from "@/components/homes/home-1/Categories";
@@ -30,8 +28,6 @@ export default function Home() {
       <Cars2 />
       <Banner />
       <CarBrands />
-      <CarReview />
-      <Blogs />
       <Brands />
       <Footer1 />
     </>

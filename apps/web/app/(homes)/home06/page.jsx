@@ -5,9 +5,7 @@ import Cars from "@/components/common/Cars";
 import CarSlider from "@/components/common/CarSlider";
 import Footer1 from "@/components/footers/Footer1";
 import Header2 from "@/components/headers/Header2";
-import Blogs from "@/components/common/Blogs2";
 import CarBrands2 from "@/components/common/CarBrands2";
-import CarCompare from "@/components/common/CarCompare";
 import Filter from "@/components/homes/home-6/Filter";
 import Hero from "@/components/homes/home-6/Hero";
 import LoanCalculaator from "@/components/homes/home-6/Banner2";
@@ -31,8 +29,6 @@ export default function page() {
       <CarBrands2 />
       <Banner />
       <CarSlider />
-      <CarCompare />
-      <Blogs />
       <Brands />
       <Footer1 />
     </>

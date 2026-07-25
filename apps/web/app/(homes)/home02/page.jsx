@@ -1,10 +1,8 @@
-import Blogs from "@/components/common/Blogs";
 import Brands from "@/components/common/Brands";
 import Footer1 from "@/components/footers/Footer1";
 import Header1 from "@/components/headers/Header1";
 import Banner from "@/components/homes/home-2/Banner";
 import CarBrands from "@/components/homes/home-2/CarBrands";
-import CarCompare from "@/components/homes/home-2/CarCompare";
 import Cars from "@/components/homes/home-2/Cars";
 import Cars2 from "@/components/common/Cars2";
 import CarSlider from "@/components/common/CarSlider";
@@ -30,9 +28,7 @@ export default function page() {
       <Features />
       <Banner />
       <CarBrands />
-      <CarCompare />
       <Cars2 />
-      <Blogs parentClass="section-blog tf-section3" />
       <Brands />
       <Footer1 />
     </>

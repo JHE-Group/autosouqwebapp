@@ -1,5 +1,5 @@
 "use client";
-import { blogPages, homepages, listingPages, otherPages } from "@/data/menu";
+import { homepages, listingPages, otherPages } from "@/data/menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
@@ -183,28 +183,6 @@ export default function MobileNav() {
                   ) : (
                     <Link href={item.href}>{item.text}</Link>
                   )}
-                </li>
-              ))}
-            </ul>
-            <div className="dropdown2-btn" onClick={handleActive1} />
-          </li>
-          <li
-            className={`dropdown2  parent-menu-1 ${
-              isActive(blogPages) ? "current" : ""
-            } `}
-          >
-            <a href="#">Blog</a>
-            <ul>
-              {blogPages.map((item, index) => (
-                <li
-                  key={index}
-                  className={
-                    item.href.split("/")[1] == pathname.split("/")[1]
-                      ? "current"
-                      : ""
-                  }
-                >
-                  <Link href={item.href}>{item.text}</Link>
                 </li>
               ))}
             </ul>

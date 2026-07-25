@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { blogPages, homepages, listingPages, otherPages } from "@/data/menu";
+import { homepages, listingPages, otherPages } from "@/data/menu";
 import { usePathname } from "next/navigation";
 
 export default function Nav() {
@@ -112,23 +112,6 @@ export default function Nav() {
               ) : (
                 <Link href={item.href}>{item.text}</Link>
               )}
-            </li>
-          ))}
-        </ul>
-      </li>
-      <li className={`dropdown2  ${isActive(blogPages) ? "current" : ""} `}>
-        <a href="#">Blog</a>
-        <ul>
-          {blogPages.map((item, index) => (
-            <li
-              key={index}
-              className={
-                item.href.split("/")[1] == pathname.split("/")[1]
-                  ? "current"
-                  : ""
-              }
-            >
-              <Link href={item.href}>{item.text}</Link>
             </li>
           ))}
         </ul>

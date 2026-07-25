@@ -1,4 +1,3 @@
-import Blogs2 from "@/components/common/Blogs2";
 import Brands from "@/components/common/Brands";
 import CarBrands from "@/components/common/CarBrands";
 import Categories2 from "@/components/common/Categories2";
@@ -33,7 +32,6 @@ export default function page() {
       <div className="mt-5 pt-5"></div>
       <Cars3 />
       <Testimonials />
-      <Blogs2 />
       <Brands />
       <Footer1 />
     </>

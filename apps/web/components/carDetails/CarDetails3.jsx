@@ -4,7 +4,6 @@ import React from "react";
 import Slider3 from "./sliders/Slider3";
 import Image from "next/image";
 import Description from "./detailComponents/Description";
-import CarReview from "./detailComponents/CarReview";
 import Features from "./detailComponents/Features";
 import Overview from "./detailComponents/Overview";
 import ProfileInfo from "./detailComponents/ProfileInfo";
@@ -132,11 +131,6 @@ export default function CarDetails3({ carItem = allCars[0] }) {
                       Recommended cars
                     </a>
                   </li>
-                  <li className="nav-item">
-                    <a className="nav-link" href="#scrollspyHeading5">
-                      New car reviews
-                    </a>
-                  </li>
                 </ul>
               </nav>
             </div>
@@ -215,18 +209,6 @@ export default function CarDetails3({ carItem = allCars[0] }) {
                             loading="lazy"
                           />
                           )}
-                      </div>
-                      <div className="listing-line" />
-                      <div
-                        className="listing-reviews flat-property-detail"
-                        id="scrollspyHeading5"
-                      >
-                        <div className="box-title">
-                          <h2 className="title-ct">
-                            Car User Reviews &amp; Rating
-                          </h2>
-                        </div>
-                        <CarReview />
                       </div>
                     </div>
                   </div>

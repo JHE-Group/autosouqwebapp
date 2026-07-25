@@ -50,7 +50,7 @@ export default function Categories() {
                 What would you like to find?
               </h2>
               <Link
-                href={`/blog-grid`}
+                href={`/listing-grid`}
                 className="tf-btn-arrow wow fadeInUpSmall"
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"

@@ -1,4 +1,3 @@
-import Agents from "@/components/common/Agents";
 import Brands from "@/components/common/Brands";
 import Footer1 from "@/components/footers/Footer1";
 import RecomandedCars from "@/components/common/RecomandedCars";
@@ -22,7 +21,6 @@ export default function page() {
       <Banner />
       <div className="mt-5 pt-5"></div>
       <Features />
-      <Agents parentClass="tf-section3" />
       <Brands />
       <Testimonials />
       <RecomandedCars />

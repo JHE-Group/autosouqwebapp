@@ -6,7 +6,6 @@ import Image from "next/image";
 import Description from "./detailComponents/Description";
 import Overview from "./detailComponents/Overview";
 import Features from "./detailComponents/Features";
-import CarReview from "./detailComponents/CarReview";
 import ProfileInfo from "./detailComponents/ProfileInfo";
 import Recommended from "./detailComponents/Recommended";
 import { allCars } from "@/data/cars";
@@ -43,11 +42,6 @@ export default function CarDetails5({ carItem = allCars[0] }) {
                   <li className="nav-item">
                     <a className="nav-link" href="#scrollspyHeading3">
                       Recommended cars
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a className="nav-link" href="#scrollspyHeading5">
-                      New car reviews
                     </a>
                   </li>
                 </ul>
@@ -157,18 +151,6 @@ export default function CarDetails5({ carItem = allCars[0] }) {
                             loading="lazy"
                           />
                           )}
-                      </div>
-                      <div className="listing-line" />
-                      <div
-                        className="listing-reviews flat-property-detail"
-                        id="scrollspyHeading5"
-                      >
-                        <div className="box-title">
-                          <h2 className="title-ct">
-                            Car User Reviews &amp; Rating
-                          </h2>
-                        </div>
-                        <CarReview />
                       </div>
                     </div>
                   </div>
