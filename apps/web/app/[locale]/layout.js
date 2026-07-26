@@ -15,6 +15,7 @@ import {
   organizationJsonLd,
   webSiteJsonLd,
 } from "@/lib/seo";
+import { Analytics } from "@vercel/analytics/next";
 
 // Must be absolute for og:image / canonical to resolve. Falls back to the
 // production origin so a build without the env var still emits real URLs.
@@ -156,6 +157,7 @@ export default async function RootLayout({ children, params }) {
         <NextIntlClientProvider messages={await pickMessages()}>
           <ClientShell>{children}</ClientShell>
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );
