@@ -16,6 +16,7 @@ import {
   webSiteJsonLd,
 } from "@/lib/seo";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 // Must be absolute for og:image / canonical to resolve. Falls back to the
 // production origin so a build without the env var still emits real URLs.
@@ -158,6 +159,7 @@ export default async function RootLayout({ children, params }) {
           <ClientShell>{children}</ClientShell>
         </NextIntlClientProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
