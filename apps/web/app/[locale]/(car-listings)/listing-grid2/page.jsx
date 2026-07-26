@@ -1,6 +1,6 @@
 import { getListings } from "@/lib/strapi";
 import Cars3 from "@/components/carsListings/Cars3";
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
 import React from "react";
 import { Link } from "@/i18n/navigation";
@@ -43,7 +43,7 @@ export default async function page({ params }) {
         </div>
       </section>
       <Cars3 listings={listings} />
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

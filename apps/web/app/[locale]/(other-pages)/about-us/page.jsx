@@ -1,4 +1,4 @@
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import RecomandedCars from "@/components/common/RecomandedCars";
 import Header2 from "@/components/headers/Header2";
 import Features from "@/components/homes/home-3/Features";
@@ -18,7 +18,8 @@ export async function generateMetadata({ params }) {
   locale,
   });
 }
-export default function page() {
+export default async function page({ params }) {
+  const { locale } = await params;
   return (
     <>
       <div className="header-fixed">
@@ -28,7 +29,7 @@ export default function page() {
       <div className="mt-5 pt-5"></div>
       <Features />
       <RecomandedCars />
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

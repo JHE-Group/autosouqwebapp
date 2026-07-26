@@ -905,7 +905,7 @@ function StepPrice({ form, set, priceCheck }) {
         rather than the whole grid.
       */}
       <p className="tfcl-hint">
-        <Link href="/listing-grid" className="tfcl-linkish">
+        <Link href="/used-cars" className="tfcl-linkish">
           {t("compareLink")}
         </Link>{" "}
         {t("compareTail")}
@@ -1599,14 +1599,28 @@ const LIEN_OPTIONS = [
 ];
 
 const OMAN_CITIES = [
+  // Muscat Governorate first — highest listing volume (seo-research §3.5).
   { en: "Muscat", ar: "مسقط" },
   { en: "Seeb", ar: "السيب" },
+  { en: "Bawshar", ar: "بوشر" },
+  { en: "Muttrah", ar: "مطرح" },
+  { en: "Al Amarat", ar: "العامرات" },
+  { en: "Al Khuwair", ar: "الخوير" },
+  { en: "Al Ghubrah", ar: "الغبرة" },
+  { en: "Azaiba", ar: "العذيبة" },
+  { en: "Ruwi", ar: "روي" },
+  { en: "Qurum", ar: "القرم" },
+  { en: "Al Mawaleh", ar: "الموالح" },
+  { en: "Al Khoud", ar: "الخوض" },
+  { en: "Al Maabilah", ar: "المعبيلة" },
+  { en: "Quriyat", ar: "قريات" },
+  // Rest of Oman
   { en: "Sohar", ar: "صحار" },
+  { en: "Barka", ar: "بركاء" },
   { en: "Salalah", ar: "صلالة" },
   { en: "Nizwa", ar: "نزوى" },
   { en: "Sur", ar: "صور" },
   { en: "Ibri", ar: "عبري" },
-  { en: "Barka", ar: "بركاء" },
   { en: "Rustaq", ar: "الرستاق" },
   { en: "Ibra", ar: "إبراء" },
   { en: "Buraimi", ar: "البريمي" },

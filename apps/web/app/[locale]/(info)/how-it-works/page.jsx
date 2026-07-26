@@ -3,15 +3,23 @@ import React from "react";
 import BulletList from "../_components/BulletList";
 import InfoShell from "../_components/InfoShell";
 
-export const metadata = {
-  title: "How it works",
-  description:
-    "How buying and selling an affordable used car on Autosouq.om works in Oman: browse OMR 1,500–6,000 listings, check the GCC-spec or import disclosure, then one WhatsApp tap to the seller.",
-};
+import { pageMetadata } from "@/lib/seo";
 
-export default function page() {
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
+    title: "How buying and selling used cars works in Oman",
+    description:
+      "How buying and selling an affordable used car on Autosouq.om works in Oman: browse OMR 1,500–6,000 listings, check the GCC-spec or import disclosure, then one WhatsApp tap to the seller.",
+    path: "/how-it-works",
+    locale,
+  });
+}
+
+export default async function page({ params }) {
+  const { locale } = await params;
   return (
-    <InfoShell breadcrumb="How it works">
+    <InfoShell breadcrumb="How it works" locale={locale}>
       <h1 className="mb-20">How Autosouq works</h1>
       <p className="font-2 fs-18 lh-28 mb-40">
         Autosouq.om is a marketplace for affordable used cars in Oman, priced
@@ -27,7 +35,7 @@ export default function page() {
         Every car on the site is inside the band. Nothing above OMR 6,000 is
         ever listed, so you are not scrolling past cars you were never going to
         buy. Start with{" "}
-        <Link className="fw-6" href="/listing-grid">
+        <Link className="fw-6" href="/used-cars">
           used cars in Oman
         </Link>{" "}
         or find what is close to you on the{" "}

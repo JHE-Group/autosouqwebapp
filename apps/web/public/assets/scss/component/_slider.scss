@@ -602,6 +602,30 @@
 
 //flat tabs
 .flat-filter-search {
+  // Keep open nice-select menus above the results `.tf-section` that follows.
+  // Without a stacking context here, long option lists (Make → Toyota) paint
+  // under the section and clicks hit the section instead of the option.
+  position: relative;
+  z-index: 20;
+  overflow: visible;
+
+  .form-sl,
+  .flat-tabs,
+  .content-tab,
+  .content-inner,
+  .wd-find-select,
+  .group-select {
+    overflow: visible;
+  }
+
+  .nice-select.open {
+    z-index: 30;
+  }
+
+  .nice-select.open .list {
+    z-index: 31;
+  }
+
   &.home {
     .form-sl {
       border-radius: 0px 16px 16px 16px;
@@ -1840,10 +1864,21 @@ $hp-hero-scrim-top: linear-gradient(
 .hp-hero__title {
   font-family: $font-1;
   font-weight: 600;
-  font-size: clamp(2rem, 6.2vw, 3.5rem);
+  font-size: clamp(2.25rem, 7vw, 3.75rem);
   line-height: 1.06;
   color: $color-1;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+// Niche line under the brand — secondary to the wordmark, still one composition.
+.hp-hero__headline {
+  font-family: $font-1;
+  font-weight: 600;
+  font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+  line-height: 1.25;
+  color: $brand-cream;
+  margin-bottom: 14px;
+  max-width: 34rem;
 }
 
 .hp-hero__lede {
@@ -1853,6 +1888,24 @@ $hp-hero-scrim-top: linear-gradient(
   color: $brand-cream;
   margin-bottom: 22px;
   max-width: 34rem;
+}
+
+// Shared cream catalogue note (browse banner + sell-flow voice).
+.asq-band-note {
+  background: $brand-cream;
+  color: $brand-indigo;
+  border: 1px solid rgba(38, 34, 98, 0.15);
+  border-radius: $radius-card;
+  padding: 14px 18px;
+  margin: 18px 0 0;
+  font-family: $font-2;
+  font-size: 15px;
+  line-height: $lh-loose;
+  max-width: 40rem;
+}
+
+.tf-banner .asq-band-note {
+  margin-top: 16px;
 }
 
 .hp-hero__facts {

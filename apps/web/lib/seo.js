@@ -24,22 +24,24 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://autosouq.om
 export const SITE_NAME = "Autosouq.om";
 
 /**
- * The one listing-detail layout that is allowed to be indexed.
+ * Canonical listing URL prefix.
  *
- * The theme ships five detail layouts (`/listing-detail-v1/[id]` …`-v5`) that
- * render the *same listing* at five URLs. Left alone that is five near-identical
- * pages per car competing with each other for the same query. v2–v5 declare this
- * one via `alternates.canonical`, and only this one appears in the sitemap.
+ * Keyword form from design/seo-research.md §8.3:
+ * `/car/{id}-{make}-{model}-{year}-{city}`. The legacy theme path
+ * `/listing-detail-v1/[id]` redirects here.
  */
+export const CANONICAL_LISTING_PREFIX = "car";
+
+/** @deprecated Use CANONICAL_LISTING_PREFIX — kept for any lingering imports. */
 export const CANONICAL_LISTING_LAYOUT = "listing-detail-v1";
 
 /**
  * Likewise for browsing: the theme has five views of the identical result set
- * (grid, grid-2, list, and two map variants). One is indexable; the rest
- * canonicalise here. When real facet routes land (`/used-cars/muscat`,
- * `/toyota-corolla`) they become the indexable browse surface, not these.
+ * (grid, grid-2, list, and two map variants). The indexable browse surface is
+ * `/used-cars` (plus gated `/used-cars/{facet}` landers). Theme layout URLs
+ * canonicalise here so they do not compete.
  */
-export const CANONICAL_LISTINGS_PATH = "/listing-grid";
+export const CANONICAL_LISTINGS_PATH = "/used-cars";
 
 /** Normalise to a rooted, trailing-slash-free path: "faq" -> "/faq". */
 export function canonicalPath(path = "/") {
@@ -53,9 +55,72 @@ export function absoluteUrl(path = "/") {
   return new URL(canonicalPath(path), SITE_URL).toString();
 }
 
-/** Canonical detail URL for a listing, in whichever layout currently wins. */
-export function listingPath(id, locale) {
-  const base = `/${CANONICAL_LISTING_LAYOUT}/${encodeURIComponent(String(id))}`;
+/** ASCII kebab segment for listing URL slugs. */
+function slugPart(value) {
+  return String(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
+/**
+ * Keyword slug: `{id}-{make}-{model}-{year}-{city}`.
+ *
+ * Demo cars use a numeric `id`, so the full keyword form is built. CMS cars
+ * set `id` to the listing slug (already `make-model-year…`) — only the city
+ * is appended, so we never emit `suzuki-swift-…-suzuki-swift-…-muscat`.
+ */
+export function listingSlug(car) {
+  if (car == null) return "";
+  if (typeof car !== "object") return slugPart(car);
+  const idStr = car.id === undefined || car.id === null ? "" : String(car.id).trim();
+  if (!idStr) return "";
+
+  if (/^\d+$/.test(idStr)) {
+    return [idStr, car.make, car.model, car.year, car.location]
+      .filter(
+        (part) =>
+          part !== undefined && part !== null && String(part).trim() !== "",
+      )
+      .map(slugPart)
+      .join("-");
+  }
+
+  const base = slugPart(idStr);
+  const city = car.location ? slugPart(car.location) : "";
+  if (city && base !== city && !base.endsWith(`-${city}`)) {
+    return `${base}-${city}`;
+  }
+  return base;
+}
+
+/**
+ * Pull a lookup key off a `/car/{slug}` segment.
+ *
+ * Numeric demo URLs keep the leading id. CMS URLs keep the full segment —
+ * callers must resolve via `resolveListing()` (slug ± trailing city), not by
+ * truncating at the first hyphen.
+ */
+export function listingIdFromSlug(slug) {
+  const raw = String(slug ?? "").trim();
+  if (!raw) return "";
+  const numeric = raw.match(/^(\d+)(?:-|$)/);
+  if (numeric) return numeric[1];
+  return raw;
+}
+
+/**
+ * Canonical detail URL.
+ * Pass a listing object for the full keyword slug, or a bare id for `/car/{id}`.
+ */
+export function listingPath(carOrId, locale) {
+  const slug =
+    carOrId && typeof carOrId === "object"
+      ? listingSlug(carOrId)
+      : slugPart(carOrId);
+  const base = `/${CANONICAL_LISTING_PREFIX}/${encodeURIComponent(slug)}`;
   return locale ? `/${locale}${base}` : base;
 }
 
@@ -92,6 +157,7 @@ export function pageMetadata({
   locale,
   type = "website",
   titleAbsolute = false,
+  robots,
 }) {
   const canonicalPathForPage = localizedPath(canonical, locale);
   const url = absoluteUrl(canonicalPathForPage);
@@ -101,6 +167,7 @@ export function pageMetadata({
     alternates: { canonical: canonicalPathForPage },
     openGraph: { type, url, title, description, siteName: SITE_NAME },
     twitter: { card: "summary_large_image", title, description },
+    ...(robots ? { robots } : {}),
   };
 }
 
@@ -250,7 +317,7 @@ function specLabel(origin) {
 export function vehicleJsonLd(car, { path } = {}) {
   if (!car || !car.title) return undefined;
 
-  const url = absoluteUrl(path || listingPath(car.id));
+  const url = absoluteUrl(path || listingPath(car));
   const price = Number(car.price);
   const hasPrice = Number.isFinite(price) && price > 0;
   const km = Number(car.km);
@@ -318,11 +385,16 @@ export function vehicleJsonLd(car, { path } = {}) {
 /* Listing copy                                                        */
 /* ------------------------------------------------------------------ */
 
-/** "2015 Toyota Corolla XLI — 2,700 OMR" — real car, real price, no filler. */
+/**
+ * SERP title: "{year make model} for sale in {city} — {price}".
+ * Falls back cleanly when city/price are missing.
+ */
 export function listingTitle(car) {
   if (!car?.title) return "Used car for sale in Oman";
+  const place = car.location ? ` for sale in ${car.location}` : " for sale in Oman";
   const price = Number(car.price);
-  return price > 0 ? `${car.title} — ${formatPrice(price, car.currency)}` : car.title;
+  const head = `${car.title}${place}`;
+  return price > 0 ? `${head} — ${formatPrice(price, car.currency)}` : head;
 }
 
 /**

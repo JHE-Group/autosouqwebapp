@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { formatPrice } from "@/lib/format";
+import { listingPath } from "@/lib/seo";
 import { buildWhatsAppUrl, WHATSAPP_BUTTON_STYLE } from "@/lib/whatsapp";
 import FilterChips, { chipsFor } from "./FilterChips";
 import { findRelaxedMatches } from "./filterLogic";
@@ -116,7 +117,7 @@ function RelaxedMatch({ car, locale }) {
     >
       {car.imgSrc && (
         <Link
-          href={`/listing-detail-v1/${car.id}`}
+          href={listingPath(car)}
           style={{ flex: "0 0 96px" }}
           aria-hidden="true"
           tabIndex={-1}
@@ -134,7 +135,7 @@ function RelaxedMatch({ car, locale }) {
       )}
       <div className="flex-grow-1">
         <h6 className="mb-1">
-          <Link href={`/listing-detail-v1/${car.id}`}>{car.title}</Link>
+          <Link href={listingPath(car)}>{car.title}</Link>
         </h6>
         <div className="fs-14 fw-6" style={{ color: INK }}>
           {formatPrice(car.price, car.currency)}
@@ -171,8 +172,17 @@ export default function EmptyResults({
       <h3 className="mb-1" style={{ color: INK }}>
         {t("title")}
       </h3>
-      <p className="mb-3" style={{ color: "#5C6368" }}>
+      <p className="mb-2" style={{ color: "#5C6368" }}>
         {t("body")}
+      </p>
+      <p
+        className="mb-3"
+        style={{
+          ...RELAXED_BANNER_STYLE,
+          fontWeight: 500,
+        }}
+      >
+        {t("bandNote")}
       </p>
 
       {chips.length > 0 && (
@@ -216,7 +226,7 @@ export default function EmptyResults({
           </button>
         )}
         <Link
-          href="/listing-grid"
+          href="/used-cars"
           className="btn btn-link"
           style={{ color: ACCENT_TEXT, minHeight: 48, fontWeight: 600 }}
         >

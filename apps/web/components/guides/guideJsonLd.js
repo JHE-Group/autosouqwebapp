@@ -1,5 +1,6 @@
-import { absoluteUrl, SITE_NAME } from "@/lib/seo";
+import { absoluteUrl, localizedPath, SITE_NAME } from "@/lib/seo";
 import { guidePath, guidesInOrder } from "@/data/guides";
+import { DEFAULT_LOCALE } from "@/i18n/routing";
 
 /**
  * `Article` JSON-LD for a guide.
@@ -25,8 +26,8 @@ import { guidePath, guidesInOrder } from "@/data/guides";
  * hand-maintained. They are the same dates rendered visibly on the page, which
  * is the point: the structured data and the copy must not be able to disagree.
  */
-export function guideArticleJsonLd(guide) {
-  const url = absoluteUrl(guidePath(guide.slug));
+export function guideArticleJsonLd(guide, locale = DEFAULT_LOCALE) {
+  const url = absoluteUrl(localizedPath(guidePath(guide.slug), locale));
   return {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -39,7 +40,7 @@ export function guideArticleJsonLd(guide) {
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     datePublished: guide.datePublished,
     dateModified: guide.dateModified,
-    inLanguage: "en-OM",
+    inLanguage: locale === "ar" ? "ar-OM" : "en-OM",
     isAccessibleForFree: true,
     author: {
       "@type": "Organization",
@@ -62,11 +63,12 @@ export function guideArticleJsonLd(guide) {
  * information. `ItemList` with real names and URLs is the part a consumer can
  * use.
  */
-export function guidesItemListJsonLd() {
+export function guidesItemListJsonLd(locale = DEFAULT_LOCALE) {
+  const hub = absoluteUrl(localizedPath("/guides", locale));
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "@id": `${absoluteUrl("/guides")}#guides`,
+    "@id": `${hub}#guides`,
     name: `Guides — ${SITE_NAME}`,
     itemListOrder: "https://schema.org/ItemListOrderAscending",
     numberOfItems: guidesInOrder.length,
@@ -74,7 +76,7 @@ export function guidesItemListJsonLd() {
       "@type": "ListItem",
       position: index + 1,
       name: guide.h1,
-      url: absoluteUrl(guidePath(guide.slug)),
+      url: absoluteUrl(localizedPath(guidePath(guide.slug), locale)),
     })),
   };
 }

@@ -1,4 +1,4 @@
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
 import Faqs from "@/components/otherPages/Faqs";
 import React from "react";
@@ -15,7 +15,8 @@ export async function generateMetadata({ params }) {
   locale,
   });
 }
-export default function page() {
+export default async function page({ params }) {
+  const { locale } = await params;
   return (
     <>
       <div className="header-fixed">
@@ -38,7 +39,7 @@ export default function page() {
         </div>
       </section>
       <Faqs />
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

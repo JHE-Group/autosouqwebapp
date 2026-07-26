@@ -33,6 +33,33 @@ function strapiRemotePattern() {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /*
+   * Legacy theme browse URLs → canonical `/used-cars`.
+   * Page-level `redirect()` alone is not enough: these routes were being
+   * statically prerendered as 200s, so crawlers and clients stayed on the
+   * old path. Config redirects run before that.
+   */
+  async redirects() {
+    const legacyBrowse = [
+      "listing-grid",
+      "listing-grid2",
+      "listing-list",
+      "listing-list-map",
+      "listing-grid-map",
+    ];
+    return legacyBrowse.flatMap((path) => [
+      {
+        source: `/${path}`,
+        destination: "/used-cars",
+        permanent: true,
+      },
+      {
+        source: `/:locale(ar|en)/${path}`,
+        destination: "/:locale/used-cars",
+        permanent: true,
+      },
+    ]);
+  },
   images: {
     /*
      * `unoptimized: true` is DELIBERATELY still here. Removing it is worth

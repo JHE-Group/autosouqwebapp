@@ -30,6 +30,35 @@
     "whatsapp": "Message seller on WhatsApp",
     "soldAsIs": "Sold as-is"
   },
+  "brand": {
+    "name": "Autosouq.om",
+    "band": "OMR 1,500–6,000",
+    "bandLong": "OMR 1,500 to 6,000",
+    "heroHeadline": "Affordable used cars, OMR 1,500–6,000",
+    "heroLede": "The price band most of the country actually buys in — and nothing above it. Every car is checked before it goes live.",
+    "heroFactPrices": "Real asking prices",
+    "heroFactSpec": "GCC spec or import, stated",
+    "heroFactWhatsapp": "One WhatsApp tap",
+    "browseCars": "Browse cars",
+    "sellYourCar": "Sell your car",
+    "catalogueNote": "Autosouq lists only affordable used cars in Oman, OMR 1,500–6,000. Nothing above that band is published.",
+    "promisesTitle": "What Autosouq promises",
+    "promisesLede": "Four things, on every car in the OMR 1,500–6,000 band. Nothing above that is listed — and you can hold any listing to all four.",
+    "guidesTitle": "Before you buy",
+    "guidesLede": "How to buy an affordable used car in Oman’s OMR 1,500–6,000 band without getting burned — written for a first car, not for a collector.",
+    "guidesAll": "All guides",
+    "howWeCheck": "How we check a listing",
+    "promises": {
+      "priceTitle": "Real prices",
+      "priceBody": "The number on the card is the price the seller is asking, in OMR. No bait figures, no “price on request”.",
+      "verifiedTitle": "Verified listings",
+      "verifiedBody": "We check a listing before it goes live, and we publish exactly what that check covers. If we have not checked it, the card says so.",
+      "specTitle": "GCC spec or import, stated",
+      "specBody": "Every car says whether it is GCC spec, a US import or a Japan import — and says so plainly when the seller has not told us.",
+      "whatsappTitle": "One WhatsApp tap",
+      "whatsappBody": "Message the seller straight from the listing. The car and its listed price are already written into the message."
+    }
+  },
   "footer": {
     "tagline": "Oman’s marketplace for affordable used cars, in Arabic and English.",
     "copyright": "© 2026 Autosouq.om",
@@ -37,17 +66,24 @@
     "col": {
       "buy": "Buy a car",
       "sell": "Sell a car",
+      "guides": "Guides",
       "brand": "Autosouq"
     },
     "link": {
       "usedCarsOman": "Used cars in Oman",
       "usedCarsMap": "Used cars on the map",
+      "usedCarsMuscat": "Used cars in Muscat",
+      "usedCarsUnder2000": "Used cars under OMR 2,000",
+      "usedCarsUnder3000": "Used cars under OMR 3,000",
+      "gccSpecCars": "GCC-spec used cars",
       "howItWorks": "How it works",
       "sellYourCar": "Sell your car",
       "addListing": "Add a listing",
+      "guideTransfer": "Transfer car ownership",
+      "guideGcc": "GCC spec vs import",
       "about": "About us",
       "faq": "FAQs",
-      "guides": "Guides",
+      "guides": "All guides",
       "contact": "Contact us",
       "terms": "Terms & Conditions",
       "privacy": "Privacy Policy"
@@ -80,7 +116,8 @@
     },
     "empty": {
       "title": "No cars match that yet",
-      "body": "Autosouq is new and the catalogue is still small. Remove a filter below, or ask us to tell you when a match is listed.",
+      "body": "Autosouq is new and the catalogue is still small — every car we list sits in OMR 1,500–6,000. Remove a filter below, or ask us to tell you when a match is listed.",
+      "bandNote": "Autosouq lists only affordable used cars, OMR 1,500–6,000. Nothing above that band is published.",
       "filteredBy": "You filtered by:",
       "relaxed": "Not a match — {count, plural, one {this is 1 car} other {these are # cars}} matching everything except {field}.",
       "showAll": "Show all cars",
@@ -175,6 +212,7 @@
     "trust": {
       "askingPrice": "Asking price",
       "priceNote": "This exact figure goes into the WhatsApp message you send, so the seller sees the price they published.",
+      "bandCaption": "Within Autosouq’s OMR 1,500–6,000 band.",
       "verified": "Autosouq checked this listing",
       "unverified": "We haven't checked this listing yet",
       "verifiedNote": "See what we check",

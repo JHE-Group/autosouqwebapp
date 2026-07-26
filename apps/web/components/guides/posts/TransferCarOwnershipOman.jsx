@@ -429,7 +429,7 @@ export default function TransferCarOwnershipOman() {
           FAQs
         </Link>{" "}
         cover the rest. When you are ready to look,{" "}
-        <Link className="fw-6" href="/listing-grid">
+        <Link className="fw-6" href="/used-cars">
           here are the cars
         </Link>
         .

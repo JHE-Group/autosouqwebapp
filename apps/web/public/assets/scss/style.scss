@@ -2275,11 +2275,19 @@ fieldset {
   #footer h4 {
     margin-bottom: 0;
   }
-  .tf-collapse-content {
+  /*
+   * Footer columns use React `.open` + _footer.scss display toggles.
+   * The old height:0 / overflow:hidden accordion left open panels clipped
+   * (~15px tall) so guide links sat under the heading and could not be tapped.
+   */
+  #footer .footer-col-block .tf-collapse-content {
+    display: none !important;
+    height: auto;
+    overflow: visible;
+  }
+
+  #footer .footer-col-block.open .tf-collapse-content {
     display: block !important;
-    height: 0px;
-    overflow: hidden;
-    transition: 0.5s;
   }
 }
 .flat-toggle.style-1 .toggle-content {

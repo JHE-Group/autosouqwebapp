@@ -17,10 +17,14 @@ import { defineRouting } from "next-intl/routing";
  *   already-shared WhatsApp preview card. With both prefixed, changing which
  *   language the root redirects to is a one-line change that moves no URL.
  *
- * - **Arabic is the default.** NICHE.md: "Arabic first, English equal second."
+ * - **Default locale.** NICHE.md wants Arabic first. Until `/ar` content is
+ *   real and `INDEXABLE_LOCALES` includes `"ar"`, the bare root and unprefixed
+ *   paths must land on **English** — otherwise `autosouq.om` redirects into a
+ *   `noindex` tree while the sitemap only nominates `/en`. Flip this back to
+ *   `"ar"` in the same deploy that indexes Arabic (layout + sitemap + hreflang).
  *
  * - **`ar` and `en`, not `ar-OM`/`en-OM`.** The region subtag targets the
- *   *user's* location, and the .om ccTLD already carries the geotargeting.
+ *   *viewer's* location, and the .om ccTLD already carries the geotargeting.
  *
  * Note Google also says to avoid auto-redirecting between language versions.
  * The middleware only redirects the bare root, and does no Accept-Language
@@ -28,7 +32,8 @@ import { defineRouting } from "next-intl/routing";
  */
 export const routing = defineRouting({
   locales: ["ar", "en"],
-  defaultLocale: "ar",
+  // Temporary: "en" while Arabic is noindex. Restore "ar" with INDEXABLE_LOCALES.
+  defaultLocale: "en",
   localePrefix: "always",
   // Don't set a locale cookie from a redirect; it makes the language a user
   // chose invisible to caches and hard to reason about in a CDN.

@@ -1,4 +1,4 @@
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import Header1 from "@/components/headers/Header1";
 import Banner from "@/components/common/Banner";
 import Cars from "@/components/common/Cars";
@@ -6,9 +6,19 @@ import Guides from "@/components/homes/home-1/Guides";
 import Hero from "@/components/homes/home-1/Hero";
 import TrustPromises from "@/components/homes/home-1/TrustPromises";
 import { getListings } from "@/lib/strapi";
+import { pageMetadata } from "@/lib/seo";
 
-// No metadata export: the home page uses the root title/description from
-// app/layout.js verbatim, unwrapped by the "%s | Autosouq.om" template.
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
+    title: "Autosouq.om — Affordable used cars in Oman",
+    description:
+      "Oman's marketplace for affordable used cars, OMR 1,500–6,000. Real prices, verified listings, GCC spec or import stated, one WhatsApp tap to the seller.",
+    path: "/",
+    locale,
+    titleAbsolute: true,
+  });
+}
 
 /**
  * The home page, in five sections, each answering the next question a
@@ -29,7 +39,7 @@ import { getListings } from "@/lib/strapi";
  *   (Audi, BMW, Dongfeng, Foton) rather than anything in the catalogue, and
  *   whose 25 feature checkboxes were bound to nothing. On a trust-led site the
  *   most prominent control on the front page cannot be one that does nothing.
- *   Real search belongs on /listing-grid, and gets there once filter state
+ *   Real search belongs on /used-cars, and gets there once filter state
  *   lives in the URL.
  * - `Cars2` ("Recommended Used Cars For You") — rendered `source.slice(0, 4)`,
  *   i.e. the *same first four cars* the section above had already shown, and
@@ -65,7 +75,7 @@ export default async function Home({ params }) {
         <Guides />
         <Banner />
       </main>
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

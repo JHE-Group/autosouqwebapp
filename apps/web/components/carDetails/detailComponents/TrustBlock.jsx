@@ -185,6 +185,9 @@ export default function TrustBlock({ carItem, locale = DEFAULT_LOCALE }) {
       <p className="mb-0" style={{ color: MUTED, fontSize: 12, lineHeight: 1.5 }}>
         {t("priceNote")}
       </p>
+      <p className="mb-0 mt-1" style={{ color: MUTED, fontSize: 12, lineHeight: 1.5 }}>
+        {t("bandCaption")}
+      </p>
 
       {(isSold || isReserved) && (
         <p

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -157,6 +157,9 @@ export default function SiteHeader({ variant = "solid" }) {
   const pathname = usePathname();
   const panelId = useId();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [stuck, setStuck] = useState(false);
+  const [spacerHeight, setSpacerHeight] = useState(0);
+  const lowerRef = useRef(null);
 
   const { className, logo, stickyLogo } = VARIANTS[variant] ?? VARIANTS.solid;
 
@@ -204,11 +207,53 @@ export default function SiteHeader({ variant = "solid" }) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [menuOpen]);
 
+  /**
+   * Sticky header. One threshold with hysteresis (enter 200 / exit 140).
+   * Spacer is React-owned so it never appears as a surprise DOM sibling
+   * between server-rendered nodes (that was the browse hydration mismatch).
+   */
+  useEffect(() => {
+    // Only pages that opt into sticky chrome (`.header-fixed` wrapper).
+    if (!lowerRef.current?.closest(".header-fixed")) return undefined;
+
+    const ENTER = 200;
+    const EXIT = 140;
+    let frame = 0;
+    let currentlyStuck = false;
+
+    const measure = () => lowerRef.current?.offsetHeight ?? 0;
+
+    const apply = () => {
+      frame = 0;
+      const y = window.scrollY;
+      const next = currentlyStuck ? y > EXIT : y > ENTER;
+      if (next === currentlyStuck) return;
+      currentlyStuck = next;
+      setStuck(next);
+      if (next) setSpacerHeight(measure());
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(apply);
+    };
+
+    setSpacerHeight(measure());
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [pathname]);
+
   const closeMenu = () => setMenuOpen(false);
 
   return (
     <header className={className}>
-      <div className="header-lower">
+      <div
+        ref={lowerRef}
+        className={`header-lower${stuck ? " is-fixed is-small" : ""}`}
+      >
         <div className="container2">
           <div className="row">
             <div className="col-lg-12">
@@ -279,6 +324,13 @@ export default function SiteHeader({ variant = "solid" }) {
           </div>
         </div>
       </div>
+
+      <div
+        className="header-lower-after-div"
+        hidden={!stuck}
+        style={{ height: stuck ? spacerHeight : 0 }}
+        aria-hidden="true"
+      />
 
       {/* Offcanvas navigation. Slides from the inline start, so it comes in
           from the left in English and the right in Arabic — see the

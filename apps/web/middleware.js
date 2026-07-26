@@ -4,11 +4,12 @@ import { routing } from "./i18n/routing";
 /**
  * Locale routing.
  *
- * Both locales are prefixed, so this only ever redirects the bare root (`/` →
- * `/ar`). It does no Accept-Language sniffing: Google's multilingual guidance
- * warns that auto-redirecting between language versions "could prevent users
- * (and search engines) from viewing all the versions of your site", and a
- * visitor who explicitly asked for /en/faq should get English.
+ * Both locales are prefixed, so this only ever redirects the bare root
+ * (`/` → `/en` while English is the sole indexable locale; see
+ * i18n/routing.js). It does no Accept-Language sniffing: Google's multilingual
+ * guidance warns that auto-redirecting between language versions "could
+ * prevent users (and search engines) from viewing all the versions of your
+ * site", and a visitor who explicitly asked for /en/faq should get English.
  */
 export default createMiddleware(routing);
 

@@ -420,7 +420,7 @@ $header-height-stuck: 70px;
  * `.is-fixed` (scrollY > 200) set `top: -150px; opacity: 0` and only
  * `.is-fixed.is-small` (scrollY > 300) brought it back — so the header
  * disappeared entirely for 100px of scrolling while its placeholder held the
- * gap open. One state now, keyed on `.is-fixed` alone; ClientShell still sets
+ * gap open. One state now, keyed on `.is-fixed` alone; SiteHeader still sets
  * `is-small` alongside it, and nothing here reads it.
  * ------------------------------------------------------------------------ */
 

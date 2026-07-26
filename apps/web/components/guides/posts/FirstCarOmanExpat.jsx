@@ -443,7 +443,7 @@ export default function FirstCarOmanExpat() {
           How it works
         </Link>{" "}
         sets out exactly what we check and what we do not. When you are ready,{" "}
-        <Link className="fw-6" href="/listing-grid">
+        <Link className="fw-6" href="/used-cars">
           the cars are here
         </Link>{" "}
         and the{" "}

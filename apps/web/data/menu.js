@@ -21,7 +21,7 @@ export const listingPages = [
     className: "dropdown2",
     title: "Browse",
     links: [
-      { href: "/listing-grid", text: "All used cars" },
+      { href: "/used-cars", text: "All used cars" },
       { href: "/listing-list", text: "List view" },
       { href: "/listing-grid-map", text: "Map view" },
     ],

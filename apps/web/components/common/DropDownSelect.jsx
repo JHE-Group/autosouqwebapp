@@ -1,91 +1,79 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 const optionsDefault = ["Newest", "Oldest", "3 days"];
+
 export default function DropdownSelect({
-  onChange = (elm) => {},
+  onChange = () => {},
   options = optionsDefault,
   defaultOption,
   selectedValue,
   addtionalParentClass = "",
 }) {
-  const selectRef = useRef();
-  const optionsRef = useRef();
+  const selectRef = useRef(null);
   const [selected, setSelected] = useState("");
-  const toggleDropdown = () => {
-    selectRef.current.classList.toggle("open");
-  };
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!selectRef.current.contains(event.target)) {
-        selectRef.current.classList.remove("open");
-      }
-    };
-
-    // Add event listeners to each dropdown element
-
-    // Add a global click event listener to detect outside clicks
-    document.addEventListener("click", handleClickOutside);
-
-    // Cleanup event listeners on component unmount
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    // Function to handle clicks outside the select or options
-    const handleClickOutside = (event) => {
-      if (
-        selectRef.current &&
-        selectRef.current.contains(event.target) &&
-        optionsRef.current &&
-        !optionsRef.current.contains(event.target)
-      ) {
-        // Close the options if clicked outside
-        toggleDropdown();
+    if (!open) return undefined;
+
+    const handlePointer = (event) => {
+      if (!selectRef.current?.contains(event.target)) {
+        setOpen(false);
       }
     };
-
-    // Add event listener on mount
-    document.addEventListener("click", handleClickOutside);
-
-    // Cleanup event listener on unmount
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
+    const handleEscape = (event) => {
+      if (event.key === "Escape") setOpen(false);
     };
-  }, []);
+
+    document.addEventListener("click", handlePointer);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("click", handlePointer);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  const current = selectedValue || selected || defaultOption || options[0];
 
   return (
-    <>
-      <div className={`nice-select ${addtionalParentClass}`} ref={selectRef}>
-        <span className="current">
-          {selectedValue || selected || defaultOption || options[0]}
-        </span>
-        <ul className="list" ref={optionsRef}>
-          {options.map((elm, i) => (
+    <div
+      className={`nice-select ${open ? "open" : ""} ${addtionalParentClass}`.trim()}
+      ref={selectRef}
+      role="button"
+      tabIndex={0}
+      aria-haspopup="listbox"
+      aria-expanded={open}
+      onClick={() => setOpen((value) => !value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setOpen((value) => !value);
+        }
+      }}
+    >
+      <span className="current">{current}</span>
+      <ul className="list" role="listbox" onClick={(event) => event.stopPropagation()}>
+        {options.map((elm, i) => {
+          const isSelected = current === elm;
+          return (
             <li
-              key={i}
+              key={`${elm}-${i}`}
+              role="option"
+              aria-selected={isSelected}
               onClick={() => {
                 setSelected(elm);
                 onChange(elm);
-                toggleDropdown();
+                setOpen(false);
               }}
-              className={`option ${
-                !selectedValue
-                  ? selected == elm
-                    ? "selected"
-                    : ""
-                  : selectedValue == elm
-                  ? "selected"
-                  : ""
-              }  text text-1`}
+              className={`option ${isSelected ? "selected" : ""} text text-1`}
             >
               {elm}
             </li>
-          ))}
-        </ul>
-      </div>
-    </>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

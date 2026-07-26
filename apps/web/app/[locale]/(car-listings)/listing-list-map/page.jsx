@@ -1,6 +1,6 @@
 import { getListings } from "@/lib/strapi";
 import Cars5 from "@/components/carsListings/Cars5";
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
 import React from "react";
 import { CANONICAL_LISTINGS_PATH, pageMetadata } from "@/lib/seo";
@@ -26,7 +26,7 @@ export default async function page({ params }) {
         <Header2 />
       </div>
       <Cars5 listings={listings} />
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

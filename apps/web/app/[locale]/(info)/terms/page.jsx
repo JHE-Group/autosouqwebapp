@@ -4,21 +4,25 @@ import BulletList from "../_components/BulletList";
 import DraftNotice from "../_components/DraftNotice";
 import InfoShell from "../_components/InfoShell";
 
-export const metadata = {
-  title: "Terms & Conditions",
-  description:
-    "The terms for using Autosouq.om, Oman's marketplace for affordable used cars. Plain-language draft pending legal review before launch.",
-  // noindex until counsel signs this off. DraftNotice already tells a reader
-  // this is not in force, but an indexed legal page carrying
-  // "[COMPANY LEGAL NAME — TO CONFIRM]" is a trust problem the banner cannot
-  // fix: it surfaces in search results stripped of its own disclaimer. Remove
-  // this line in the same change that fills in the bracketed details.
-  robots: { index: false, follow: true },
-};
+import { pageMetadata } from "@/lib/seo";
 
-export default function page() {
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
+    title: "Terms & Conditions",
+    description:
+      "The terms for using Autosouq.om, Oman's marketplace for affordable used cars. Plain-language draft pending legal review before launch.",
+    path: "/terms",
+    locale,
+    // noindex until counsel signs this off. Remove with the bracketed details.
+    robots: { index: false, follow: true },
+  });
+}
+
+export default async function page({ params }) {
+  const { locale } = await params;
   return (
-    <InfoShell breadcrumb="Terms & Conditions">
+    <InfoShell breadcrumb="Terms & Conditions" locale={locale}>
       <h1 className="mb-20">Terms &amp; Conditions</h1>
       <DraftNotice />
 

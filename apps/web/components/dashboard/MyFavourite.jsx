@@ -23,7 +23,7 @@ export default function MyFavourite() {
                     icon="heart"
                     title={t("emptyTitle")}
                     body={t("emptyBody")}
-                    actionHref="/listing-grid"
+                    actionHref="/used-cars"
                     actionLabel={t("emptyAction")}
                   />
                 </div>

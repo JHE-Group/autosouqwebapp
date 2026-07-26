@@ -30,13 +30,13 @@ export default function Banner() {
             <div className="tf-image-box style1 bg-orange hp-banner__card">
               <div className="content">
                 <h2 className="text-color-2 hp-banner__title">
-                  <Link href="/listing-grid">Looking for a car?</Link>
+                  <Link href="/used-cars">Looking for a car?</Link>
                 </h2>
                 <p className="text-color-2">
                   Every car is between OMR 1,500 and 6,000, checked before it
                   goes live, with GCC spec or import stated up front.
                 </p>
-                <Link href="/listing-grid" className="find-cars">
+                <Link href="/used-cars" className="find-cars">
                   <span>Find cars</span>
                 </Link>
               </div>

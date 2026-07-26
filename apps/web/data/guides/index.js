@@ -53,14 +53,14 @@ export const guides = [
   {
     order: 2,
     slug: "transfer-car-ownership-oman",
-    title: "How to transfer a car into your name in Oman",
-    h1: "How to transfer a car into your name in Oman",
+    title: "How to transfer car ownership in Oman (Mulkiya)",
+    h1: "How to transfer car ownership in Oman (Mulkiya)",
     description:
       "The ROP mulkiya transfer in plain language: the conditions that must be true first, the 24-hour signing window, and the three situations that stop a transfer dead after you have paid.",
     summary:
       "What the ROP’s own page tells you, plus the parts it leaves out: the 24-hour window, unpaid fines, older cars and mortgaged cars.",
     datePublished: "2026-07-25",
-    dateModified: "2026-07-25",
+    dateModified: "2026-07-26",
     verifiedOn: "2026-07-25",
   },
   {

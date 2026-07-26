@@ -2,17 +2,24 @@ import { Link } from "@/i18n/navigation";
 import React from "react";
 import BulletList from "../_components/BulletList";
 import InfoShell from "../_components/InfoShell";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Sell your car",
-  description:
-    "Sell your used car in Oman on Autosouq.om. We list cars priced OMR 1,500–6,000, and accept OMR 1,000–1,499 published as sold as-is. Buyers reach you on WhatsApp.",
-};
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
+    title: "Sell your used car in Oman",
+    description:
+      "Sell your used car in Oman on Autosouq.om. We list cars priced OMR 1,500–6,000, and accept OMR 1,000–1,499 published as sold as-is. Buyers reach you on WhatsApp.",
+    path: "/sell-your-car",
+    locale,
+  });
+}
 
-export default function page() {
+export default async function page({ params }) {
+  const { locale } = await params;
   return (
-    <InfoShell breadcrumb="Sell your car">
-      <h1 className="mb-20">Sell your car on Autosouq</h1>
+    <InfoShell breadcrumb="Sell your car" locale={locale}>
+      <h1 className="mb-20">Sell your used car in Oman</h1>
       <p className="font-2 fs-18 lh-28 mb-40">
         Autosouq is where people in Oman look for an affordable used car. If
         your car is priced in the band below, buyers who are ready to buy at
@@ -20,11 +27,6 @@ export default function page() {
         directly. The buyer pays you — Autosouq never handles the money.
       </p>
 
-      {/* The route to the form used to be one inline text link, three
-          screens down, after ~700 words. On the page whose only job is
-          converting a seller — and with supply the binding constraint per
-          NICHE.md — the action belongs where the decision is made, and again
-          at the end for anyone who read the rules first. */}
       <p className="mb-40">
         <Link className="sc-button" href="/add-listing">
           <span>Add a listing</span>
@@ -57,8 +59,8 @@ export default function page() {
       <p className="font-2 fs-16 lh-26 mb-40">
         We will not list it. This is not negotiable, and it is not personal —
         the site exists for one band, and stretching it would make Autosouq the
-        same undifferentiated listings site everyone already has. If your car is
-        worth more than 6,000, you will do better elsewhere.
+        same undifferentiated listings site everyone already has. If your car
+        is worth more than 6,000, you will do better elsewhere.
       </p>
 
       <h2 className="mb-20">The rules</h2>
@@ -94,6 +96,7 @@ export default function page() {
           "You arrange the viewing, agree the deal and complete the ownership transfer directly with the buyer.",
         ]}
       />
+
       <p className="font-2 fs-16 lh-26 mb-20">
         It takes a few minutes from your phone.
       </p>
@@ -119,8 +122,8 @@ export default function page() {
         We check your listing before it goes live and we can remove listings
         that break the rules. Beyond that, the sale is yours. We do not value
         cars, inspect them mechanically, hold payments, transport vehicles,
-        transfer ownership on your behalf, or guarantee that your car will sell.
-        The full picture is on{" "}
+        transfer ownership on your behalf, or guarantee that your car will
+        sell. The full picture is on{" "}
         <Link className="fw-6" href="/how-it-works">
           how it works
         </Link>

@@ -67,13 +67,20 @@ const description =
  */
 const INDEXABLE_LOCALES = ["en"];
 
+/**
+ * Locale-level metadata only: robots + shared defaults.
+ *
+ * Do **not** set `alternates.canonical` or `openGraph.url` here. Next merges
+ * layout metadata into every child; a homepage canonical on the layout made
+ * every page that skipped `pageMetadata` (info drafts, dashboard) claim `/en`
+ * or `/ar` as its canonical. Each route must set its own via `pageMetadata`.
+ */
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const indexable = INDEXABLE_LOCALES.includes(locale);
   return {
     ...metadata,
-    alternates: { canonical: `/${locale}` },
-    openGraph: { ...metadata.openGraph, url: `/${locale}`, locale },
+    openGraph: { ...metadata.openGraph, locale },
     robots: indexable
       ? { index: true, follow: true }
       : { index: false, follow: true },
@@ -88,15 +95,11 @@ const metadata = {
     template: "%s | Autosouq.om",
   },
   description,
-  alternates: {
-    canonical: "/",
-  },
   // og:image / twitter:image are injected by Next from app/opengraph-image.png
   // and app/twitter-image.png — don't restate them here or they double up.
   openGraph: {
     type: "website",
     siteName: "Autosouq.om",
-    url: "/",
     title,
     description,
   },
@@ -104,10 +107,6 @@ const metadata = {
     card: "summary_large_image",
     title,
     description,
-  },
-  robots: {
-    index: true,
-    follow: true,
   },
 };
 

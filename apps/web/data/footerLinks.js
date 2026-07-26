@@ -1,57 +1,71 @@
 /**
  * Footer information architecture.
  *
- * Rebuilt from the template's 21-link farm (14 of which pointed at /about-us,
- * with duplicated Terms / Privacy entries and seven brand links that all
- * resolved to the same unfiltered /listing-grid). Optimised for short links:
- * ten links, every one to a real page, with anchor text that says what is on
- * the other side.
+ * Short links mean few, descriptive, real destinations — not a city/make farm
+ * (design/seo-research.md §9). Every href must resolve under app/.
  *
- * Removed outright rather than re-pointed, because Autosouq does not have the
- * surface they describe: Careers With Us (pre-launch, no roles), Investors,
- * Corporate Policies, Copyrights, Help center (that is /faq + /contact),
- * Car sales trends (no editorial), Personal loan (we do not offer finance).
- * The "Popular used car" brand column is gone until /listing-grid accepts a
- * make filter — seven links to one identical unfiltered page help nobody.
+ * Buy facet links are inventory-gated via `buildFooterData(listings)` so the
+ * footer never advertises a `/used-cars/{facet}` URL that would 404.
  *
- * Every href here must resolve to a page under app/. Adding a link without
- * the page is the exact bug this file used to have.
- *
- * The labels are message *keys*, not English strings. They used to be literals,
- * which meant /ar rendered an English footer under a translated header — the
- * one part of the chrome that stayed in the wrong language. Resolve them
- * against the `footer` namespace in messages/{en,ar}.json; adding an entry here
- * without adding both translations will surface as the raw key, which is the
- * intended loud failure.
+ * Labels are message keys under the `footer` namespace in messages/{en,ar}.json.
  */
+
+import { footerFacetLinks } from "./usedCarsFacets.js";
+
+/** Static Buy links that always exist. */
+const BUY_CORE = [
+  { textKey: "link.usedCarsOman", href: "/used-cars" },
+  { textKey: "link.usedCarsMap", href: "/listing-grid-map" },
+];
+
+const SELL_ITEMS = [
+  { textKey: "link.sellYourCar", href: "/sell-your-car" },
+  { textKey: "link.addListing", href: "/add-listing" },
+];
+
+const GUIDE_ITEMS = [
+  {
+    textKey: "link.guideTransfer",
+    href: "/guides/transfer-car-ownership-oman",
+  },
+  {
+    textKey: "link.guideGcc",
+    href: "/guides/gcc-spec-vs-american-import",
+  },
+  { textKey: "link.guides", href: "/guides" },
+];
+
+const BRAND_ITEMS = [
+  { textKey: "link.about", href: "/about-us" },
+  { textKey: "link.faq", href: "/faq" },
+  { textKey: "link.howItWorks", href: "/how-it-works" },
+  { textKey: "link.contact", href: "/contact" },
+  { textKey: "link.terms", href: "/terms" },
+  { textKey: "link.privacy", href: "/privacy" },
+];
+
+/** Static shape used when inventory is unknown (tests / storybook). */
 export const footerData = [
   {
     id: "buy",
     headingKey: "col.buy",
-    menuItems: [
-      { textKey: "link.usedCarsOman", href: "/listing-grid" },
-      { textKey: "link.usedCarsMap", href: "/listing-grid-map" },
-      { textKey: "link.howItWorks", href: "/how-it-works" },
-    ],
+    menuItems: BUY_CORE,
   },
-  {
-    id: "sell",
-    headingKey: "col.sell",
-    menuItems: [
-      { textKey: "link.sellYourCar", href: "/sell-your-car" },
-      { textKey: "link.addListing", href: "/add-listing" },
-    ],
-  },
-  {
-    id: "brand",
-    headingKey: "col.brand",
-    menuItems: [
-      { textKey: "link.about", href: "/about-us" },
-      { textKey: "link.faq", href: "/faq" },
-      { textKey: "link.guides", href: "/guides" },
-      { textKey: "link.contact", href: "/contact" },
-      { textKey: "link.terms", href: "/terms" },
-      { textKey: "link.privacy", href: "/privacy" },
-    ],
-  },
+  { id: "sell", headingKey: "col.sell", menuItems: SELL_ITEMS },
+  { id: "guides", headingKey: "col.guides", menuItems: GUIDE_ITEMS },
+  { id: "brand", headingKey: "col.brand", menuItems: BRAND_ITEMS },
 ];
+
+/** Full footer columns with gated Buy facet short-links. */
+export function buildFooterData(listings) {
+  return [
+    {
+      id: "buy",
+      headingKey: "col.buy",
+      menuItems: [...BUY_CORE, ...footerFacetLinks(listings)],
+    },
+    { id: "sell", headingKey: "col.sell", menuItems: SELL_ITEMS },
+    { id: "guides", headingKey: "col.guides", menuItems: GUIDE_ITEMS },
+    { id: "brand", headingKey: "col.brand", menuItems: BRAND_ITEMS },
+  ];
+}

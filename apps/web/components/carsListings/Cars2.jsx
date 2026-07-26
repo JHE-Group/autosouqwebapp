@@ -17,7 +17,7 @@ import useCarFilters from "./useCarFilters";
  * panel the other layouts already had is now rendered here too, reached from
  * the toolbar trigger with its applied count.
  */
-export default function Cars2({ listings }) {
+export default function Cars2({ listings, resultsHeading = "Browse cars" }) {
   const {
     source,
     filterOptions,
@@ -30,6 +30,11 @@ export default function Cars2({ listings }) {
     itemPerPage,
     sortingOption,
   } = useCarFilters(listings, { pageSize: 12 });
+
+  // Facet landers put the SEO H1 in the hero; the results block then uses a
+  // plain heading so the page does not ship two competing H1s.
+  const HeadingTag = resultsHeading ? "h2" : "h1";
+  const headingText = resultsHeading || "Browse cars";
 
   return (
     <>
@@ -53,11 +58,7 @@ export default function Cars2({ listings }) {
           <div className="row">
             <div className="col-lg-12">
               <div className="heading-section">
-                <h1>Browse cars</h1>
-                {/* A statement about this search, not about the business. An
-                    inventory count is a confidence signal only when the number
-                    is large; ours is not yet, so it stays off the button and
-                    off the home page and lives in the toolbar only. */}
+                <HeadingTag>{headingText}</HeadingTag>
               </div>
               <ResultsToolbar
                 resultCount={sorted.length}

@@ -1,4 +1,4 @@
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
 import { Link } from "@/i18n/navigation";
 import React from "react";
@@ -14,7 +14,7 @@ import React from "react";
  * The content column is col-lg-8 — long legal paragraphs at full container
  * width are unreadable on a laptop.
  */
-export default function InfoShell({ breadcrumb, children }) {
+export default function InfoShell({ breadcrumb, children, locale }) {
   return (
     <>
       <div className="header-fixed">
@@ -43,7 +43,7 @@ export default function InfoShell({ breadcrumb, children }) {
           </div>
         </div>
       </section>
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

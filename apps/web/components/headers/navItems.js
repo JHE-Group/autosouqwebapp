@@ -9,7 +9,7 @@
  * Two decisions live here:
  *
  * 1. **"Browse" is a real link, not a dead `href="#"` toggle.** It points at
- *    /listing-grid — the canonical browse page — and the dropdown offers the
+ *    /used-cars — the canonical browse page — and the dropdown offers the
  *    alternate presentations of that same result set. A parent that goes
  *    nowhere is unusable by keyboard and by touch, where there is no hover.
  *
@@ -22,7 +22,7 @@ import { listingPages, otherPages } from "@/data/menu";
 
 /** href → key in the `nav` message namespace. */
 const LABEL_KEYS = {
-  "/listing-grid": "allUsedCars",
+  "/used-cars": "allUsedCars",
   "/listing-list": "listView",
   "/listing-grid-map": "mapView",
   "/how-it-works": "howItWorks",
@@ -36,7 +36,7 @@ const LABEL_KEYS = {
 /** Pulled out of the flat list and shown under Browse instead. */
 const NESTED_UNDER_BROWSE = ["/how-it-works"];
 
-const BROWSE_HREF = "/listing-grid";
+const BROWSE_HREF = "/used-cars";
 
 /**
  * Build the header tree.

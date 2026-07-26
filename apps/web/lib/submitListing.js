@@ -1,4 +1,5 @@
-import { buildWhatsAppUrl, normalizeOmaniMsisdn } from "./whatsapp";
+import { importOriginLabel } from "./listingLabels";
+import { buildWhatsAppUrl, normalizeOmaniMsisdn, toTelHref } from "./whatsapp";
 
 /**
  * How a completed listing leaves the browser.
@@ -82,8 +83,20 @@ const line = (label, value) =>
  * what they are sending under their own name before they send it.
  */
 export function listingSubmissionMessage(form, { locale = "ar", title } = {}) {
-  const t = LABELS[locale] ?? LABELS.ar;
+  const lang = locale === "en" ? "en" : "ar";
+  const t = LABELS[lang] ?? LABELS.ar;
   const km = Number(form.km);
+  const origin = form.importSpec
+    ? importOriginLabel(form.importSpec, lang)
+    : null;
+  // Prefer a readable bilingual label; fall back to the raw key only if the
+  // form somehow holds a value we do not recognise.
+  const specText = origin?.stated
+    ? origin.text
+    : form.importSpec || "";
+  const contact =
+    toTelHref(form.whatsapp) ||
+    (form.whatsapp ? String(form.whatsapp).trim() : "");
 
   return [
     t.intro,
@@ -91,12 +104,12 @@ export function listingSubmissionMessage(form, { locale = "ar", title } = {}) {
     line(t.title, title || [form.year, form.make, form.model].filter(Boolean).join(" ")),
     line(t.price, form.price ? `OMR ${Number(form.price).toLocaleString("en-US")}` : ""),
     line(t.km, Number.isFinite(km) && km > 0 ? km.toLocaleString("en-US") : ""),
-    line(t.spec, form.importSpec),
+    line(t.spec, specText),
     line(t.condition, form.condition),
     line(t.mulkiya, form.mulkiyaExpiry),
     line(t.lien, form.underLien),
     line(t.where, [form.city, form.area].filter(Boolean).join(" — ")),
-    line(t.contact, form.whatsapp),
+    line(t.contact, contact),
     "",
     line(t.faults, form.noKnownFaults ? t.noFaults : form.knownFaults),
     line(t.work, form.recentWork),

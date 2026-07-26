@@ -268,7 +268,7 @@ export default function CheckFinesBeforeBuyingOman() {
         is explicit about what that does and does not cover — we do not check
         anybody’s fines, and we could not: those are the ROP’s records and they
         change daily. That check is yours to run, and now you know how.{" "}
-        <Link className="fw-6" href="/listing-grid">
+        <Link className="fw-6" href="/used-cars">
           Browse the cars
         </Link>{" "}
         or read the{" "}

@@ -8,6 +8,7 @@ import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import PlaceholderPhotoTag from "@/components/common/PlaceholderPhotoTag";
 import { formatPrice } from "@/lib/format";
+import { listingPath } from "@/lib/seo";
 
 /**
  * The one listing card.
@@ -104,7 +105,7 @@ export default function ListingCard({
 
   if (!car) return null;
 
-  const href = detailHref ?? `/listing-detail-v1/${car.id}`;
+  const href = detailHref ?? listingPath(car);
   const placeholder = isPlaceholderPhoto(car);
   const photos = realPhotoCount(car);
   const sold = car.listingStatus === "sold";

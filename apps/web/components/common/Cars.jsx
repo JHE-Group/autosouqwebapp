@@ -1,4 +1,5 @@
 import { formatPrice } from "@/lib/format";
+import { listingPath } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import PlaceholderPhotoTag from "@/components/common/PlaceholderPhotoTag";
@@ -61,7 +62,7 @@ export default function Cars({
               its check status on the card.
             </p>
           </div>
-          <Link href="/listing-grid" className="hp-link hp-link--btn">
+          <Link href="/used-cars" className="hp-link hp-link--btn">
             Browse all cars
           </Link>
         </div>
@@ -118,7 +119,7 @@ export default function Cars({
                     is the entry criterion on a price-banded site. */}
                 <div className="content">
                   <h3 className="link-style-1 hp-card__title">
-                    <Link href={`/listing-detail-v1/${car.id}`}>
+                    <Link href={listingPath(car)}>
                       {car.title}
                     </Link>
                   </h3>
@@ -156,7 +157,7 @@ export default function Cars({
                       an empty box on every card. */}
                   <div className="days-box flex justify-space align-center">
                     <Link
-                      href={`/listing-detail-v1/${car.id}`}
+                      href={listingPath(car)}
                       className="view-car"
                     >
                       View car

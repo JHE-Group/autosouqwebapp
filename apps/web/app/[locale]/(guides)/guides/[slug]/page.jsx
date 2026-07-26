@@ -18,7 +18,7 @@ import { breadcrumbJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
  * the default.
  *
  * The prefix half is not implemented here, deliberately. The rest of the app is
- * unprefixed (`/listing-grid`, `/faq`, `/how-it-works`), there is no `[locale]`
+ * unprefixed (`/used-cars`, `/faq`, `/how-it-works`), there is no `[locale]`
  * segment, and lib/seo.js documents at length why hreflang must not ship before
  * that routing lands: an `ar-OM` annotation pointing at a URL that serves
  * English is not a partial win, it is a wrong signal. Shipping guides alone at
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function GuidePage({ params }) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const guide = getGuide(slug);
   // Both halves must exist: a registry entry without a body would render a
   // headline over an empty page, which is the one failure mode worth a 404.
@@ -62,19 +62,19 @@ export default async function GuidePage({ params }) {
     <>
       <script
         type="application/ld+json"
-        {...jsonLdScript(guideArticleJsonLd(guide))}
+        {...jsonLdScript(guideArticleJsonLd(guide, locale))}
       />
       <script
         type="application/ld+json"
         {...jsonLdScript(
           breadcrumbJsonLd([
-            { name: "Home", path: "/" },
-            { name: "Guides", path: "/guides" },
-            { name: guide.h1, path: guidePath(guide.slug) },
+            { name: "Home", path: `/${locale}` },
+            { name: "Guides", path: `/${locale}/guides` },
+            { name: guide.h1, path: `/${locale}${guidePath(guide.slug)}` },
           ])
         )}
       />
-      <GuideShell guide={guide}>
+      <GuideShell guide={guide} locale={locale}>
         <GuideBody slug={slug} />
       </GuideShell>
     </>

@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import React from "react";
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
 import { guidesItemListJsonLd } from "@/components/guides/guideJsonLd";
 import { P } from "@/components/guides/Prose";
@@ -34,19 +34,20 @@ export async function generateMetadata({ params }) {
  * eighteen briefed guides exist; the rest are unwritten, and this page says so
  * rather than implying a fuller library than there is.
  */
-export default function GuidesIndexPage() {
+export default async function GuidesIndexPage({ params }) {
+  const { locale } = await params;
   return (
     <>
       <script
         type="application/ld+json"
-        {...jsonLdScript(guidesItemListJsonLd())}
+        {...jsonLdScript(guidesItemListJsonLd(locale))}
       />
       <script
         type="application/ld+json"
         {...jsonLdScript(
           breadcrumbJsonLd([
-            { name: "Home", path: "/" },
-            { name: "Guides", path: "/guides" },
+            { name: "Home", path: `/${locale}` },
+            { name: "Guides", path: `/${locale}/guides` },
           ])
         )}
       />
@@ -128,7 +129,7 @@ export default function GuidesIndexPage() {
               </P>
 
               <P className="mb-0">
-                <Link className="fw-6" href="/listing-grid">
+                <Link className="fw-6" href="/used-cars">
                   Browse used cars in Oman
                 </Link>{" "}
                 ·{" "}
@@ -144,7 +145,7 @@ export default function GuidesIndexPage() {
           </div>
         </div>
       </section>
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

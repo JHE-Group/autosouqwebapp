@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import React from "react";
-import Footer1 from "@/components/footers/Footer1";
+import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
 import { formatGuideDate } from "@/data/guides";
 import { P } from "@/components/guides/Prose";
@@ -20,7 +20,7 @@ import { P } from "@/components/guides/Prose";
  * The single `<h1>` for every guide page is rendered here, from the guide
  * record. Body components start at `<h2>` and must never introduce another h1.
  */
-export default function GuideShell({ guide, children }) {
+export default function GuideShell({ guide, children, locale }) {
   const published = formatGuideDate(guide.datePublished);
   const modified = formatGuideDate(guide.dateModified);
   const verified = formatGuideDate(guide.verifiedOn);
@@ -104,7 +104,7 @@ export default function GuideShell({ guide, children }) {
                       All Autosouq guides
                     </Link>{" "}
                     ·{" "}
-                    <Link className="fw-6" href="/listing-grid">
+                    <Link className="fw-6" href="/used-cars">
                       Browse used cars in Oman
                     </Link>
                   </P>
@@ -114,7 +114,7 @@ export default function GuideShell({ guide, children }) {
           </div>
         </div>
       </section>
-      <Footer1 />
+      <SiteFooter locale={locale} />
     </>
   );
 }

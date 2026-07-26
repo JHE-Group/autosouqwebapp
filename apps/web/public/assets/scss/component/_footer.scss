@@ -205,9 +205,8 @@ $footer-rule: rgba($brand-white, 0.12);
 }
 
 @media only screen and (max-width: 575px) {
-  // responsive.scss hides `.tf-collapse-content` outright at this width and
-  // the old accordion only ever animated `height` — so on exactly the screens
-  // this site is built for, the footer was four headings and no links at all.
+  // Open/closed display is owned here and reinforced in style.scss (which used
+  // to force height:0 on every `.tf-collapse-content` and clip open columns).
   #footer .footer-col-block .tf-collapse-content {
     display: none;
   }

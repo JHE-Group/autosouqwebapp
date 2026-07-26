@@ -1,6 +1,7 @@
 "use client";
 
 import EmptyResults from "./EmptyResults";
+import { listingPath } from "@/lib/seo";
 import FilterChips from "./FilterChips";
 import FilterSidebar from "./FilterSidebar";
 import ListingCard from "./ListingCard";
@@ -65,7 +66,7 @@ export default function Cars5({ listings }) {
                   key={car.id}
                   car={car}
                   variant={isGrid ? "grid" : "list"}
-                  detailHref={`/listing-detail-v1/${car.id}`}
+                  detailHref={listingPath(car)}
                   sizes="(max-width: 991px) 100vw, 40vw"
                 />
               ))}

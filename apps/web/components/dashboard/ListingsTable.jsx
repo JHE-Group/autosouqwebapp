@@ -5,6 +5,7 @@ import React, { useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
+import { listingPath } from "@/lib/seo";
 import {
   SOLD_AS_IS,
   importOriginLabel,
@@ -66,7 +67,7 @@ export default function ListingsTable({ listings = [], title }) {
           steps={[t("step1"), t("step2"), t("step3")]}
           actionHref="/add-listing"
           actionLabel={t("emptyAction")}
-          secondaryHref="/listing-grid"
+          secondaryHref="/used-cars"
           secondaryLabel={t("emptySecondary")}
         />
       </div>
@@ -153,7 +154,7 @@ export default function ListingsTable({ listings = [], title }) {
                 <tr key={elm.id ?? i}>
                   <td className="column-listing" data-label="Listing">
                     <div className="tfcl-listing-product">
-                      <Link href={`/listing-detail-v1/${elm.id}`}>
+                      <Link href={listingPath(elm)}>
                         <Image
                           alt={elm.title ?? "listing photo"}
                           src={elm.imgSrc}
@@ -163,7 +164,7 @@ export default function ListingsTable({ listings = [], title }) {
                       </Link>
                       <div className="tfcl-listing-summary">
                         <h4 className="tfcl-listing-title">
-                          <Link href={`/listing-detail-v1/${elm.id}`}>
+                          <Link href={listingPath(elm)}>
                             {elm.title}
                           </Link>
                         </h4>
@@ -186,7 +187,7 @@ export default function ListingsTable({ listings = [], title }) {
                   <td className="column-controller" data-label="Action">
                     <div className="inner-controller">
                       <Link
-                        href={`/listing-detail-v1/${elm.id}`}
+                        href={listingPath(elm)}
                         className="btn-action"
                       >
                         View listing

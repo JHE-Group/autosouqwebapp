@@ -6,9 +6,9 @@
  */
 import { chromium } from "playwright-core";
 
-// Prefer localhost over 127.0.0.1 — Next 16 blocks cross-origin HMR/dev
-// resources from 127.0.0.1 when the server binds as localhost.
-const BASE = process.env.SELL_FLOW_BASE || "http://localhost:3001";
+// Default to 127.0.0.1 so Playwright matches a hostname-bound next dev
+// (`next dev --hostname 127.0.0.1`). Override with SELL_FLOW_BASE if needed.
+const BASE = process.env.SELL_FLOW_BASE || "http://127.0.0.1:3001";
 const CHROME =
   process.env.CHROME_PATH ||
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";

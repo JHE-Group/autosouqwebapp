@@ -1,6 +1,7 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { formatPrice } from "@/lib/format";
+import { listingPath } from "@/lib/seo";
 import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import {
@@ -296,7 +297,7 @@ export default function ListingMap({ listings }) {
                   <div className="content">
                     <p className="text-color-3 font">{getLocation.type}</p>
                     <h5>
-                      <Link href={`/listing-detail-v1/${getLocation.id}`}>
+                      <Link href={listingPath(getLocation)}>
                         {getLocation.title}
                       </Link>
                     </h5>

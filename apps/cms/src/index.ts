@@ -274,7 +274,8 @@ async function seedDemoData(strapi: Core.Strapi) {
       latitude: 23.5992,
       longitude: 58.3707,
       importOrigin: "gcc",
-      price: 2300, year: 2016, mileage: 228000,
+      // Keep enough sub-2000 inventory for the /used-cars/under-2000-omr facet gate (≥5).
+      price: 1780, year: 2016, mileage: 228000,
       whatsapp: "96890000002", city: "muscat", make: "toyota", model: "yaris",
       featured: false, verified: true, address: "العذيبة، مسقط",
       description: "Economical on fuel with cold A/C. High mileage, but mechanically excellent. Sold subject to inspection.",
@@ -346,7 +347,8 @@ async function seedDemoData(strapi: Core.Strapi) {
       latitude: 22.5667,
       longitude: 59.5289,
       importOrigin: "us-import",
-      price: 2200, year: 2013, mileage: 297000,
+      // Second sub-2000 listing so the under-2000-omr facet clears the ≥5 gate.
+      price: 1680, year: 2013, mileage: 297000,
       whatsapp: "96890000005", city: "sur", make: "honda", model: "civic",
       featured: false, verified: false, address: "صور",
       description: "Silver Civic, high mileage — two panels have been resprayed. Price negotiable after inspection.",

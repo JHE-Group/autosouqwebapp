@@ -19,7 +19,7 @@ export default function Banner() {
                   seller is asking, GCC spec or import is always stated, and the
                   seller is one WhatsApp tap away.
                 </p>
-                <Link href="/listing-grid" className="sc-button btn-svg">
+                <Link href="/used-cars" className="sc-button btn-svg">
                   <span>Browse cars</span>
                   <i className="icon-autodeal-next" />
                 </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatPrice } from "@/lib/format";
+import { listingPath } from "@/lib/seo";
 import { carData } from "@/data/cars";
 import { Navigation, Pagination } from "swiper/modules";
 import Image from "next/image";
@@ -51,7 +52,7 @@ export default function RecomandedCars() {
                 Recommended Used Cars For You
               </h2>
               <Link
-                href={`/listing-grid`}
+                href={`/used-cars`}
                 className="tf-btn-arrow wow fadeInUpSmall"
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
@@ -161,7 +162,7 @@ export default function RecomandedCars() {
                         entirely, as was the one-tap WhatsApp contact. */}
                     <div className="content">
                       <h5 className="link-style-1">
-                        <Link href={`/listing-detail-v1/${car.id}`}>
+                        <Link href={listingPath(car)}>
                           {car.title}
                         </Link>
                       </h5>
@@ -199,7 +200,7 @@ export default function RecomandedCars() {
                           an empty box on every card. */}
                       <div className="days-box flex justify-space align-center">
                         <Link
-                          href={`/listing-detail-v1/${car.id}`}
+                          href={listingPath(car)}
                           className="view-car"
                         >
                           View car

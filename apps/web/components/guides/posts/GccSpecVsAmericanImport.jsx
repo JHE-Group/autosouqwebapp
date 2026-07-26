@@ -308,7 +308,7 @@ export default function GccSpecVsAmericanImport() {
       </P>
       <P>
         You can see how the disclosure looks on{" "}
-        <Link className="fw-6" href="/listing-grid">
+        <Link className="fw-6" href="/used-cars">
           every car on Autosouq
         </Link>
         , what we do and do not verify on{" "}

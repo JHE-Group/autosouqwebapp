@@ -3,6 +3,7 @@ import React from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/format";
+import { listingPath } from "@/lib/seo";
 import ListingSignals from "@/components/common/ListingSignals";
 import { DEFAULT_LOCALE } from "@/lib/locale";
 
@@ -44,7 +45,7 @@ export default function Recommended({ cars, locale = DEFAULT_LOCALE }) {
             </div>
             <div className="content">
               <h6>
-                <Link href={`/listing-detail-v1/${car.id}`}>{car.title}</Link>
+                <Link href={listingPath(car)}>{car.title}</Link>
               </h6>
               <p className="fs-14 fw-7 text-color-2 font-1">
                 {formatPrice(car.price, car.currency)}

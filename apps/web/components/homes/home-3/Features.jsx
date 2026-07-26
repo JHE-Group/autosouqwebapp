@@ -103,7 +103,7 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <Link href="/listing-grid">Real prices</Link>
+                      <Link href="/used-cars">Real prices</Link>
                     </h5>
                     <p>
                       The number on the card is the price the seller is asking, in OMR. No bait figures, no hidden prices, nothing above OMR 6,000.

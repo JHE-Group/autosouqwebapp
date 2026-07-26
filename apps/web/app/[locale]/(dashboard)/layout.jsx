@@ -15,6 +15,10 @@ import { pickMessages } from "@/i18n/clientMessages";
  * rather than site-wide so that a buyer browsing listings never downloads the
  * seller form. See i18n/clientMessages.js.
  */
+export const metadata = {
+  robots: { index: false, follow: false },
+};
+
 export default async function DashboardLayout({ children }) {
   return (
     <NextIntlClientProvider

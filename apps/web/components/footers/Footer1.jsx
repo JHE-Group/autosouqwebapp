@@ -154,7 +154,7 @@ function FooterColumn({ headingKey, menuItems }) {
   );
 }
 
-export default function Footer1() {
+export default function Footer1({ columns = footerData }) {
   const t = useTranslations("footer");
 
   return (
@@ -184,7 +184,8 @@ export default function Footer1() {
 
         <div className="footer-main">
           <div className="row">
-            <div className="col-lg-3 col-12">
+            {/* Four link columns + brand: brand takes 4, each menu column 2. */}
+            <div className="col-lg-4 col-12">
               <div className="footer-brand">
                 <Link href="/" aria-label="Autosouq.om">
                   <Image
@@ -198,8 +199,8 @@ export default function Footer1() {
                 <LocaleSwitcher />
               </div>
             </div>
-            {footerData.map((column) => (
-              <div className="col-lg-3 col-sm-4 col-12" key={column.id}>
+            {columns.map((column) => (
+              <div className="col-lg-2 col-sm-6 col-12" key={column.id}>
                 <FooterColumn
                   headingKey={column.headingKey}
                   menuItems={column.menuItems}
