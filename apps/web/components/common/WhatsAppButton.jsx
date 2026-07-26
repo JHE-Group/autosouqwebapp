@@ -1,12 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   buildWhatsAppUrl,
   listingEnquiryMessage,
   WHATSAPP_BUTTON_STYLE,
 } from "@/lib/whatsapp";
-import { DEFAULT_LOCALE } from "@/lib/locale";
 
 function WhatsAppGlyph({ size = 20 }) {
   // Non-directional icon — must NOT be mirrored in RTL.
@@ -32,7 +31,7 @@ function WhatsAppGlyph({ size = 20 }) {
  */
 export default function WhatsAppButton({
   car,
-  locale = DEFAULT_LOCALE,
+  locale: localeProp,
   variant = "full",
   className = "",
   // The `full` variant hardcoded `w-100`, which is right inside a card column
@@ -42,6 +41,8 @@ export default function WhatsAppButton({
   fullWidth = true,
 }) {
   const t = useTranslations("common");
+  const routeLocale = useLocale();
+  const locale = localeProp ?? routeLocale;
   // A sold car has nothing to sell. Sending a buyer into a seller's WhatsApp
   // to be told "that went last month" is the top complaint about the
   // incumbents; the card keeps the listing visible (proof that cars do sell

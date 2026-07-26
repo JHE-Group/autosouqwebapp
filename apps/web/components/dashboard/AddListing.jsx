@@ -18,16 +18,15 @@ import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels
 
 /**
  * ============================================================================
- * SUBMIT GAP — deliberate, stated once here rather than implied everywhere.
+ * SUBMIT PATH — WhatsApp handoff today (see lib/submitListing.js).
  * ============================================================================
  *
- * There is no submit path from this form. There is no auth, no listing POST
- * endpoint, and no upload target for the photos. "Publish listing" therefore
- * validates and stops; it is type="button" so it cannot half-submit, and there
- * is no success screen, no "your listing is live", no fake reference number.
- * A seller must not be able to finish this form believing a car is now for sale.
+ * There is no authenticated listing POST yet, so "Publish listing" opens
+ * WhatsApp to the ops number (`NEXT_PUBLIC_AUTOSOUQ_WHATSAPP`) with the
+ * seller's answers as a message. Nothing goes live until a human enters it.
+ * Without that env var the publish controls stay disabled and say so.
  *
- * What DOES work, and works honestly:
+ * Also honest today:
  *   - every field is kept in React state and mirrored to localStorage, so an
  *     interrupted seller does not lose twenty minutes of typing. That draft is
  *     on their phone and nowhere else, and the UI says so in those words.
@@ -35,7 +34,7 @@ import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels
  *     the draft (a handful of phone photos would blow the ~5 MB localStorage
  *     quota) and the photo step says so before the seller starts.
  *
- * When the endpoint lands:
+ * When the authenticated API lands:
  *   - BAND below must still be enforced server-side. Client validation is a
  *     courtesy to the seller, never the guard — apps/cms/.../listing/
  *     lifecycles.ts is the guard.
@@ -348,13 +347,13 @@ export default function AddListing() {
 
   /* ----------------------------------------------------------- stepping -- */
 
-  const goTo = (index) => {
-    setStep(Math.min(Math.max(index, 0), STEPS.length - 1));
+  const goTo = useCallback((index) => {
+    setStep(() => Math.min(Math.max(index, 0), STEPS.length - 1));
     // Move focus to the new step's heading so a screen-reader user and a
     // keyboard user both land at the top of what just changed, and a phone
     // scrolls back up instead of stranding them mid-form.
     window.requestAnimationFrame(() => headingRef.current?.focus());
-  };
+  }, []);
 
   /**
    * The listing title is derived, not typed.
@@ -376,7 +375,10 @@ export default function AddListing() {
         <div className="col-md-12">
           <div className="content-area">
             <main id="main" className="main-content">
-              <div className="tfcl-dashboard tfcl-add-listing-flow">
+              <div
+                className="tfcl-dashboard tfcl-add-listing-flow"
+                data-step={step}
+              >
                 <h1 className="admin-title mb-3">{t("title")}</h1>
 
                 {/* The band, stated once at the top before anything is typed,
@@ -390,6 +392,12 @@ export default function AddListing() {
                     label: tCommon("soldAsIs"),
                   })}
                 </div>
+
+                {!submitAvailable ? (
+                  <div className="tfcl-notice tfcl-notice--action" role="status">
+                    <span>{t("notConfigured")}</span>
+                  </div>
+                ) : null}
 
                 {offerRestore ? (
                   <div className="tfcl-notice tfcl-notice--action" role="status">
@@ -422,12 +430,7 @@ export default function AddListing() {
                   tabIndex={-1}
                   ref={headingRef}
                 >
-                  <span lang="ar" dir="rtl">
-                    {current.ar}
-                  </span>
-                  <span className="tfcl-step-heading__en" lang="en">
-                    {current.en}
-                  </span>
+                  {t(`step.${current.id}`)}
                 </h2>
 
                 {step === 0 ? (
@@ -465,6 +468,9 @@ export default function AddListing() {
                     showExtras={showExtras}
                     setShowExtras={setShowExtras}
                     onGoTo={goTo}
+                    onPublish={handlePublish}
+                    submitState={submitState}
+                    submitAvailable={submitAvailable}
                   />
                 ) : null}
 
@@ -472,7 +478,12 @@ export default function AddListing() {
                   <button
                     type="button"
                     className="second-btn"
-                    onClick={() => goTo(step - 1)}
+                    // Functional updates — do not close over `step`. A stale
+                    // `goTo(step + 1)` handler was leaving sellers stuck on the
+                    // price step after the first couple of advances.
+                    onClick={() =>
+                      setStep((current) => Math.max(current - 1, 0))
+                    }
                     disabled={step === 0}
                   >
                     Back
@@ -484,7 +495,12 @@ export default function AddListing() {
                     <button
                       type="button"
                       className="pre-btn"
-                      onClick={() => goTo(step + 1)}
+                      onClick={() =>
+                        setStep((current) =>
+                          Math.min(current + 1, STEPS.length - 1),
+                        )
+                      }
+                      data-testid="listing-next"
                     >
                       Next
                     </button>
@@ -494,6 +510,7 @@ export default function AddListing() {
                       className="pre-btn"
                       onClick={handlePublish}
                       disabled={!canPublish || !submitAvailable}
+                      data-testid="listing-publish"
                       title={
                         canPublish
                           ? submitAvailable
@@ -1405,10 +1422,10 @@ function StepReview({
       </div>
 
       <div className="tfcl-add-listing">
-        <h3>{t("publishShort")}</h3>
+        <h3>{tc("publishShort")}</h3>
         {missing.length ? (
           <div role="status">
-            <p className="tfcl-amber">{t("stillNeeded")}</p>
+            <p className="tfcl-amber">{tc("stillNeeded")}</p>
             <ul className="tfcl-missing">
               {missing.map((item) => (
                 <li key={item.label}>
@@ -1431,12 +1448,8 @@ function StepReview({
           </p>
         )}
 
-        {/*
-          SUBMIT GAP — see the block comment at the top of this file. There is
-          no endpoint behind this button. It is type="button" so it cannot
-          half-submit, and there is deliberately no success state, because
-          nothing has succeeded.
-        */}
+        {/* WhatsApp handoff — see lib/submitListing.js. type="button" so it
+            cannot half-submit a form POST that does not exist. */}
         <div className="group-button-submit left">
           <button
             type="button"

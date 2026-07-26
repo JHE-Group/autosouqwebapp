@@ -38,7 +38,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const guide = getGuide(slug);
   if (!guide) return {};
 
@@ -46,6 +46,7 @@ export async function generateMetadata({ params }) {
     title: guide.title,
     description: guide.description,
     path: guidePath(guide.slug),
+    locale,
     type: "article",
   });
 }

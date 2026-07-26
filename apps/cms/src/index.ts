@@ -86,9 +86,9 @@ async function findOrCreate(
  * The only guard used to be "does a listing already exist", which is the right
  * question for a local dev database and the wrong one for a hosted deployment:
  * a managed database starts empty, so the first production boot passed that
- * check and populated the site with demo rows. Every one of those listings has
- * `hasPlaceholderImage` set — stand-in photography — and publishing stand-ins
- * as real listings is the exact thing NICHE.md exists to prevent.
+ * check and populated the site with demo rows. Those seed listings have no
+ * gallery photos — the web app flags them as placeholders — and publishing
+ * stand-ins as real listings is the exact thing NICHE.md exists to prevent.
  *
  * Rules, in order:
  *   SEED_DEMO_DATA=true   seed, even in production (useful right after a
@@ -541,17 +541,16 @@ async function repairListingLanguageFields(strapi: Core.Strapi) {
     const titleAr = (listing as { titleAr?: string }).titleAr ?? "";
     // Run when the Arabic still sits in `title` (first pass), or when a
     // previous pass produced a slug-cased trim code like "Xli" (casing pass).
+    // Only repair rows that still have Arabic sitting in the English base
+    // fields. Do not slug-recase every English title on every boot — that
+    // overwrites legitimate custom titles (trim codes, em dashes, etc.).
     const needsSplit = !titleAr && ARABIC.test(title);
-    const needsRecase = Boolean(titleAr) && !ARABIC.test(title);
-    // Descriptions have the same shape of problem as the titles did: the first
-    // seed wrote Arabic into `description` and left `descriptionAr` null. So the
-    // Arabic to move is in the BASE field, not the *Ar one.
     const descBase = (listing as { description?: string }).description ?? "";
     const descArField = (listing as { descriptionAr?: string }).descriptionAr ?? "";
     const descNeedsSplit =
       !descArField && ARABIC.test(descBase) && Boolean(DESCRIPTION_EN[descBase]);
 
-    if (!needsSplit && !needsRecase && !descNeedsSplit) continue;
+    if (!needsSplit && !descNeedsSplit) continue;
 
     // The slug is already the English form ("toyota-corolla-2015-xli"), so the
     // English title is recovered from it rather than invented.
@@ -564,16 +563,10 @@ async function repairListingLanguageFields(strapi: Core.Strapi) {
       })
       .join(" ");
 
-    // Titles may already be right while descriptions still need splitting —
-    // only skip when there is genuinely nothing left to do for this row.
-    const titleFix = needsSplit || (needsRecase && english !== title);
-    if (!titleFix && !descNeedsSplit) continue;
-
     await strapi.documents("api::listing.listing").update({
       documentId: (listing as { documentId: string }).documentId,
       data: {
         ...(needsSplit ? { title: english, titleAr: title } : {}),
-        ...(needsRecase && english !== title ? { title: english } : {}),
         ...(descNeedsSplit
           ? { description: DESCRIPTION_EN[descBase], descriptionAr: descBase }
           : {}),
@@ -609,10 +602,15 @@ export default {
       strapi.log.error(`Autosouq: demo seeding failed — ${err}`);
     }
 
-    try {
-      await repairListingLanguageFields(strapi);
-    } catch (err) {
-      strapi.log.error(`Autosouq: language repair failed — ${err}`);
+    // One-shot migration for the first-seed language mix-up. Off by default so
+    // boots never rewrite listing titles; set REPAIR_LISTING_LANGUAGE=true to
+    // run it deliberately against a database that still needs the fix.
+    if (process.env.REPAIR_LISTING_LANGUAGE === "true") {
+      try {
+        await repairListingLanguageFields(strapi);
+      } catch (err) {
+        strapi.log.error(`Autosouq: language repair failed — ${err}`);
+      }
     }
   },
 };

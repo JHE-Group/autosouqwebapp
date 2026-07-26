@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "@/i18n/navigation";
-import { cars } from "@/data/cars";
 import ListingsTable from "./ListingsTable";
 
 /**
@@ -8,12 +7,12 @@ import ListingsTable from "./ListingsTable";
  * component rather than keeping a second copy of it. The template's "16 results
  * found" was a literal string that never matched the five rows underneath;
  * ListingsTable counts the array it is given.
+ *
+ * Empty until auth + seller listing API exist — never show demo inventory as
+ * the signed-in seller's cars.
  */
 export default function MyListings() {
-  // Stands in for the signed-in seller's listings until auth and the CMS
-  // listing API are wired up. Set to [] to see the empty state, which is what
-  // a new seller actually gets.
-  const myListings = cars.slice(0, 5);
+  const myListings = [];
 
   return (
     <div className="container">

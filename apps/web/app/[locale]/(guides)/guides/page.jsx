@@ -12,12 +12,16 @@ import {
 } from "@/data/guides";
 import { breadcrumbJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
   title: "Guides to buying a used car in Oman",
   description:
     "Plain, checkable guides to buying an affordable used car in Oman: GCC spec or import, the ROP mulkiya transfer, fines and restrictions, scam patterns, and a first-car walkthrough for expats.",
   path: "/guides",
-});
+  locale,
+  });
+}
 
 /**
  * The guides hub at /guides.

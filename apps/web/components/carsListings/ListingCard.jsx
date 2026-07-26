@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
@@ -8,7 +8,6 @@ import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import PlaceholderPhotoTag from "@/components/common/PlaceholderPhotoTag";
 import { formatPrice } from "@/lib/format";
-import { DEFAULT_LOCALE } from "@/lib/locale";
 
 /**
  * The one listing card.
@@ -96,10 +95,12 @@ export default function ListingCard({
   variant = "grid",
   detailHref,
   sizes = "(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 33vw",
-  locale = DEFAULT_LOCALE,
+  locale: localeProp,
   className = "",
 }) {
   const t = useTranslations("browse.card");
+  const routeLocale = useLocale();
+  const locale = localeProp ?? routeLocale;
 
   if (!car) return null;
 

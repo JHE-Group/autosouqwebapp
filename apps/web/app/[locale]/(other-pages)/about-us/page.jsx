@@ -8,12 +8,16 @@ import React from "react";
 
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
   title: "About Autosouq — affordable used cars in Oman",
   description:
     "Why we list only used cars between OMR 1,500 and 6,000, how we verify a listing, and why GCC-spec or US-import is shown on every car instead of hidden.",
   path: "/about-us",
-});
+  locale,
+  });
+}
 export default function page() {
   return (
     <>

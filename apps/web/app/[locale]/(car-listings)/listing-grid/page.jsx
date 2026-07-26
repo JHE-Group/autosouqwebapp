@@ -8,12 +8,17 @@ import { pageMetadata } from "@/lib/seo";
 // The canonical browse page. `/listing-grid2`, `/listing-list`,
 // `/listing-grid-map` and `/listing-list-map` are alternate presentations of
 // this exact result set and canonicalise here — see lib/seo.js.
-export const metadata = pageMetadata({
-  title: "Used cars for sale in Oman — OMR 1,500–6,000",
-  description:
-    "Browse affordable used cars across Oman, OMR 1,500 to 6,000. Real prices, verified listings, GCC-spec or import stated, and one WhatsApp tap to the seller.",
-  path: "/listing-grid",
-});
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
+    title: "Used cars for sale in Oman — OMR 1,500–6,000",
+    description:
+      "Browse affordable used cars across Oman, OMR 1,500 to 6,000. Real prices, verified listings, GCC-spec or import stated, and one WhatsApp tap to the seller.",
+    path: "/listing-grid",
+    locale,
+  });
+}
+
 export default async function page({ params }) {
   const { locale } = await params;
   const listings = await getListings(locale);
@@ -34,9 +39,8 @@ export default async function page({ params }) {
                     Every car between OMR 1,500 and 6,000
                   </p>
                   <p className="text-color-1 fs-18 fw-4 lh-22 font">
-                    Leading online car buying and selling platform. helps users
-                    buy <br />
-                    cars that are right for them
+                    Real listed prices, GCC-spec or import stated, and one
+                    WhatsApp tap to the seller.
                   </p>
                 </div>
               </div>

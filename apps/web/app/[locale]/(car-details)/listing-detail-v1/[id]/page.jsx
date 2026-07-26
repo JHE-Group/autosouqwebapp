@@ -44,6 +44,7 @@ export async function generateMetadata({ params }) {
     title: listingTitle(car),
     description: listingDescription(car),
     path: listingPath(id),
+    locale,
     type: "article",
   });
 }
@@ -59,13 +60,13 @@ export default async function page({ params }) {
   const recommended = (listings.length ? listings : allCars)
     .filter((elm) => elm.id !== carItem.id)
     .slice(0, 4);
-  const path = listingPath(id);
+  const path = listingPath(id, locale);
   // Both generators return undefined rather than a half-empty object when the
   // listing lacks the fields to fill them, so nothing ships with a null price.
   const vehicle = vehicleJsonLd(carItem, { path });
   const breadcrumb = breadcrumbJsonLd([
-    { name: "Home", path: "/" },
-    { name: "Used cars for sale", path: "/listing-grid" },
+    { name: "Home", path: `/${locale}` },
+    { name: "Used cars for sale", path: `/${locale}/listing-grid` },
     { name: carItem?.title, path },
   ]);
 

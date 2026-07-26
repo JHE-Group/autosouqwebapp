@@ -58,7 +58,9 @@ export function listingEnquiryMessage(car, opts = {}) {
     // Must be absolute — a relative path is useless in the seller's chat.
     origin = process.env.NEXT_PUBLIC_SITE_URL || "https://autosouq.om",
   } = opts;
-  const url = `${origin}/listing-detail-v1/${car.id}`;
+  // localePrefix is "always" — bare /listing-detail-v1/... redirects to /ar/...
+  // and would land English buyers on the Arabic page after the redirect.
+  const url = `${origin}/${locale}/listing-detail-v1/${car.id}`;
   const price = `${Number(car.price).toLocaleString("en-US")} ${car.currency || "OMR"}`;
 
   // Titles usually already carry the year ("تويوتا يارس 2016") — only prepend

@@ -1,6 +1,5 @@
 import { useTranslations } from "next-intl";
 import React from "react";
-import { cars } from "@/data/cars";
 import ListingsTable from "./ListingsTable";
 import EmptyState from "./EmptyState";
 
@@ -20,18 +19,16 @@ import EmptyState from "./EmptyState";
  * buyer taps WhatsApp — we genuinely cannot count them, so we do not pretend
  * to. The three tiles below are the three states a listing can be in, and each
  * is `filter().length` over the rows on screen.
+ *
+ * Until auth and the seller listing API exist, this stays empty — demo catalogue
+ * cars must never appear as "your listings".
  */
 export default function DashBoard() {
   const tPage = useTranslations("dashboard.page");
   const tStat = useTranslations("dashboard.stat");
   const tList = useTranslations("dashboard.listings");
   const tRev = useTranslations("dashboard.reviews");
-  // Stands in for "the signed-in seller's listings" until auth and the CMS
-  // listing API are wired up. The stat cards count this exact array, so the
-  // headline numbers can never drift from the rows on screen. Set it to [] to
-  // see what a seller with no cars sees — which is what every seller sees on
-  // day one, and is the state the screen below is designed around.
-  const myListings = cars.slice(0, 5);
+  const myListings = [];
 
   const soldCount = myListings.filter((car) => car.status === "Sold").length;
   const pendingCount = myListings.filter(
@@ -112,7 +109,7 @@ export default function DashBoard() {
   );
 }
 
-function StatCard({ tone, labelAr, labelEn, value }) {
+function StatCard({ tone, label, value }) {
   return (
     <div className="col-sm-6 col-xl-4">
       <div className={`tfcl-card tfcl-stat tfcl-stat--${tone}`}>
@@ -121,14 +118,7 @@ function StatCard({ tone, labelAr, labelEn, value }) {
             <StatIcon tone={tone} />
           </div>
           <div className="content-overview">
-            <h5>
-              <span lang="ar" dir="rtl">
-                {labelAr}
-              </span>
-              <span className="d-block tfcl-stat__sublabel" lang="en">
-                {labelEn}
-              </span>
-            </h5>
+            <h5>{label}</h5>
             <div className="tfcl-dashboard-title">
               <span>
                 <b>{value}</b>

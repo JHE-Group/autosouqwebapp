@@ -8,8 +8,7 @@ import { formatPrice } from "@/lib/format";
 import { buildWhatsAppUrl, WHATSAPP_BUTTON_STYLE } from "@/lib/whatsapp";
 import FilterChips, { chipsFor } from "./FilterChips";
 import { findRelaxedMatches } from "./filterLogic";
-import { DEFAULT_LOCALE } from "@/lib/locale";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 /**
  * The zero-result screen.
@@ -156,10 +155,12 @@ export default function EmptyResults({
   source = [],
   allProps,
   clearFilter,
-  locale = DEFAULT_LOCALE,
+  locale: localeProp,
 }) {
   const t = useTranslations("browse.empty");
   const tField = useTranslations("browse.field");
+  const routeLocale = useLocale();
+  const locale = localeProp ?? routeLocale;
   const chips = chipsFor(allProps);
   const relaxed = findRelaxedMatches(source, allProps, allProps?.bounds);
 

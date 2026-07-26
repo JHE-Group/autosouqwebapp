@@ -54,8 +54,20 @@ export function absoluteUrl(path = "/") {
 }
 
 /** Canonical detail URL for a listing, in whichever layout currently wins. */
-export function listingPath(id) {
-  return `/${CANONICAL_LISTING_LAYOUT}/${encodeURIComponent(String(id))}`;
+export function listingPath(id, locale) {
+  const base = `/${CANONICAL_LISTING_LAYOUT}/${encodeURIComponent(String(id))}`;
+  return locale ? `/${locale}${base}` : base;
+}
+
+/**
+ * Prefix a site path with a locale segment when localePrefix is "always".
+ * Paths that already start with /ar or /en are left alone.
+ */
+export function localizedPath(path = "/", locale) {
+  const rooted = canonicalPath(path);
+  if (!locale) return rooted;
+  if (rooted === `/${locale}` || rooted.startsWith(`/${locale}/`)) return rooted;
+  return rooted === "/" ? `/${locale}` : `/${locale}${rooted}`;
 }
 
 /**
@@ -66,6 +78,8 @@ export function listingPath(id) {
  * `canonical` defaults to the page's own path; pass a different one to point a
  * duplicate layout at the original.
  *
+ * Pass `locale` so canonicals match real URLs (`/ar/...`, `/en/...`).
+ *
  * `titleAbsolute` opts out of the root "%s | Autosouq.om" template, for the few
  * titles that already carry the brand and would otherwise read
  * "Autosouq.om — … | Autosouq.om".
@@ -75,14 +89,16 @@ export function pageMetadata({
   description,
   path,
   canonical = path,
+  locale,
   type = "website",
   titleAbsolute = false,
 }) {
-  const url = canonicalPath(canonical);
+  const canonicalPathForPage = localizedPath(canonical, locale);
+  const url = absoluteUrl(canonicalPathForPage);
   return {
     title: titleAbsolute ? { absolute: title } : title,
     description,
-    alternates: { canonical: url },
+    alternates: { canonical: canonicalPathForPage },
     openGraph: { type, url, title, description, siteName: SITE_NAME },
     twitter: { card: "summary_large_image", title, description },
   };

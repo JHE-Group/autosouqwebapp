@@ -6,13 +6,17 @@ import React from "react";
 import { CANONICAL_LISTINGS_PATH, pageMetadata } from "@/lib/seo";
 
 // Same listings as /listing-grid, beside a map — canonical points there.
-export const metadata = pageMetadata({
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
   title: "Used cars near you in Oman — map and grid",
   description:
     "Find affordable used cars from OMR 1,500 to 6,000 on a map of Oman, from Muscat to Salalah. Real prices, verified listings, one WhatsApp tap to the seller.",
   path: "/listing-grid-map",
   canonical: CANONICAL_LISTINGS_PATH,
-});
+  locale,
+  });
+}
 export default async function page({ params }) {
   const { locale } = await params;
   const listings = await getListings(locale);

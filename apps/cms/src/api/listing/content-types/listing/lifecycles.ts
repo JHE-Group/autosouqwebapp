@@ -18,11 +18,17 @@ export const BAND = {
   MAX: 6000,
 } as const;
 
-function applyBand(data: Record<string, any>, currentPrice?: number) {
-  const price = data.price === undefined ? currentPrice : Number(data.price);
+function applyBand(data: Record<string, unknown>, currentPrice?: number) {
+  const raw = data.price === undefined ? currentPrice : Number(data.price);
 
-  // Nothing to enforce on a partial update that does not touch the price.
-  if (price === undefined || price === null || Number.isNaN(price)) return;
+  // Nothing to enforce on a partial update that does not touch the price —
+  // but never trust a client-supplied soldAsIs in that case either.
+  if (raw === undefined || raw === null || Number.isNaN(Number(raw))) {
+    if ("soldAsIs" in data) delete data.soldAsIs;
+    return;
+  }
+
+  const price = Number(raw);
 
   if (price > BAND.MAX) {
     throw new ValidationError(
@@ -42,22 +48,33 @@ function applyBand(data: Record<string, any>, currentPrice?: number) {
   data.soldAsIs = price <= BAND.ASIS_MAX;
 }
 
+async function resolveStoredPrice(where: Record<string, unknown> | undefined) {
+  if (!where) return undefined;
+
+  const id = where.id ?? where.documentId;
+  if (id == null) return undefined;
+
+  const existing = await strapi.db.query("api::listing.listing").findOne({
+    where: where.documentId ? { documentId: where.documentId } : { id: where.id },
+    select: ["price"],
+  });
+
+  return existing?.price as number | undefined;
+}
+
 export default {
-  beforeCreate(event: any) {
+  beforeCreate(event: { params: { data: Record<string, unknown> } }) {
     applyBand(event.params.data);
   },
 
-  async beforeUpdate(event: any) {
+  async beforeUpdate(event: {
+    params: { data: Record<string, unknown>; where?: Record<string, unknown> };
+  }) {
     const { data, where } = event.params;
 
-    // A partial update may omit price while flipping soldAsIs, so read the
-    // stored price before deciding.
     let currentPrice: number | undefined;
-    if (data.price === undefined && where?.id) {
-      const existing = await strapi.db
-        .query("api::listing.listing")
-        .findOne({ where: { id: where.id }, select: ["price"] });
-      currentPrice = existing?.price;
+    if (data.price === undefined) {
+      currentPrice = await resolveStoredPrice(where);
     }
 
     applyBand(data, currentPrice);

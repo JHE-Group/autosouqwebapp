@@ -10,7 +10,6 @@ import {
   importOriginLabel,
 } from "@/lib/listingLabels";
 import EmptyState from "./EmptyState";
-import Pagination2 from "../common/Pagination2";
 
 /**
  * The seller's listings table, shared by /dashboard and /my-listing — the two
@@ -224,14 +223,6 @@ export default function ListingsTable({ listings = [], title }) {
               {ALL_STATUSES}”.
             </p>
           ) : null}
-        </div>
-        {/* Pagination2 defaults to itemLength=100 — ten pages of page
-            numbers over however few rows there actually are. Given the real
-            count it renders nothing until there is a second page. */}
-        <div className="themesflat-pagination clearfix mt-40">
-          <ul>
-            <Pagination2 itemLength={filtered.length} />
-          </ul>
         </div>
       </div>
     </div>

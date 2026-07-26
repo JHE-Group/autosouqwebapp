@@ -5,12 +5,16 @@ import React from "react";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return pageMetadata({
   title: "Contact the Autosouq team",
   description:
     "Reach the Autosouq team about a listing, a seller, or getting your own car listed. Questions about a specific car go straight to the seller on WhatsApp.",
   path: "/contact",
-});
+  locale,
+  });
+}
 export default function page() {
   return (
     <>
