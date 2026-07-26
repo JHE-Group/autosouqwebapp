@@ -1,0 +1,57 @@
+/*
+ * Arabic typography.
+ *
+ * The theme resolves every font-family through two custom properties —
+ * `$font-1: var(--font-outfit)` and `$font-2: var(--font-inter)` in
+ * abstracts/_variables.scss, plus ~100 direct `var(--font-inter)` rules in
+ * component/_dashboard.scss. Rather than touch a hundred call sites, the
+ * Arabic tree repoints those two variables at Cairo. Everything downstream
+ * follows automatically, including any rule added later.
+ *
+ * `html[lang="ar"]` (0,1,1) outranks the `.__variable_*` class next/font puts
+ * on the same element (0,1,0), so this wins without !important.
+ */
+html[lang="ar"] {
+  --font-inter: var(--font-cairo);
+  --font-outfit: var(--font-cairo);
+
+  /*
+   * Arabic has taller ascenders, deeper descenders, and dot/diacritic marks
+   * that collide at Latin leading. 1.7 is the floor recommended in
+   * design/research/arabic-seo-strategy.md §6 — it is the single detail that
+   * separates "translated" from "designed in Arabic".
+   */
+  line-height: 1.75;
+
+  /*
+   * Never letter-space an Arabic run: the script is cursive, and tracking
+   * breaks the joins between letters. The theme applies it in a few display
+   * headings, which is where it does the most visible damage.
+   */
+  * {
+    letter-spacing: normal !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: 1.5;
+  }
+
+  p,
+  li {
+    line-height: 1.85;
+  }
+
+  /*
+   * Latin runs inside Arabic copy — a model name, a plate, an OMR figure —
+   * should render in Inter rather than Cairo's sparse Latin stub. Authors mark
+   * them with `lang="en"`; see the bidi note in §4 of the strategy doc.
+   */
+  [lang="en"] {
+    font-family: var(--font-inter), sans-serif;
+  }
+}

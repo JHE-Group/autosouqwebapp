@@ -18,6 +18,7 @@
 
 import { DEFAULT_CURRENCY, formatPrice } from "@/lib/format";
 import { IMPORT_ORIGIN } from "@/lib/listingLabels";
+import { DEFAULT_LOCALE, INDEXABLE_LOCALES } from "@/i18n/routing";
 
 // Must match app/layout.js, which sets `metadataBase` from the same variable.
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://autosouq.om";
@@ -78,8 +79,14 @@ export function listingSlug(car) {
   const idStr = car.id === undefined || car.id === null ? "" : String(car.id).trim();
   if (!idStr) return "";
 
+  // Locale-independent city key. `car.location` is the *display* label and is
+  // Arabic on /ar, which would give the same car two different URLs — see the
+  // note on `citySlug` in lib/strapi.js. Demo cars (data/cars.js) carry no
+  // taxonomy relation, so their English `location` is the stable value.
+  const cityKey = car.citySlug || car.location;
+
   if (/^\d+$/.test(idStr)) {
-    return [idStr, car.make, car.model, car.year, car.location]
+    return [idStr, car.make, car.model, car.year, cityKey]
       .filter(
         (part) =>
           part !== undefined && part !== null && String(part).trim() !== "",
@@ -89,7 +96,7 @@ export function listingSlug(car) {
   }
 
   const base = slugPart(idStr);
-  const city = car.location ? slugPart(car.location) : "";
+  const city = cityKey ? slugPart(cityKey) : "";
   if (city && base !== city && !base.endsWith(`-${city}`)) {
     return `${base}-${city}`;
   }
@@ -164,11 +171,55 @@ export function pageMetadata({
   return {
     title: titleAbsolute ? { absolute: title } : title,
     description,
-    alternates: { canonical: canonicalPathForPage },
-    openGraph: { type, url, title, description, siteName: SITE_NAME },
+    alternates: {
+      // Language-SPECIFIC, always: /ar/faq self-canonicalises to /ar/faq and
+      // never to /en/faq. A cross-locale canonical would de-index the whole
+      // Arabic tree in one line (strategy doc §10, gate 3).
+      canonical: canonicalPathForPage,
+      languages: languageAlternates(canonical),
+    },
+    openGraph: {
+      type,
+      url,
+      title,
+      description,
+      siteName: SITE_NAME,
+      locale: locale === "ar" ? "ar_OM" : "en_OM",
+    },
     twitter: { card: "summary_large_image", title, description },
     ...(robots ? { robots } : {}),
   };
+}
+
+/**
+ * The `hreflang` set for one unprefixed path.
+ *
+ * Emitted only while every locale in `INDEXABLE_LOCALES` is genuinely indexable,
+ * because hreflang is a reciprocal, all-or-nothing contract: if any page in the
+ * cluster fails to point back, Google drops the annotations for the whole set —
+ * and Search Console stopped reporting hreflang errors in 2022, so nothing
+ * warns you (design/research/arabic-seo-strategy.md §2).
+ *
+ * Two consequences worth stating, because both are easy to get wrong later:
+ *
+ * - **Every page lists every language including itself.** Self-reference is
+ *   part of the contract, not an optimisation. Generating the whole map from
+ *   one path is what makes that automatic and un-forgettable.
+ * - **`x-default` points at Arabic**, which is the default locale and what the
+ *   bare root redirects to. It is the version served to a visitor whose
+ *   language we cannot infer.
+ *
+ * Bare `ar`/`en` rather than `ar-OM`/`en-OM`: the region subtag targets the
+ * *viewer's* location, and the .om ccTLD already carries the geotargeting
+ * (i18n/routing.js).
+ */
+export function languageAlternates(path = "/") {
+  if (INDEXABLE_LOCALES.length < 2) return undefined;
+  const map = Object.fromEntries(
+    INDEXABLE_LOCALES.map((l) => [l, localizedPath(path, l)]),
+  );
+  map["x-default"] = localizedPath(path, DEFAULT_LOCALE);
+  return map;
 }
 
 /* ------------------------------------------------------------------ */
@@ -290,9 +341,10 @@ const AVAILABILITY = {
   sold: "https://schema.org/SoldOut",
 };
 
-/** English spec label ("GCC spec" / "US import") for a Strapi importOrigin. */
-function specLabel(origin) {
-  return origin && IMPORT_ORIGIN[origin] ? IMPORT_ORIGIN[origin].en : null;
+/** Spec label ("GCC spec" / "خليجي") for a Strapi importOrigin, per language. */
+function specLabel(origin, locale = "en") {
+  if (!origin || !IMPORT_ORIGIN[origin]) return null;
+  return IMPORT_ORIGIN[origin][locale === "ar" ? "ar" : "en"] ?? null;
 }
 
 /**
@@ -314,7 +366,7 @@ function specLabel(origin) {
  * Emits nothing at all for a car with no title. Emits no `offers` for a car
  * with no usable price rather than an `Offer` claiming OMR 0.
  */
-export function vehicleJsonLd(car, { path } = {}) {
+export function vehicleJsonLd(car, { path, locale = "en" } = {}) {
   if (!car || !car.title) return undefined;
 
   const url = absoluteUrl(path || listingPath(car));
@@ -364,7 +416,7 @@ export function vehicleJsonLd(car, { path } = {}) {
     driveWheelConfiguration: DRIVE_WHEEL[car.driveType] || undefined,
     // GCC-spec vs import is one of the four trust promises — state it where a
     // machine can read it, and say nothing when the seller has not declared it.
-    vehicleConfiguration: specLabel(car.importOrigin) || undefined,
+    vehicleConfiguration: specLabel(car.importOrigin, locale) || undefined,
     offers: hasPrice
       ? {
           "@type": "Offer",
@@ -386,15 +438,56 @@ export function vehicleJsonLd(car, { path } = {}) {
 /* ------------------------------------------------------------------ */
 
 /**
+ * Wording for the generated listing title and description, per language.
+ *
+ * These are built from **structured fields only** — year, make, model, city,
+ * price, mileage — and never from the seller's own paragraph. That is the
+ * requirement in design/research/arabic-seo-strategy.md §8: an Arabic listing
+ * page must have an Arabic `<title>` and meta description whether or not the
+ * seller wrote a word of Arabic, because most of them will not. Generating
+ * from fields is what makes that possible without inventing anything.
+ *
+ * They live here rather than in messages/*.json because lib/seo.js is imported
+ * by app/sitemap.js and by `generateMetadata`, neither of which has a
+ * next-intl request scope to read messages from.
+ */
+const LISTING_COPY = {
+  en: {
+    fallback: "Used car for sale in Oman",
+    forSaleIn: (city) => ` for sale in ${city}`,
+    forSaleOman: " for sale in Oman",
+    km: (n) => `${n.toLocaleString("en-US")} km`,
+    separator: ", ",
+    asIs: " Sold as-is. Message the seller on WhatsApp.",
+    verified: " Verified listing. Message the seller on WhatsApp.",
+  },
+  ar: {
+    fallback: "سيارة مستعملة للبيع في عُمان",
+    forSaleIn: (city) => ` للبيع في ${city}`,
+    forSaleOman: " للبيع في عُمان",
+    // Latin digits, per §4 — the price beside it is Latin too.
+    km: (n) => `${n.toLocaleString("en-US")} كم`,
+    separator: "، ",
+    asIs: " تُباع كما هي. راسل البائع على واتساب.",
+    verified: " إعلان محقَّق منه. راسل البائع على واتساب.",
+  },
+};
+
+const copyFor = (locale) => (locale === "ar" ? LISTING_COPY.ar : LISTING_COPY.en);
+
+/**
  * SERP title: "{year make model} for sale in {city} — {price}".
  * Falls back cleanly when city/price are missing.
  */
-export function listingTitle(car) {
-  if (!car?.title) return "Used car for sale in Oman";
-  const place = car.location ? ` for sale in ${car.location}` : " for sale in Oman";
+export function listingTitle(car, locale = "en") {
+  const c = copyFor(locale);
+  if (!car?.title) return c.fallback;
+  const place = car.location ? c.forSaleIn(car.location) : c.forSaleOman;
   const price = Number(car.price);
   const head = `${car.title}${place}`;
-  return price > 0 ? `${head} — ${formatPrice(price, car.currency)}` : head;
+  return price > 0
+    ? `${head} — ${formatPrice(price, car.currency, locale)}`
+    : head;
 }
 
 /**
@@ -402,24 +495,24 @@ export function listingTitle(car) {
  * until it fills the ~155-character window. Nothing is padded or invented; a
  * sparse listing simply gets a shorter description.
  */
-export function listingDescription(car) {
+export function listingDescription(car, locale = "en") {
   if (!car?.title) return null;
+  const c = copyFor(locale);
   const price = Number(car.price);
   const km = Number(car.km);
 
   const facts = [
-    price > 0 ? formatPrice(price, car.currency) : null,
-    Number.isFinite(km) && km > 0 ? `${km.toLocaleString("en-US")} km` : null,
+    price > 0 ? formatPrice(price, car.currency, locale) : null,
+    Number.isFinite(km) && km > 0 ? c.km(km) : null,
     car.transmission || null,
-    specLabel(car.importOrigin),
+    specLabel(car.importOrigin, locale),
     car.location || null,
   ].filter(Boolean);
 
-  const head = facts.length ? `${car.title}: ${facts.join(", ")}.` : `${car.title}.`;
-  const tail = car.soldAsIs
-    ? " Sold as-is. Message the seller on WhatsApp."
-    : " Verified listing. Message the seller on WhatsApp.";
-  return `${head}${tail}`;
+  const head = facts.length
+    ? `${car.title}: ${facts.join(c.separator)}.`
+    : `${car.title}.`;
+  return `${head}${car.soldAsIs ? c.asIs : c.verified}`;
 }
 
 /* ------------------------------------------------------------------ */

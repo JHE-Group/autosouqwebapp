@@ -17,11 +17,10 @@ import { defineRouting } from "next-intl/routing";
  *   already-shared WhatsApp preview card. With both prefixed, changing which
  *   language the root redirects to is a one-line change that moves no URL.
  *
- * - **Default locale.** NICHE.md wants Arabic first. Until `/ar` content is
- *   real and `INDEXABLE_LOCALES` includes `"ar"`, the bare root and unprefixed
- *   paths must land on **English** — otherwise `autosouq.om` redirects into a
- *   `noindex` tree while the sitemap only nominates `/en`. Flip this back to
- *   `"ar"` in the same deploy that indexes Arabic (layout + sitemap + hreflang).
+ * - **Default locale.** NICHE.md wants Arabic first, and as of the full Arabic
+ *   translation that is what the bare root serves. Both trees are indexable,
+ *   both are in the sitemap, and hreflang is reciprocal across them — see
+ *   `INDEXABLE_LOCALES` below, which is the one switch that governs all three.
  *
  * - **`ar` and `en`, not `ar-OM`/`en-OM`.** The region subtag targets the
  *   *viewer's* location, and the .om ccTLD already carries the geotargeting.
@@ -32,8 +31,8 @@ import { defineRouting } from "next-intl/routing";
  */
 export const routing = defineRouting({
   locales: ["ar", "en"],
-  // Temporary: "en" while Arabic is noindex. Restore "ar" with INDEXABLE_LOCALES.
-  defaultLocale: "en",
+  // NICHE.md: Arabic first. The bare root 307s here and x-default points at it.
+  defaultLocale: "ar",
   localePrefix: "always",
   // Don't set a locale cookie from a redirect; it makes the language a user
   // chose invisible to caches and hard to reason about in a CDN.
@@ -42,6 +41,30 @@ export const routing = defineRouting({
 
 export const LOCALES = routing.locales;
 export const DEFAULT_LOCALE = routing.defaultLocale;
+
+/**
+ * Which locale trees we are willing to have indexed. **One switch, three
+ * consumers**, and they must never disagree:
+ *
+ *   - app/[locale]/layout.js — `robots: index/noindex` per tree
+ *   - app/sitemap.js         — which trees are nominated
+ *   - lib/seo.js             — which `hreflang` annotations are emitted
+ *
+ * That is why it lives here rather than being declared separately in each. An
+ * indexed tree missing from the sitemap, or a sitemap entry that serves
+ * `noindex`, or an hreflang pointing at a `noindex` URL, are all wrong signals
+ * — and the third one silently invalidates the annotations for *both*
+ * languages, because hreflang is reciprocal and all-or-nothing
+ * (design/research/arabic-seo-strategy.md §2).
+ *
+ * To take a locale back out of the index, remove it here and redeploy. Nothing
+ * else needs to change, and hreflang switches itself off below two entries.
+ */
+export const INDEXABLE_LOCALES = ["ar", "en"];
+
+export function isIndexableLocale(locale) {
+  return INDEXABLE_LOCALES.includes(locale);
+}
 
 /** Text direction for a locale — drives <html dir> and the RTL stylesheet. */
 export function dirFor(locale) {

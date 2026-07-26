@@ -1,7 +1,10 @@
 import React from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
-export default function Features() {
+import { getTranslations } from "next-intl/server";
+export default async function Features() {
+  const t = await getTranslations("aboutPage");
+  const tf = await getTranslations("aboutPage.features");
   return (
     <section className="tf-section3 section-why-choose-us">
       <div className="container">
@@ -12,19 +15,19 @@ export default function Features() {
                 <li className="tf-icon-list ani5">
                   <i className="icon-autodeal-check" />
                   <span className="fs-18 fw-6 lh-25 text-color-2">
-                    Only OMR 1,500 – 6,000
+                    {t("iconBand")}
                   </span>
                 </li>
                 <li className="tf-icon-list ani4">
                   <i className="icon-autodeal-check" />
                   <span className="fs-18 fw-6 lh-25 text-color-2">
-                    Every listing verified
+                    {t("iconVerified")}
                   </span>
                 </li>
                 <li className="tf-icon-list ani5">
                   <i className="icon-autodeal-check" />
                   <span className="fs-18 fw-6 lh-25 text-color-2">
-                    One WhatsApp tap to the seller
+                    {t("iconWhatsapp")}
                   </span>
                 </li>
               </ul>
@@ -58,16 +61,14 @@ export default function Features() {
                   data-wow-delay="0.2s"
                   data-wow-duration="1000ms"
                 >
-                  Why Choose Autosouq
+                  {t("whyTitle")}
                 </h2>
                 <p
                   className="mt-18 wow fadeInUpSmall"
                   data-wow-delay="0.2s"
                   data-wow-duration="1000ms"
                 >
-                  The reasons to use Autosouq instead of the general classifieds: real
-                  prices, verified listings, GCC spec or import stated plainly,
-                  and one WhatsApp tap to the seller.
+                  {t("whyLede")}
                 </p>
               </div>
               <div className="tf-icon-box-list">
@@ -103,11 +104,9 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <Link href="/used-cars">Real prices</Link>
+                      <Link href="/used-cars">{tf("priceTitle")}</Link>
                     </h5>
-                    <p>
-                      The number on the card is the price the seller is asking, in OMR. No bait figures, no hidden prices, nothing above OMR 6,000.
-                    </p>
+                    <p>{tf("priceBody")}</p>
                   </div>
                 </div>
                 <div
@@ -142,11 +141,9 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <Link href="/faq">Verified listings</Link>
+                      <Link href="/faq">{tf("verifiedTitle")}</Link>
                     </h5>
-                    <p>
-                      Every car is checked before it goes live. If we cannot verify it, we do not publish it.
-                    </p>
+                    <p>{tf("verifiedBody")}</p>
                   </div>
                 </div>
                 <div
@@ -182,11 +179,9 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <Link href="/faq">GCC spec or import, stated</Link>
+                      <Link href="/faq">{tf("specTitle")}</Link>
                     </h5>
-                    <p>
-                      Every listing shows whether the car is GCC spec, a US import or a Japan import, and says so plainly when the seller has not told us.
-                    </p>
+                    <p>{tf("specBody")}</p>
                   </div>
                 </div>
                 <div
@@ -225,11 +220,9 @@ export default function Features() {
                   </div>
                   <div className="content">
                     <h5>
-                      <Link href="/faq">One WhatsApp tap</Link>
+                      <Link href="/faq">{tf("whatsappTitle")}</Link>
                     </h5>
-                    <p>
-                      Message the seller straight from the listing. The car and its listed price are already written into the message.
-                    </p>
+                    <p>{tf("whatsappBody")}</p>
                   </div>
                 </div>
               </div>

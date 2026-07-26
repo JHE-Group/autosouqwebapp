@@ -42,7 +42,7 @@ export default function ChangePass() {
                       form validates but does not post. */}
                   <div className="tfcl-add-listing profile-password">
                     <div className="form-group">
-                      <label htmlFor="old_password">Current password</label>
+                      <label htmlFor="old_password">{t("password.current")}</label>
                       {/* Was type="text" — the password was typed in the clear
                           and left visible on screen. */}
                       <input
@@ -51,18 +51,18 @@ export default function ChangePass() {
                         autoComplete="current-password"
                         className="form-control"
                         name="old_password"
-                        placeholder="Current password"
+                        placeholder={t("password.current")}
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="new_password">New password</label>
+                      <label htmlFor="new_password">{t("password.new")}</label>
                       <input
                         id="new_password"
                         type="password"
                         autoComplete="new-password"
                         className="form-control"
                         name="new_password"
-                        placeholder="New password"
+                        placeholder={t("password.new")}
                         value={next}
                         onChange={(e) => setNext(e.target.value)}
                       />
@@ -81,14 +81,14 @@ export default function ChangePass() {
                       ))}
                     </ul>
                     <div className="form-group">
-                      <label htmlFor="confirm_password">Confirm password</label>
+                      <label htmlFor="confirm_password">{t("password.confirm")}</label>
                       <input
                         id="confirm_password"
                         type="password"
                         autoComplete="new-password"
                         className="form-control"
                         name="confirm_password"
-                        placeholder="Confirm password"
+                        placeholder={t("password.confirm")}
                         value={confirm}
                         onChange={(e) => setConfirm(e.target.value)}
                         aria-invalid={mismatch}

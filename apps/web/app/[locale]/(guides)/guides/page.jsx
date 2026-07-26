@@ -8,18 +8,20 @@ import {
   formatGuideDate,
   guidePath,
   guidesInOrder,
+  guideText,
   GUIDES_VERIFIED_ON,
 } from "@/data/guides";
 import { breadcrumbJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
+import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.guides" });
   return pageMetadata({
-  title: "Guides to buying a used car in Oman",
-  description:
-    "Plain, checkable guides to buying an affordable used car in Oman: GCC spec or import, the ROP mulkiya transfer, fines and restrictions, scam patterns, and a first-car walkthrough for expats.",
-  path: "/guides",
-  locale,
+    title: t("title"),
+    description: t("description"),
+    path: "/guides",
+    locale,
   });
 }
 
@@ -36,6 +38,8 @@ export async function generateMetadata({ params }) {
  */
 export default async function GuidesIndexPage({ params }) {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "guidesPage" });
+  const crumb = await getTranslations({ locale, namespace: "breadcrumb" });
   return (
     <>
       <script
@@ -46,8 +50,8 @@ export default async function GuidesIndexPage({ params }) {
         type="application/ld+json"
         {...jsonLdScript(
           breadcrumbJsonLd([
-            { name: "Home", path: `/${locale}` },
-            { name: "Guides", path: `/${locale}/guides` },
+            { name: crumb("home"), path: `/${locale}` },
+            { name: crumb("guides"), path: `/${locale}/guides` },
           ])
         )}
       />
@@ -61,9 +65,9 @@ export default async function GuidesIndexPage({ params }) {
               <div className="title-inner style">
                 <div className="title-group fs-12">
                   <Link className="home fw-6 text-color-3" href="/">
-                    Home
+                    {crumb("home")}
                   </Link>
-                  <span>Guides</span>
+                  <span>{crumb("guides")}</span>
                 </div>
               </div>
             </div>
@@ -74,71 +78,53 @@ export default async function GuidesIndexPage({ params }) {
         <div className="container">
           <div className="row">
             <div className="col-lg-8">
-              <h1 className="mb-20">Guides to buying a used car in Oman</h1>
-              <P>
-                Written for people buying an affordable used car here — the OMR
-                1,500–6,000 band this site covers. Plain, specific, and honest
-                about what we could and could not confirm.
-              </P>
-              <P className="mb-40">
-                Two rules apply to every page below. Where a guide states
-                something about ROP procedure, the official page it came from is
-                linked so you can check us. Where we could not confirm a fee, a
-                premium or a rule against a primary source, we leave the number
-                out and say where to get it — a wrong number in your budget is
-                worse than a gap.
-              </P>
+              <h1 className="mb-20">{t("h1")}</h1>
+              <P>{t("lede")}</P>
+              <P className="mb-40">{t("rules")}</P>
 
               {guidesInOrder.map((guide) => (
                 <div key={guide.slug} className="mb-40">
                   <h2 className="fs-20 mb-2">
-                    <Link href={guidePath(guide.slug)}>{guide.h1}</Link>
+                    <Link href={guidePath(guide.slug)}>
+                      {guideText(guide, "h1", locale)}
+                    </Link>
                   </h2>
-                  <P className="mb-2">{guide.summary}</P>
+                  <P className="mb-2">{guideText(guide, "summary", locale)}</P>
                   <p className="font-2 fs-14 lh-24 mb-0">
-                    Updated{" "}
+                    {t("updated")}{" "}
                     <time dateTime={guide.dateModified}>
-                      {formatGuideDate(guide.dateModified)}
+                      {formatGuideDate(guide.dateModified, locale)}
                     </time>
-                    {guide.verifiedOn
-                      ? " · procedure checked against the ROP’s own pages"
-                      : null}
+                    {guide.verifiedOn ? ` · ${t("ropChecked")}` : null}
                   </p>
                 </div>
               ))}
 
-              <h2 className="mb-20">What is not here yet</h2>
-              <P>
-                These five are the start of a longer list. Guides on flood and
-                salvage cars, chassis-number checks, air-conditioning before an
-                Omani summer, high-mileage buying, running costs, insurance and
-                selling your own car are researched and not yet written. We would
-                rather publish five pages that are right than eighteen that are
-                filled in.
-              </P>
+              <h2 className="mb-20">{t("notHereTitle")}</h2>
+              <P>{t("notHereBody")}</P>
               <P className="mb-40">
-                Sources were last checked on{" "}
+                {t("sourcesCheckedLead")}{" "}
                 <time dateTime={GUIDES_VERIFIED_ON}>
-                  {formatGuideDate(GUIDES_VERIFIED_ON)}
+                  {formatGuideDate(GUIDES_VERIFIED_ON, locale)}
                 </time>
-                . If something here is out of date,{" "}
+                {t("sourcesCheckedMid")}{" "}
                 <Link className="fw-6" href="/contact">
-                  tell us
+                  {t("tellUs")}
                 </Link>{" "}
-                and we will fix it and re-date the page.
+                {t("sourcesCheckedTail")}
               </P>
 
               <P className="mb-0">
                 <Link className="fw-6" href="/used-cars">
-                  Browse used cars in Oman
+                  {t("linkBrowse")}
                 </Link>{" "}
                 ·{" "}
                 <Link className="fw-6" href="/how-it-works">
-                  How Autosouq works
+                  {t("linkHowItWorks")}
                 </Link>{" "}
                 ·{" "}
                 <Link className="fw-6" href="/faq">
-                  FAQs
+                  {t("linkFaq")}
                 </Link>
               </P>
             </div>

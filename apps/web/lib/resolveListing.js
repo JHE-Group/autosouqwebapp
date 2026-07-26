@@ -3,6 +3,24 @@ import { getListing, getListings } from "@/lib/strapi";
 import { listingSlug } from "@/lib/seo";
 
 /**
+ * Tag a listing that came from `data/cars.js` rather than the CMS.
+ *
+ * data/cars.js says it plainly: those cars are stand-ins, not real inventory.
+ * app/sitemap.js already refuses to nominate them — but the sitemap is not the
+ * only way in. Whenever Strapi returns nothing, the homepage grid and
+ * /used-cars render the demo catalogue and link every card at `/car/{slug}`,
+ * and those pages answered `200 index, follow` with `Car` + `Offer` structured
+ * data quoting a price. That is how a launch with a half-loaded CMS gets
+ * invented inventory into the index.
+ *
+ * The flag is read by app/[locale]/(car-details)/car/[slug]/page.jsx. It is
+ * inert on a populated CMS, which is the normal production state.
+ */
+function asDemoListing(car) {
+  return car ? { ...car, isDemoListing: true } : null;
+}
+
+/**
  * Resolve a `/car/{slug}` segment to a listing.
  *
  * Demo cars use numeric ids (`3-toyota-corolla-2015-muscat`). CMS cars use the
@@ -18,7 +36,7 @@ export async function resolveListing(slug, locale) {
     const id = numeric[1];
     return (
       (await getListing(id, locale)) ??
-      allCars.find((car) => String(car.id) === id) ??
+      asDemoListing(allCars.find((car) => String(car.id) === id)) ??
       null
     );
   }
@@ -42,8 +60,9 @@ export async function resolveListing(slug, locale) {
   }
 
   return (
-    allCars.find((car) => listingSlug(car) === raw) ??
-    allCars.find((car) => String(car.id) === raw) ??
-    null
+    asDemoListing(
+      allCars.find((car) => listingSlug(car) === raw) ??
+        allCars.find((car) => String(car.id) === raw),
+    ) ?? null
   );
 }

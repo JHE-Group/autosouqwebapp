@@ -111,11 +111,22 @@ export function Source({ href, children }) {
   );
 }
 
-/** The list of sources at the foot of a guide. */
-export function Sources({ items }) {
+/**
+ * The list of sources at the foot of a guide.
+ *
+ * `title` is a prop rather than a lookup because Prose is imported by both the
+ * English and the Arabic bodies, and those are plain components with no
+ * next-intl scope of their own. The Arabic bodies pass "المصادر".
+ *
+ * The `label`s themselves stay in the language of the page being cited — an
+ * ROP page titled "Vehicle Ownership Transfer" is findable under that name,
+ * and translating a link text into Arabic would send a reader looking for a
+ * page that does not exist under that title.
+ */
+export function Sources({ items, title = "Sources" }) {
   return (
     <>
-      <H2 id="sources">Sources</H2>
+      <H2 id="sources">{title}</H2>
       <ul className="mb-0" style={BULLETS}>
         {items.map((item, index) => (
           <li

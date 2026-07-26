@@ -48,7 +48,7 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
       <button
         type="button"
         className={`dashboard-overlay ${open ? "active" : ""}`}
-        aria-label="Close menu"
+        aria-label={t("sidebar.closeMenu")}
         tabIndex={open ? 0 : -1}
         aria-hidden={open ? undefined : "true"}
         onClick={onClose}
@@ -56,7 +56,7 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
       <aside
         id="dashboard-sidebar"
         className={`sidebar-dashboard ${open ? "active" : ""}`}
-        aria-label="Dashboard"
+        aria-label={t("page.dashboard")}
       >
         <div className="db-content db-logo pad-30">
           <Link href={`/`} title="Autosouq.om">
@@ -67,7 +67,7 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
                 reusing the old PNG's 432×76 would squash the mark. */}
             <Image
               className="site-logo"
-              alt="Autosouq.om"
+              alt={t("sidebar.logoAlt")}
               src="/assets/images/brand/logo-horizontal-om-cream-terracotta.svg"
               width={220}
               height={76}
@@ -79,7 +79,7 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
             ref={closeRef}
             className="db-close"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={t("sidebar.closeMenu")}
           >
             <svg width={20} height={20} viewBox="0 0 20 20" fill="none">
               <path
@@ -109,13 +109,13 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
         </div>
 
         <div className="db-content db-author pad-30">
-          <h6 className="db-title">Profile</h6>
+          <h6 className="db-title">{t("sidebar.profile")}</h6>
           <div className="author">
             <div className="content">
               {/* Was a stock portrait plus "themesflat@gmail..." presented as
                   the signed-in account. There is no auth yet, so there is no
                   account to name. */}
-              <div className="name">Not signed in</div>
+              <div className="name">{t("sidebar.notSignedIn")}</div>
               <Link href={`/my-profile`} className="author-position">
                 View profile
               </Link>
@@ -124,8 +124,8 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
         </div>
 
         <div className="db-content db-list-menu">
-          <h6 className="db-title">Selling</h6>
-          <nav className="db-dashboard-menu" aria-label="Selling">
+          <h6 className="db-title">{t("sidebar.selling")}</h6>
+          <nav className="db-dashboard-menu" aria-label={t("sidebar.selling")}>
             <ul>
               {item("/dashboard", "Dashboard")}
               {item("/my-listing", "My listings")}
@@ -134,13 +134,13 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
             </ul>
           </nav>
 
-          <h6 className="db-title db-title-sub">Buying</h6>
-          <nav className="db-dashboard-menu" aria-label="Buying">
+          <h6 className="db-title db-title-sub">{t("sidebar.buying")}</h6>
+          <nav className="db-dashboard-menu" aria-label={t("sidebar.buying")}>
             <ul>{item("/my-favorite", "Saved cars")}</ul>
           </nav>
 
-          <h6 className="db-title db-title-sub">Account</h6>
-          <nav className="db-dashboard-menu" aria-label="Account">
+          <h6 className="db-title db-title-sub">{t("sidebar.account")}</h6>
+          <nav className="db-dashboard-menu" aria-label={t("sidebar.account")}>
             <ul>
               {item("/my-profile", "Profile")}
               {/* The theme's last item was a dead "Logout" link. There is no

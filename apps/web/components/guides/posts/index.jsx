@@ -4,6 +4,11 @@ import FirstCarOmanExpat from "@/components/guides/posts/FirstCarOmanExpat";
 import GccSpecVsAmericanImport from "@/components/guides/posts/GccSpecVsAmericanImport";
 import TransferCarOwnershipOman from "@/components/guides/posts/TransferCarOwnershipOman";
 import UsedCarScamsOman from "@/components/guides/posts/UsedCarScamsOman";
+import CheckFinesBeforeBuyingOmanAr from "@/components/guides/posts/ar/CheckFinesBeforeBuyingOman";
+import FirstCarOmanExpatAr from "@/components/guides/posts/ar/FirstCarOmanExpat";
+import GccSpecVsAmericanImportAr from "@/components/guides/posts/ar/GccSpecVsAmericanImport";
+import TransferCarOwnershipOmanAr from "@/components/guides/posts/ar/TransferCarOwnershipOman";
+import UsedCarScamsOmanAr from "@/components/guides/posts/ar/UsedCarScamsOman";
 
 /**
  * slug -> body, joined here rather than in data/guides/index.js so the registry
@@ -15,19 +20,25 @@ import UsedCarScamsOman from "@/components/guides/posts/UsedCarScamsOman";
  * `react-hooks/static-components` — React treats the result as a component
  * created during render, which resets state on every render. A switch returning
  * elements is the same dispatch with none of that.
+ *
+ * Each guide has an English body and an Arabic one under ./ar. Both must exist
+ * for a slug: a guide that renders in English and 404s in Arabic breaks the
+ * identical-path-shape requirement hreflang depends on (design/research/
+ * arabic-seo-strategy.md §10, gate 1).
  */
-export function GuideBody({ slug }) {
+export function GuideBody({ slug, locale = "en" }) {
+  const ar = locale === "ar";
   switch (slug) {
     case "gcc-spec-vs-american-import":
-      return <GccSpecVsAmericanImport />;
+      return ar ? <GccSpecVsAmericanImportAr /> : <GccSpecVsAmericanImport />;
     case "transfer-car-ownership-oman":
-      return <TransferCarOwnershipOman />;
+      return ar ? <TransferCarOwnershipOmanAr /> : <TransferCarOwnershipOman />;
     case "used-car-scams-oman":
-      return <UsedCarScamsOman />;
+      return ar ? <UsedCarScamsOmanAr /> : <UsedCarScamsOman />;
     case "check-fines-before-buying-oman":
-      return <CheckFinesBeforeBuyingOman />;
+      return ar ? <CheckFinesBeforeBuyingOmanAr /> : <CheckFinesBeforeBuyingOman />;
     case "first-car-oman-expat":
-      return <FirstCarOmanExpat />;
+      return ar ? <FirstCarOmanExpatAr /> : <FirstCarOmanExpat />;
     default:
       return null;
   }

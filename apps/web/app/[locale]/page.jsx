@@ -7,13 +7,14 @@ import Hero from "@/components/homes/home-1/Hero";
 import TrustPromises from "@/components/homes/home-1/TrustPromises";
 import { getListings } from "@/lib/strapi";
 import { pageMetadata } from "@/lib/seo";
+import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.home" });
   return pageMetadata({
-    title: "Autosouq.om — Affordable used cars in Oman",
-    description:
-      "Oman's marketplace for affordable used cars, OMR 1,500–6,000. Real prices, verified listings, GCC spec or import stated, one WhatsApp tap to the seller.",
+    title: t("title"),
+    description: t("description"),
     path: "/",
     locale,
     titleAbsolute: true,

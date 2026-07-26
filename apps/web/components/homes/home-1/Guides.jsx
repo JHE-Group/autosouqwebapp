@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { guidePath, guidesInOrder } from "@/data/guides";
+import { guidePath, guidesInOrder, guideText } from "@/data/guides";
+import { getLocale } from "next-intl/server";
 
 /**
  * Three of the buying guides, on the home page.
@@ -8,6 +9,7 @@ import { guidePath, guidesInOrder } from "@/data/guides";
  */
 export default async function Guides({ limit = 3 }) {
   const t = await getTranslations("brand");
+  const locale = await getLocale();
   const shown = guidesInOrder.slice(0, limit);
   if (shown.length === 0) return null;
 
@@ -28,9 +30,13 @@ export default async function Guides({ limit = 3 }) {
           {shown.map((guide) => (
             <li key={guide.slug} className="hp-guide">
               <h3 className="hp-guide__title">
-                <Link href={guidePath(guide.slug)}>{guide.title}</Link>
+                <Link href={guidePath(guide.slug)}>
+                  {guideText(guide, "title", locale)}
+                </Link>
               </h3>
-              <p className="hp-guide__summary">{guide.summary}</p>
+              <p className="hp-guide__summary">
+                {guideText(guide, "summary", locale)}
+              </p>
             </li>
           ))}
         </ul>

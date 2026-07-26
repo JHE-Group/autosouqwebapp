@@ -91,6 +91,28 @@ export function isMuscatListingLocation(location) {
   );
 }
 
+/**
+ * Whether a listing is in Muscat, judged on locale-independent data.
+ *
+ * Prefers `citySlug` (the taxonomy slug from Strapi, always Latin) and falls
+ * back to the display label for demo listings, which carry no relation.
+ * Matching on the label alone meant `/ar/used-cars/muscat` compared "مسقط"
+ * against an English list, found nothing, failed its inventory gate and served
+ * `noindex` while `/en/used-cars/muscat` was indexable — the same page
+ * indexable in one language and not the other.
+ */
+export function isMuscatListing(car) {
+  if (!car) return false;
+  if (car.citySlug) {
+    return MUSCAT_LISTING_LOCATIONS.some(
+      (name) =>
+        name.toLowerCase().replace(/\s+/g, "-") ===
+        String(car.citySlug).toLowerCase(),
+    );
+  }
+  return isMuscatListingLocation(car.location);
+}
+
 /** High-priority names for on-page “areas we cover” copy (not a link farm). */
 export const MUSCAT_AREAS_FOR_COPY = MUSCAT_LOCALITIES.filter(
   (place) => place.priority === "high" && place.slug !== "muscat",

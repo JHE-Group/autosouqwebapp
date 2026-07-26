@@ -48,7 +48,7 @@ export default function Recommended({ cars, locale = DEFAULT_LOCALE }) {
                 <Link href={listingPath(car)}>{car.title}</Link>
               </h6>
               <p className="fs-14 fw-7 text-color-2 font-1">
-                {formatPrice(car.price, car.currency)}
+                {formatPrice(car.price, car.currency, locale)}
               </p>
               {/* Spec disclosure travels with every card, sidebar included. */}
               <ListingSignals car={car} locale={locale} className="mt-1" />

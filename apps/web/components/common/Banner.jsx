@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 
 /**
  * The two jobs, at the foot of the page: buy one, or sell one.
@@ -21,7 +22,8 @@ import { Link } from "@/i18n/navigation";
  *   is not defined anywhere in the stylesheet, so it had zero padding and
  *   collided with whatever preceded it.
  */
-export default function Banner() {
+export default async function Banner() {
+  const t = await getTranslations("homeBanner");
   return (
     <section className="hp-section hp-banner">
       <div className="container">
@@ -30,14 +32,13 @@ export default function Banner() {
             <div className="tf-image-box style1 bg-orange hp-banner__card">
               <div className="content">
                 <h2 className="text-color-2 hp-banner__title">
-                  <Link href="/used-cars">Looking for a car?</Link>
+                  <Link href="/used-cars">{t("buyEyebrow")}</Link>
                 </h2>
                 <p className="text-color-2">
-                  Every car is between OMR 1,500 and 6,000, checked before it
-                  goes live, with GCC spec or import stated up front.
+                  {t("buyBody")}
                 </p>
                 <Link href="/used-cars" className="find-cars">
-                  <span>Find cars</span>
+                  <span>{t("buyCta")}</span>
                 </Link>
               </div>
             </div>
@@ -50,14 +51,13 @@ export default function Banner() {
             <div className="tf-image-box style1 hp-banner__card hp-banner__card--indigo">
               <div className="content">
                 <h2 className="text-color-1 hp-banner__title">
-                  <Link href="/sell-your-car">Selling one?</Link>
+                  <Link href="/sell-your-car">{t("sellEyebrow")}</Link>
                 </h2>
                 <p className="text-color-1">
-                  List it with its real asking price and its spec stated
-                  honestly. Buyers reach you on WhatsApp — no account needed.
+                  {t("sellBody")}
                 </p>
                 <Link href="/add-listing" className="find-cars">
-                  <span>List your car</span>
+                  <span>{t("sellCta")}</span>
                 </Link>
               </div>
             </div>

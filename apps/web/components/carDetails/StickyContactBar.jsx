@@ -70,7 +70,7 @@ export default function StickyContactBar({ car, locale = DEFAULT_LOCALE }) {
     >
       <div className="d-flex justify-content-between align-items-center mb-2 gap-2">
         <span className="fw-bold fs-5 text-nowrap" style={{ color: BRAND_INK }}>
-          {formatPrice(car.price, car.currency)}
+          {formatPrice(car.price, car.currency, locale)}
         </span>
         {/* One pill, never the whole signal row: "GCC spec", or the amber
             "Spec not stated by seller" when the seller withheld it. Both are

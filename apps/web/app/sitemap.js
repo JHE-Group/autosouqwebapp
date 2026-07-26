@@ -4,29 +4,16 @@ import {
   listingPath,
   localizedPath,
 } from "@/lib/seo";
+import { blogPath, liveBlogCategories, postsInOrder } from "@/data/blog";
+import { blogCategoryPath } from "@/data/blog/categories";
 import { guidePath, guidesInOrder } from "@/data/guides";
-import { DEFAULT_LOCALE } from "@/i18n/routing";
+import { DEFAULT_LOCALE, INDEXABLE_LOCALES } from "@/i18n/routing";
 import {
   USED_CARS_FACETS,
   facetClearsGate,
   facetPath,
 } from "@/data/usedCarsFacets";
 import { getListings } from "@/lib/strapi";
-
-/**
- * Which locale trees we are willing to have indexed.
- *
- * `/ar` exists and renders, but its content is still English behind an Arabic
- * URL and an `<html lang="ar">`. Nominating those URLs — or emitting an
- * hreflang="ar" that points at them — tells Google something untrue, which is
- * worse than being absent. Add "ar" here in the same deploy that completes
- * messages/ar.json and the Arabic listing copy, not before.
- *
- * See design/research/arabic-seo-strategy.md §9: hreflang is a reciprocal
- * contract, and Search Console stopped reporting hreflang errors in 2022, so
- * nothing will warn you if this is wrong.
- */
-const INDEXABLE_LOCALES = ["en"];
 
 /**
  * XML sitemap, served at /sitemap.xml by Next's file convention.
@@ -105,6 +92,34 @@ export default async function sitemap() {
     })),
   ];
 
+  const blogLatest = postsInOrder.reduce(
+    (latest, post) =>
+      post.dateModified > latest ? post.dateModified : latest,
+    postsInOrder[0]?.dateModified ?? lastModified,
+  );
+
+  const blogRoutes = [
+    {
+      path: "/blog",
+      lastModified: blogLatest,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    // Categories with no posts are left out — see `categoryHasPosts()`.
+    ...liveBlogCategories.map((category) => ({
+      path: blogCategoryPath(category.slug),
+      lastModified: blogLatest,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    })),
+    ...postsInOrder.map((post) => ({
+      path: blogPath(post.slug),
+      lastModified: post.dateModified,
+      changeFrequency: "monthly",
+      priority: 0.65,
+    })),
+  ];
+
   const listingRoutes = listings
     .filter((car) => car?.id)
     .map((car) => ({
@@ -114,8 +129,22 @@ export default async function sitemap() {
       lastModified,
     }));
 
-  const entries = [...staticRoutes, ...guideRoutes, ...listingRoutes];
+  const entries = [
+    ...staticRoutes,
+    ...guideRoutes,
+    ...blogRoutes,
+    ...listingRoutes,
+  ];
 
+  /**
+   * Both trees, each entry carrying the same `alternates.languages` map that
+   * `pageMetadata()` puts in the <head>. The two have to agree: a sitemap that
+   * nominates a URL whose page does not point back at it is exactly the
+   * asymmetry that makes Google drop the whole hreflang cluster.
+   *
+   * Only the URL count doubles, not the maintenance — the duplicate-layout
+   * exclusions above apply per language because they are expressed as paths.
+   */
   return INDEXABLE_LOCALES.flatMap((locale) =>
     entries.map((entry) => ({
       url: absoluteUrl(localizedPath(entry.path, locale)),
@@ -125,12 +154,17 @@ export default async function sitemap() {
       ...(INDEXABLE_LOCALES.length > 1
         ? {
             alternates: {
-              languages: Object.fromEntries(
-                INDEXABLE_LOCALES.map((l) => [
-                  l,
-                  absoluteUrl(localizedPath(entry.path, l)),
-                ]),
-              ),
+              languages: {
+                ...Object.fromEntries(
+                  INDEXABLE_LOCALES.map((l) => [
+                    l,
+                    absoluteUrl(localizedPath(entry.path, l)),
+                  ]),
+                ),
+                "x-default": absoluteUrl(
+                  localizedPath(entry.path, DEFAULT_LOCALE),
+                ),
+              },
             },
           }
         : {}),

@@ -177,7 +177,7 @@ export default function ListingCard({
           <Link href={href}>{car.title}</Link>
         </h3>
 
-        <p className="asq-card__price">{formatPrice(car.price, car.currency)}</p>
+        <p className="asq-card__price">{formatPrice(car.price, car.currency, locale)}</p>
 
         {/* Spec origin on every card, "not stated" shown rather than hidden,
             plus as-is and verification — NICHE.md requires all of them. */}

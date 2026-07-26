@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "next-intl";
+import { filterLabel } from "@/lib/filterLabels";
 
 const optionsDefault = ["Newest", "Oldest", "3 days"];
 
@@ -14,6 +16,10 @@ export default function DropdownSelect({
   const selectRef = useRef(null);
   const [selected, setSelected] = useState("");
   const [open, setOpen] = useState(false);
+  const locale = useLocale();
+  // Display only. `onChange` below still reports the untranslated value, which
+  // is what the filter reducer compares against — see lib/filterLabels.js.
+  const label = (value) => filterLabel(value, locale);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -53,7 +59,7 @@ export default function DropdownSelect({
         }
       }}
     >
-      <span className="current">{current}</span>
+      <span className="current">{label(current)}</span>
       <ul className="list" role="listbox" onClick={(event) => event.stopPropagation()}>
         {options.map((elm, i) => {
           const isSelected = current === elm;
@@ -69,7 +75,7 @@ export default function DropdownSelect({
               }}
               className={`option ${isSelected ? "selected" : ""} text text-1`}
             >
-              {elm}
+              {label(elm)}
             </li>
           );
         })}

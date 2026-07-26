@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import React, { useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
@@ -31,6 +31,7 @@ import EmptyState from "./EmptyState";
 export default function ListingsTable({ listings = [], title }) {
   const tCommon = useTranslations("common");
   const t = useTranslations("dashboard.listings");
+  const locale = useLocale();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState(ALL_STATUSES);
 
@@ -172,7 +173,7 @@ export default function ListingsTable({ listings = [], title }) {
                         <ListingLabels listing={elm} />
                         <div className="price">
                           <div className="inner tfcl-listing-price">
-                            {formatPrice(elm.price, elm.currency)}
+                            {formatPrice(elm.price, elm.currency, locale)}
                           </div>
                         </div>
                       </div>

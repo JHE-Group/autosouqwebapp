@@ -9,7 +9,12 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
+import { useLocale, useTranslations } from "next-intl";
 export default function RecomandedCars() {
+  const t = useTranslations("browse.card");
+  const tCommon = useTranslations("common");
+  const tAbout = useTranslations("aboutPage");
+  const locale = useLocale();
   const swiperOptions = {
     speed: 1000,
     spaceBetween: 30,
@@ -49,7 +54,7 @@ export default function RecomandedCars() {
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
-                Recommended Used Cars For You
+                {tAbout("recommendedTitle")}
               </h2>
               <Link
                 href={`/used-cars`}
@@ -57,7 +62,7 @@ export default function RecomandedCars() {
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
-                View all
+                {tCommon("viewAll")}
                 <i className="icon-autodeal-btn-right" />
               </Link>
             </div>
@@ -75,7 +80,7 @@ export default function RecomandedCars() {
                       <div className="top flex-two">
                         <ul className="d-flex gap-8">
                           {car?.featured && (
-                            <li className="flag-tag success">Featured</li>
+                            <li className="flag-tag success">{t("featured")}</li>
                           )}
                           <li className="flag-tag style-1">
                             <div className="icon">
@@ -167,7 +172,7 @@ export default function RecomandedCars() {
                         </Link>
                       </h5>
                       <div className="money fs-20 fw-5 lh-25 text-color-3">
-                        {formatPrice(car.price, car.currency)}
+                        {formatPrice(car.price, car.currency, locale)}
                       </div>
                       <ListingSignals car={car} className="mt-2" />
                       <div className="icon-box flex flex-wrap mt-2">
@@ -203,7 +208,7 @@ export default function RecomandedCars() {
                           href={listingPath(car)}
                           className="view-car"
                         >
-                          View car
+                          {t("view")}
                         </Link>
                       </div>
                     </div>

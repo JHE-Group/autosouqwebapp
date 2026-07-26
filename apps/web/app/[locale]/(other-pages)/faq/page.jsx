@@ -4,19 +4,21 @@ import Faqs from "@/components/otherPages/Faqs";
 import React from "react";
 import { Link } from "@/i18n/navigation";
 import { pageMetadata } from "@/lib/seo";
+import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.faq" });
   return pageMetadata({
-  title: "Buying a used car in Oman — questions answered",
-  description:
-    "How Autosouq verifies listings, what GCC-spec and US-import mean for you, what sold as-is means under OMR 1,500, and how to reach a seller on WhatsApp.",
-  path: "/faq",
-  locale,
+    title: t("title"),
+    description: t("description"),
+    path: "/faq",
+    locale,
   });
 }
 export default async function page({ params }) {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "breadcrumb" });
   return (
     <>
       <div className="header-fixed">
@@ -29,9 +31,9 @@ export default async function page({ params }) {
               <div className="title-inner style">
                 <div className="title-group fs-12">
                   <Link className="home fw-6 text-color-3" href={`/`}>
-                    Home
+                    {t("home")}
                   </Link>
-                  <span>Used cars for sale</span>
+                  <span>{t("faq")}</span>
                 </div>
               </div>
             </div>

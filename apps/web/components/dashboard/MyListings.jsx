@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "@/i18n/navigation";
 import ListingsTable from "./ListingsTable";
+import { useTranslations } from "next-intl";
 
 /**
  * /my-listing — the same table as the dashboard, so it now shares the same
@@ -12,6 +13,7 @@ import ListingsTable from "./ListingsTable";
  * the signed-in seller's cars.
  */
 export default function MyListings() {
+  const t = useTranslations("dashboard");
   const myListings = [];
 
   return (
@@ -22,7 +24,7 @@ export default function MyListings() {
             <main id="main" className="main-content">
               <div className="tfcl-dashboard">
                 <div className="tfcl-page-head">
-                  <h1 className="admin-title">My listings</h1>
+                  <h1 className="admin-title">{t("page.myListings")}</h1>
                   {/* The action that matters on this page, reachable without
                       opening the drawer on a phone. Hidden when the list is
                       empty, because the empty state already leads with it. */}

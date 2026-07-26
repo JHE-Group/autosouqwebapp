@@ -37,6 +37,7 @@ const GUIDE_ITEMS = [
 
 const BRAND_ITEMS = [
   { textKey: "link.about", href: "/about-us" },
+  { textKey: "link.blog", href: "/blog" },
   { textKey: "link.faq", href: "/faq" },
   { textKey: "link.howItWorks", href: "/how-it-works" },
   { textKey: "link.contact", href: "/contact" },

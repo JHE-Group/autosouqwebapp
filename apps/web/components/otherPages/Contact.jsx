@@ -2,6 +2,7 @@
 import React, { useRef, useState } from "react";
 
 import emailjs from "@emailjs/browser";
+import { useTranslations } from "next-intl";
 /**
  * Is the mail transport actually configured?
  *
@@ -26,6 +27,7 @@ const MAIL_CONFIGURED = Boolean(
 const OPS_WHATSAPP = process.env.NEXT_PUBLIC_AUTOSOUQ_WHATSAPP;
 
 export default function Contact() {
+  const t = useTranslations("contactPage");
   const formRef = useRef();
   // null = nothing attempted yet. It was `true`, which pre-loaded a success
   // state before the reader had done anything.
@@ -61,7 +63,7 @@ export default function Contact() {
           <div className="row">
             <div className="col-lg-12">
               <div className="inner-heading flex-two flex-wrap">
-                <h1 className="heading-listing">Contact us</h1>
+                <h1 className="heading-listing">{t("h1")}</h1>
               </div>
             </div>
           </div>
@@ -75,17 +77,12 @@ export default function Contact() {
           <div className="row">
             <div className="col-md-8 contact-left">
               <div className="heading-section mb-30">
-                <h2>Send us a message</h2>
-                <p className="mt-12">
-                  A question about a listing, a seller, or something that does
-                  not look right? Tell us and we will look into it.
-                </p>
+                <h2>{t("sendTitle")}</h2>
+                <p className="mt-12">{t("sendLede")}</p>
               </div>
               {!MAIL_CONFIGURED && (
                 <div className="tfcl-notice" role="note">
-                  The message form is not switched on yet — there is no mail
-                  service configured, so anything typed into it would go
-                  nowhere. It is hidden rather than left looking usable.
+                  {t("notConfigured")}
                   {OPS_WHATSAPP ? (
                     <>
                       {" "}
@@ -94,9 +91,9 @@ export default function Contact() {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Message us on WhatsApp
+                        {t("whatsappUs")}
                       </a>{" "}
-                      instead.
+                      {t("instead")}
                     </>
                   ) : null}
                 </div>
@@ -112,60 +109,56 @@ export default function Contact() {
                   >
                     <div className="grid-sw-2">
                       <fieldset className="email-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">Name</label>
+                        <label className="font-1 fs-14 fw-5">{t("name")}</label>
                         <input
                           type="text"
                           className="tb-my-input"
                           name="name"
-                          placeholder="Your name"
+                          placeholder={t("namePlaceholder")}
                           required
                         />
                       </fieldset>
                       <fieldset className="phone-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">
-                          Email address
-                        </label>
+                        <label className="font-1 fs-14 fw-5">{t("email")}</label>
                         <input
                           type="email"
                           className="tb-my-input"
                           name="email"
-                          placeholder="Your email"
+                          placeholder={t("emailPlaceholder")}
                           required
                         />
                       </fieldset>
                     </div>
                     <div className="grid-sw-2">
                       <fieldset className="email-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">
-                          Phone number
-                        </label>
+                        <label className="font-1 fs-14 fw-5">{t("phone")}</label>
                         <input
                           type="tel"
                           className="tb-my-input"
                           name="tel"
-                          placeholder="Your phone number"
+                          placeholder={t("phonePlaceholder")}
                           required
                         />
                       </fieldset>
                       <fieldset className="phone-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">Subject</label>
+                        <label className="font-1 fs-14 fw-5">{t("subject")}</label>
                         <input
                           type="text"
                           className="tb-my-input"
                           name="subject"
-                          placeholder="What is this about?"
+                          placeholder={t("subjectPlaceholder")}
                           required
                         />
                       </fieldset>
                     </div>
                     <fieldset className="phone-wrap style-text">
-                      <label className="font-1 fs-14 fw-5">Your Message</label>
+                      <label className="font-1 fs-14 fw-5">{t("message")}</label>
                       <textarea
                         id="comment-message"
                         name="message"
                         rows={4}
                         tabIndex={4}
-                        placeholder="Your message"
+                        placeholder={t("messagePlaceholder")}
                         aria-required="true"
                         required
                         defaultValue={""}
@@ -175,17 +168,10 @@ export default function Contact() {
                         Renders nothing until something has actually been sent. */}
                     <div className="tfSubscribeMsg footer-sub-element active" aria-live="polite">
                       {success === true && (
-                        <p style={{ color: "#15803D" }}>
-                          Thanks — your message has been sent. We reply on
-                          WhatsApp or by email, usually within a day.
-                        </p>
+                        <p style={{ color: "#15803D" }}>{t("sent")}</p>
                       )}
                       {success === false && (
-                        <p style={{ color: "#B42318" }}>
-                          That did not send. Nothing has reached us, so please
-                          do not assume we have your message — try again, or
-                          contact us another way.
-                        </p>
+                        <p style={{ color: "#B42318" }}>{t("failed")}</p>
                       )}
                     </div>
                     <div className="button-boxs">
@@ -195,7 +181,7 @@ export default function Contact() {
                         type="submit"
                         disabled={sending}
                       >
-                        <span>{sending ? "Sending…" : "Send Message"}</span>
+                        <span>{sending ? t("sending") : t("send")}</span>
                       </button>
                     </div>
                   </form>
@@ -204,7 +190,7 @@ export default function Contact() {
             </div>
             <div className="col-md-4 contact-right">
               <div className="contact-info box-sd">
-                <h2 className="mb-30">Contact Us</h2>
+                <h2 className="mb-30">{t("infoTitle")}</h2>
                 {/* The theme shipped a US street address, a US phone number and
                     a themesflat@gmail.com address. Autosouq is an Oman
                     business and none of the real details have been supplied
@@ -212,15 +198,15 @@ export default function Contact() {
                     safer than a plausible invention. */}
                 <div className="wrap-info">
                   <div className="box-info">
-                    <h5>Where we are</h5>
-                    <p>Autosouq is an Omani business, operating across Oman.</p>
+                    <h5>{t("whereTitle")}</h5>
+                    <p>{t("whereBody")}</p>
                   </div>
                   {OPS_WHATSAPP ? (
                     <div className="box-info">
-                      <h5>Get in touch</h5>
+                      <h5>{t("getInTouch")}</h5>
                       <p>
                         <a href={`https://wa.me/${OPS_WHATSAPP}`} rel="noopener noreferrer" target="_blank">
-                          Message us on WhatsApp
+                          {t("whatsappUs")}
                         </a>
                       </p>
                     </div>

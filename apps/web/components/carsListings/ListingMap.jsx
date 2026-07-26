@@ -1,5 +1,5 @@
 "use client";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import ListingSignals from "@/components/common/ListingSignals";
@@ -197,6 +197,7 @@ const containerStyle = {
 };
 export default function ListingMap({ listings }) {
   const t = useTranslations("browse.filter");
+  const locale = useLocale();
   const [getLocation, setLocation] = useState(null);
 
   const { isLoaded } = useLoadScript({
@@ -316,7 +317,7 @@ export default function ListingMap({ listings }) {
                       </p>
                     </div>
                     <h3>
-                      <a>{formatPrice(getLocation.price, getLocation.currency)}</a>
+                      <a>{formatPrice(getLocation.price, getLocation.currency, locale)}</a>
                     </h3>
                     {/* Spec disclosure is shown "always" — a map bubble is a
                         card like any other. */}

@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "@/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 
-export default function Banner() {
+export default async function Banner() {
+  const t = await getTranslations("aboutPage");
   return (
     <section className="tf-banner style-1">
       <div className="container">
@@ -10,17 +12,14 @@ export default function Banner() {
             <div className="content relative z-2">
               <div className="heading">
                 <h1 className="text-color-1">
-                  Affordable used cars in Oman, <br />
-                  honestly listed
+                  {t("h1Line1")} <br />
+                  {t("h1Line2")}
                 </h1>
                 <p className="text-color-1 fs-18 fw-4 lh-22 font">
-                  Autosouq lists used cars from OMR 1,500 to 6,000 and nothing above
-                  that. Every listing is checked, the price shown is the price the
-                  seller is asking, GCC spec or import is always stated, and the
-                  seller is one WhatsApp tap away.
+                  {t("lede")}
                 </p>
                 <Link href="/used-cars" className="sc-button btn-svg">
-                  <span>Browse cars</span>
+                  <span>{t("browseCars")}</span>
                   <i className="icon-autodeal-next" />
                 </Link>
               </div>

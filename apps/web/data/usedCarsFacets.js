@@ -10,7 +10,7 @@
  *   that pass the gate at build/request time.
  */
 
-import { isMuscatListingLocation } from "./muscatLocalities.js";
+import { isMuscatListing } from "./muscatLocalities.js";
 
 /** Minimum matched listings before a facet URL is allowed to exist. */
 export const MIN_LISTINGS_FOR_FACET = 5;
@@ -49,7 +49,7 @@ export const USED_CARS_FACETS = [
       en: "Cars listed across Muscat Governorate — Muscat, Seeb, Bawshar, Muttrah and nearby areas — in the Autosouq price band.",
       ar: "سيارات معروضة في محافظة مسقط — مسقط والسيب وبوشر ومطرح والمناطق القريبة — ضمن نطاق أسعار أوتوسوق.",
     },
-    match: (car) => isMuscatListingLocation(car.location),
+    match: (car) => isMuscatListing(car),
   },
   {
     slug: "under-2000-omr",

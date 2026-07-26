@@ -7,6 +7,7 @@ import WhatsAppButton from "@/components/common/WhatsAppButton";
 import Image from "next/image";
 import { cars } from "@/data/cars";
 import { DEFAULT_LOCALE } from "@/lib/locale";
+import { getTranslations } from "next-intl/server";
 
 /**
  * The listings section of the home page.
@@ -40,12 +41,15 @@ import { DEFAULT_LOCALE } from "@/lib/locale";
  *   unreachable and the demo array covers that today, but the section should
  *   never render a heading over nothing.
  */
-export default function Cars({
+export default async function Cars({
   parentClass = "hp-section",
   listings,
   locale = DEFAULT_LOCALE,
   limit = 6,
 }) {
+  const t = await getTranslations({ locale, namespace: "homeCars" });
+  const tCard = await getTranslations({ locale, namespace: "browse.card" });
+  const tCommon = await getTranslations({ locale, namespace: "common" });
   // Strapi listings when the CMS has them, the theme demo data otherwise —
   // the same idiom as carsListings/Cars1.
   const source = listings?.length ? listings : cars;
@@ -56,14 +60,13 @@ export default function Cars({
       <div className="container">
         <div className="hp-section-head">
           <div>
-            <h2 className="hp-section-title">Cars listed right now</h2>
+            <h2 className="hp-section-title">{t("title")}</h2>
             <p className="hp-section-lede">
-              Every one of them between OMR 1,500 and 6,000, with its spec and
-              its check status on the card.
+              {t("lede")}
             </p>
           </div>
           <Link href="/used-cars" className="hp-link hp-link--btn">
-            Browse all cars
+            {tCommon("browseAll")}
           </Link>
         </div>
 
@@ -88,7 +91,7 @@ export default function Cars({
                   <div className="top flex-two">
                     <ul className="d-flex gap-8">
                       {car?.featured && (
-                        <li className="flag-tag success">Featured</li>
+                        <li className="flag-tag success">{tCard("featured")}</li>
                       )}
                       {/* Only when there is a number to show. The template
                           rendered the camera icon with an empty count for
@@ -160,7 +163,7 @@ export default function Cars({
                       href={listingPath(car)}
                       className="view-car"
                     >
-                      View car
+                      {tCard("view")}
                     </Link>
                   </div>
                 </div>

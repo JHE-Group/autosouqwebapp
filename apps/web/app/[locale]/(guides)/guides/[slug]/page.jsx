@@ -3,7 +3,8 @@ import React from "react";
 import GuideShell from "@/components/guides/GuideShell";
 import { guideArticleJsonLd } from "@/components/guides/guideJsonLd";
 import { GuideBody, hasGuideBody } from "@/components/guides/posts";
-import { getGuide, guidePath, guides } from "@/data/guides";
+import { getGuide, guidePath, guideText, guides } from "@/data/guides";
+import { getTranslations } from "next-intl/server";
 import { breadcrumbJsonLd, jsonLdScript, pageMetadata } from "@/lib/seo";
 
 /**
@@ -43,8 +44,8 @@ export async function generateMetadata({ params }) {
   if (!guide) return {};
 
   return pageMetadata({
-    title: guide.title,
-    description: guide.description,
+    title: guideText(guide, "title", locale),
+    description: guideText(guide, "description", locale),
     path: guidePath(guide.slug),
     locale,
     type: "article",
@@ -58,6 +59,8 @@ export default async function GuidePage({ params }) {
   // headline over an empty page, which is the one failure mode worth a 404.
   if (!guide || !hasGuideBody(slug)) notFound();
 
+  const crumb = await getTranslations({ locale, namespace: "breadcrumb" });
+
   return (
     <>
       <script
@@ -68,14 +71,17 @@ export default async function GuidePage({ params }) {
         type="application/ld+json"
         {...jsonLdScript(
           breadcrumbJsonLd([
-            { name: "Home", path: `/${locale}` },
-            { name: "Guides", path: `/${locale}/guides` },
-            { name: guide.h1, path: `/${locale}${guidePath(guide.slug)}` },
+            { name: crumb("home"), path: `/${locale}` },
+            { name: crumb("guides"), path: `/${locale}/guides` },
+            {
+              name: guideText(guide, "h1", locale),
+              path: `/${locale}${guidePath(guide.slug)}`,
+            },
           ])
         )}
       />
       <GuideShell guide={guide} locale={locale}>
-        <GuideBody slug={slug} />
+        <GuideBody slug={slug} locale={locale} />
       </GuideShell>
     </>
   );

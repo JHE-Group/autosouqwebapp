@@ -1,5 +1,5 @@
 import { absoluteUrl, localizedPath, SITE_NAME } from "@/lib/seo";
-import { guidePath, guidesInOrder } from "@/data/guides";
+import { guidePath, guidesInOrder, guideText } from "@/data/guides";
 import { DEFAULT_LOCALE } from "@/i18n/routing";
 
 /**
@@ -34,8 +34,11 @@ export function guideArticleJsonLd(guide, locale = DEFAULT_LOCALE) {
     "@id": `${url}#article`,
     // schema.org allows up to 110 characters here; every h1 in the set is inside
     // that, and the check is worth keeping if the set grows.
-    headline: guide.h1.slice(0, 110),
-    description: guide.description,
+    // Both fields resolve in the page's own language: §7 of the strategy doc
+    // requires one JSON-LD graph per page, entirely in that page's language —
+    // never an Arabic page carrying an English headline.
+    headline: guideText(guide, "h1", locale).slice(0, 110),
+    description: guideText(guide, "description", locale),
     url,
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     datePublished: guide.datePublished,
@@ -69,13 +72,14 @@ export function guidesItemListJsonLd(locale = DEFAULT_LOCALE) {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "@id": `${hub}#guides`,
-    name: `Guides — ${SITE_NAME}`,
+    name:
+      locale === "ar" ? `أدلة — ${SITE_NAME}` : `Guides — ${SITE_NAME}`,
     itemListOrder: "https://schema.org/ItemListOrderAscending",
     numberOfItems: guidesInOrder.length,
     itemListElement: guidesInOrder.map((guide, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      name: guide.h1,
+      name: guideText(guide, "h1", locale),
       url: absoluteUrl(localizedPath(guidePath(guide.slug), locale)),
     })),
   };
