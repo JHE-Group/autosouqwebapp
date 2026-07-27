@@ -103,7 +103,11 @@ export default function RecomandedCars() {
                             {car?.images?.length || ""}
                           </li>
                         </ul>
-                        <div className="year flag-tag">2024</div>
+                        {/* Was the hardcoded literal `2024`, printed over cars whose real years
+                            are 2008–2019 (data/cars.js). On the page a sceptical buyer
+                            visits to decide whether to trust us, every card carried a
+                            false model year — a NICHE.md violation, not a cosmetic bug. */}
+                        <div className="year flag-tag">{car.year}</div>
                       </div>
                       <ul className="change-heart flex">
                         <li className="box-icon w-32">
@@ -192,7 +196,7 @@ export default function RecomandedCars() {
                         )}
                         {car.location && (
                           <div className="icons flex-three">
-                            <i className="icon-autodeal-location" />
+                            <i className="icon-autodeal-city" aria-hidden="true" />
                             <span>{car.location}</span>
                           </div>
                         )}

@@ -127,7 +127,7 @@ export default async function Cars({
                     </Link>
                   </h3>
                   <div className="money fs-20 fw-5 lh-25 text-color-3">
-                    {formatPrice(car.price, car.currency)}
+                    {formatPrice(car.price, car.currency, locale)}
                   </div>
                   <ListingSignals car={car} locale={locale} className="mt-2" />
                   <div className="icon-box flex flex-wrap mt-2">
@@ -147,7 +147,7 @@ export default async function Cars({
                     )}
                     {car.location && (
                       <div className="icons flex-three">
-                        <i className="icon-autodeal-location" />
+                        <i className="icon-autodeal-city" aria-hidden="true" />
                         <span>{car.location}</span>
                       </div>
                     )}

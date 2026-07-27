@@ -2524,6 +2524,14 @@ body {
     text-align: left !important;
   }
 
+  /* These two mirror one edge each, and that is all they can safely do.
+     Never put `.start-0` and `.end-0` on the same element: both rules are
+     `!important` at equal specificity, so the later one wins every
+     declaration it repeats — `.end-0`'s `right: auto` cancels `.start-0`'s
+     `right: 0`, and the element ends up anchored to one edge with a
+     shrink-to-fit width instead of spanning. To span, use the logical
+     `inset-inline: 0` (or `style={{ insetInline: 0 }}`), which needs no
+     shim at all. See components/carDetails/StickyContactBar.jsx. */
   .start-0 {
     right: 0 !important;
     left: auto !important;

@@ -139,7 +139,14 @@ export default function Slider1({ carItem, locale = DEFAULT_LOCALE }) {
                 pointerEvents: "none",
               }}
             >
-              {active + 1} / {images.length}
+              {/* <bdi> isolates the whole counter from the surrounding RTL
+                  paragraph direction. Without it UAX#9 resolves the neutral
+                  " / " to the RTL level and the two numbers swap visually, so
+                  photo 3 of 9 rendered as "9 / 3" on /ar — and at this price
+                  band the photos are the only condition evidence a buyer has. */}
+              <bdi>
+                {active + 1} / {images.length}
+              </bdi>
             </div>
           </>
         )}

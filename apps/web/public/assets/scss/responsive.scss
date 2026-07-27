@@ -938,7 +938,18 @@
 @media only screen and (max-width: 575px) {
 
   .footer-heading-desktop,
-  .tf-collapse-content {
+  /* Scoped to the footer, which is the only place this collapse belongs.
+     Unscoped, it also matched the listing detail page: Overview.jsx:135
+     (`.tfcl-listing-info tf-collapse-content`) and Features.jsx:25,45
+     (`.features-inner tf-collapse-content`). Nothing else set `display` on
+     those, and the only rules that restored it were `#footer`-scoped
+     (style.scss:2283, _footer.scss:210) — so below 576px a buyer got the
+     "Overview" and "Features" headings with *nothing underneath*: no spec
+     origin, condition, transmission, fuel, body, engine, doors, seats or
+     colour, and no features list. That is the entire evidence base for the
+     car, missing on the 360px Android this site is built for, in both
+     languages. */
+  #footer .tf-collapse-content {
     display: none;
   }
 

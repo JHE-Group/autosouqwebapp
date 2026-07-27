@@ -109,8 +109,9 @@ export default function Contact() {
                   >
                     <div className="grid-sw-2">
                       <fieldset className="email-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">{t("name")}</label>
+                        <label className="font-1 fs-14 fw-5" htmlFor="contact-name">{t("name")}</label>
                         <input
+                          id="contact-name"
                           type="text"
                           className="tb-my-input"
                           name="name"
@@ -119,8 +120,9 @@ export default function Contact() {
                         />
                       </fieldset>
                       <fieldset className="phone-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">{t("email")}</label>
+                        <label className="font-1 fs-14 fw-5" htmlFor="contact-email">{t("email")}</label>
                         <input
+                          id="contact-email"
                           type="email"
                           className="tb-my-input"
                           name="email"
@@ -131,8 +133,9 @@ export default function Contact() {
                     </div>
                     <div className="grid-sw-2">
                       <fieldset className="email-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">{t("phone")}</label>
+                        <label className="font-1 fs-14 fw-5" htmlFor="contact-phone">{t("phone")}</label>
                         <input
+                          id="contact-phone"
                           type="tel"
                           className="tb-my-input"
                           name="tel"
@@ -141,8 +144,9 @@ export default function Contact() {
                         />
                       </fieldset>
                       <fieldset className="phone-wrap style-text">
-                        <label className="font-1 fs-14 fw-5">{t("subject")}</label>
+                        <label className="font-1 fs-14 fw-5" htmlFor="contact-subject">{t("subject")}</label>
                         <input
+                          id="contact-subject"
                           type="text"
                           className="tb-my-input"
                           name="subject"
@@ -152,12 +156,11 @@ export default function Contact() {
                       </fieldset>
                     </div>
                     <fieldset className="phone-wrap style-text">
-                      <label className="font-1 fs-14 fw-5">{t("message")}</label>
+                      <label className="font-1 fs-14 fw-5" htmlFor="contact-message">{t("message")}</label>
                       <textarea
-                        id="comment-message"
+                        id="contact-message"
                         name="message"
                         rows={4}
-                        tabIndex={4}
                         placeholder={t("messagePlaceholder")}
                         aria-required="true"
                         required
