@@ -1,5 +1,5 @@
 import { allCars } from "@/data/cars";
-import { getListings } from "@/lib/strapi";
+import { getListingsResult } from "@/lib/strapi";
 
 /**
  * Two questions, deliberately kept apart: *what do we render*, and *what do we
@@ -27,7 +27,7 @@ import { getListings } from "@/lib/strapi";
 export async function getBrowseData(locale) {
   // Next memoizes the underlying fetch per request, so asking twice in one
   // render (generateMetadata *and* the page) costs one round trip.
-  const cms = await getListings(locale);
+  const { listings: cms, ok } = await getListingsResult(locale);
   return {
     /** What the page shows — CMS when it has anything, demo cars otherwise. */
     listings: cms?.length ? cms : allCars,
@@ -35,7 +35,39 @@ export async function getBrowseData(locale) {
     cms: cms ?? [],
     /** True while the visible catalogue is stand-ins rather than real cars. */
     isDemo: !cms?.length,
+    /**
+     * The CMS did not answer, so we do not know what the inventory is.
+     *
+     * Distinct from `isDemo`, and the distinction is the whole point: an empty
+     * answer is a fact about the catalogue, a failed one is a fact about the
+     * network. Treating them alike meant a thirty-second Strapi restart could
+     * publish `noindex` on /used-cars and 404 every facet — and, because these
+     * routes are ISR, persist that wrong answer into the cache.
+     */
+    cmsUnavailable: !ok,
   };
+}
+
+/**
+ * Refuse to render rather than cache a wrong answer.
+ *
+ * When the CMS is unreachable at *runtime*, throwing is the useful thing to do:
+ * Next keeps serving the last good ISR page instead of replacing it with one
+ * built on no data. Silence would be worse than an error here — the page would
+ * look fine and quietly say the wrong thing about our inventory.
+ *
+ * During `next build` there is no previous page to keep, so we degrade instead
+ * and let the build finish; the routes come back on their first revalidation
+ * once the CMS is up.
+ */
+export function assertCmsAvailable({ cmsUnavailable }, where) {
+  const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+  if (cmsUnavailable && !isBuild) {
+    throw new Error(
+      `[${where}] CMS unreachable — refusing to render an inventory claim from ` +
+        "no data. The last good page stays served until the CMS answers again.",
+    );
+  }
 }
 
 /**

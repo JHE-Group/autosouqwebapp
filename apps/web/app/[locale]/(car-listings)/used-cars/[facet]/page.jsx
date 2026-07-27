@@ -6,7 +6,7 @@ import {
   getFacet,
   matchFacetListings,
 } from "@/data/usedCarsFacets";
-import { getBrowseData } from "@/lib/listingSource";
+import { assertCmsAvailable, getBrowseData } from "@/lib/listingSource";
 import { pageMetadata } from "@/lib/seo";
 
 export function generateStaticParams() {
@@ -41,8 +41,9 @@ export async function generateMetadata({ params }) {
   // demo catalogue clears every one of these gates on its own, so gating on it
   // meant an empty CMS still published four indexable facet pages full of cars
   // that do not exist. See lib/listingSource.js.
-  const { cms } = await getBrowseData(locale);
-  if (!facetClearsGate(cms, facet)) {
+  const data = await getBrowseData(locale);
+  assertCmsAvailable(data, "used-cars/[facet] metadata");
+  if (!facetClearsGate(data.cms, facet)) {
     return { robots: { index: false, follow: true } };
   }
 
@@ -69,10 +70,13 @@ export default async function UsedCarsFacetPage({ params }) {
    * demo fallback exists for `/used-cars`, which is a hub and always exists;
    * a *facet* asserts "there are cars matching this", so it must be true.
    */
-  const { cms } = await getBrowseData(locale);
-  if (!facetClearsGate(cms, facet)) notFound();
+  const data = await getBrowseData(locale);
+  // A 404 here is a durable claim that this facet has no cars. Never make it
+  // on the strength of a failed request.
+  assertCmsAvailable(data, "used-cars/[facet]");
+  if (!facetClearsGate(data.cms, facet)) notFound();
 
-  const matched = matchFacetListings(cms, facet);
+  const matched = matchFacetListings(data.cms, facet);
   const lang = locale === "ar" ? "ar" : "en";
 
   return (

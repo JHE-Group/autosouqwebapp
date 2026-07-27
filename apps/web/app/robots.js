@@ -40,6 +40,15 @@ export default function robots() {
       },
     ],
     sitemap: absoluteUrl("/sitemap.xml"),
-    host: SITE_URL,
+    // `Host` is a Yandex-only directive and expects a bare hostname, not a URL.
+    // Google ignores it either way, but `Host: https://autosouq.om` is simply
+    // malformed. Derived rather than hardcoded so it cannot drift from SITE_URL.
+    host: (() => {
+      try {
+        return new URL(SITE_URL).host;
+      } catch {
+        return undefined;
+      }
+    })(),
   };
 }

@@ -297,7 +297,21 @@ async function strapiFetch(path) {
  * Published listings, newest first. Returns `[]` (never throws) when the CMS
  * is unreachable, so pages can fall back to the demo data in `data/cars.js`.
  */
-export async function getListings(locale = DEFAULT_LOCALE) {
+/**
+ * Published listings **plus whether the CMS actually answered**.
+ *
+ * These are not the same question, and collapsing them was a real defect: the
+ * old signature returned `[]` for both "the catalogue is empty" and "Strapi is
+ * down", so a thirty-second restart was indistinguishable from having no
+ * inventory. Everything downstream then acted on the wrong one — /used-cars
+ * flipped to `noindex`, every facet 404'd, and each listing URL 404'd — and
+ * because those routes are ISR, the wrong answer was written into the cache
+ * and served to whoever asked next, including Googlebot.
+ *
+ * `ok: false` means "we do not know", which is a different thing from "there
+ * is nothing". Callers that publish a claim about inventory must check it.
+ */
+export async function getListingsResult(locale = DEFAULT_LOCALE) {
   try {
     const first = await strapiFetch(
       `/api/listings?${LISTING_POPULATE}&sort=createdAt:desc&pagination[pageSize]=${LISTINGS_PAGE_SIZE}&pagination[page]=1`,
@@ -338,11 +352,23 @@ export async function getListings(locale = DEFAULT_LOCALE) {
       rest.forEach((json) => rows.push(...(json.data ?? [])));
     }
 
-    return rows.map((l) => toCar(l, locale));
+    return { listings: rows.map((l) => toCar(l, locale)), ok: true };
   } catch (err) {
     console.warn(`[strapi] listings unavailable — using demo data. ${err.message}`);
-    return [];
+    return { listings: [], ok: false };
   }
+}
+
+/**
+ * Published listings, or `[]` when the CMS cannot be reached.
+ *
+ * Kept for callers that genuinely cannot act on the difference. **If you are
+ * about to decide whether a URL is indexable, or whether to 404, use
+ * `getListingsResult` instead** — see the note there.
+ */
+export async function getListings(locale = DEFAULT_LOCALE) {
+  const { listings } = await getListingsResult(locale);
+  return listings;
 }
 
 /**

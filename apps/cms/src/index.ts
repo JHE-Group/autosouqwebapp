@@ -656,7 +656,71 @@ async function repairListingLanguageFields(strapi: Core.Strapi) {
 }
 
 export default {
-  register() {},
+  /**
+   * Runtime-only preflight.
+   *
+   * These checks live here, not in config/database.ts, because config files are
+   * loaded by `strapi build` too — and a build machine legitimately has no
+   * database credentials. Throwing from the config turned `NODE_ENV=production
+   * strapi build` into a hard failure, which would have broken the deploy
+   * pipeline rather than protecting it. `register()` runs only when a server is
+   * actually starting.
+   */
+  register({ strapi }: { strapi: Core.Strapi }) {
+    if (process.env.NODE_ENV !== "production") return;
+
+    /**
+     * SQLite is a development default and must not become a production one by
+     * omission.
+     *
+     * config/database.ts falls back to `sqlite` writing to `.tmp/data.db` — a
+     * gitignored path that, on a rebuildable instance or a container, sits on a
+     * filesystem that does not survive redeploy. A deploy that simply forgot
+     * DATABASE_CLIENT would boot perfectly, accept listings, and lose every one
+     * of them at the next restart with nothing in the logs to say so. Silent
+     * data loss is worth refusing to start over.
+     */
+    const client = strapi.config.get("database.connection.client");
+    const allowSqlite = process.env.ALLOW_SQLITE_IN_PRODUCTION === "true";
+    if (client === "sqlite" && !allowSqlite) {
+      throw new Error(
+        "Refusing to start: the database client is sqlite in production. Set " +
+          "DATABASE_CLIENT=postgres and the DATABASE_* connection variables " +
+          "(see .env.example), or ALLOW_SQLITE_IN_PRODUCTION=true if the file " +
+          "is on a persistent, backed-up volume.",
+      );
+    }
+
+    /**
+     * Behind OVH's reverse proxy, Strapi must be told its own public origin and
+     * to trust X-Forwarded-*. Without PUBLIC_URL it hands out
+     * `http://0.0.0.0:1337` as the base for media and admin links; without
+     * TRUST_PROXY it treats every request as plain http from the proxy's IP.
+     * Both are warnings rather than errors — a same-origin deployment with no
+     * proxy in front is a legitimate, if unusual, setup.
+     */
+    if (!process.env.PUBLIC_URL) {
+      strapi.log.warn(
+        "Autosouq: PUBLIC_URL is not set. Absolute media and admin URLs will be " +
+          "derived from HOST:PORT and will not be reachable from a browser " +
+          "behind a proxy. See DEPLOYMENT.md.",
+      );
+    } else if (!process.env.PUBLIC_URL.startsWith("https://")) {
+      strapi.log.warn(
+        `Autosouq: PUBLIC_URL is not https (${process.env.PUBLIC_URL}). The web ` +
+          "app sends `upgrade-insecure-requests`, so browsers will rewrite CMS " +
+          "image requests to https and they will fail.",
+      );
+    }
+
+    if (process.env.TRUST_PROXY !== "true") {
+      strapi.log.warn(
+        "Autosouq: TRUST_PROXY is not true. If a reverse proxy terminates TLS " +
+          "in front of this server, set it — otherwise protocol detection, " +
+          "client IPs and secure cookies are all wrong.",
+      );
+    }
+  },
 
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     // Neither of these is essential to serving the API, and an unhandled

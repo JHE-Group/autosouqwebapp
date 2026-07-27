@@ -61,17 +61,33 @@ function contentSecurityPolicy() {
      * — worth doing, but it is a change to how every page renders, not a
      * config edit, so it is not smuggled in here.
      */
-    "script-src 'self' 'unsafe-inline' https://maps.googleapis.com",
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
-    // Strapi media (lib/strapi.js absoluteUrl), Maps tiles, and the data: URIs
-    // the sell form builds for local photo previews before upload.
-    ["img-src 'self' data: blob:", strapi, "https://*.googleapis.com", "https://*.gstatic.com"]
-      .filter(Boolean)
-      .join(" "),
-    "font-src 'self' data:",
-    ["connect-src 'self'", strapi, "https://api.emailjs.com", "https://*.googleapis.com"]
-      .filter(Boolean)
-      .join(" "),
+    /*
+     * `${strapi}` is here for one real call site: the gallery lightbox links
+     * straight at the CMS media URL (carDetails/sliders/Slider1.jsx), so the
+     * browser fetches that origin directly. Everything else goes through
+     * /_next/image and is same-origin. `data:` is for the photo previews the
+     * sell form builds before upload (AddListing.jsx readAsDataURL).
+     *
+     * No `blob:` — nothing calls createObjectURL. No Google hosts: the only
+     * consumer of the Maps SDK is ListingMap, reachable solely from
+     * /listing-grid-map and /listing-list-map, and both are 308-redirected in
+     * `redirects()` below. Re-enabling a map means re-adding script-src,
+     * img-src and font/style entries for it, deliberately.
+     */
+    ["img-src 'self' data:", strapi].filter(Boolean).join(" "),
+    "font-src 'self'",
+    /*
+     * EmailJS only. Not `${strapi}`: every CMS call is server-side, and a grep
+     * for `fetch(` across components/ and app/ returns nothing — the browser
+     * never talks to the CMS. Not `https://*.googleapis.com` either, which was
+     * the worst line in this policy: that wildcard includes
+     * storage.googleapis.com, so any public GCS bucket would have been a valid
+     * exfiltration endpoint for injected script — exactly what `default-src
+     * 'self'` is here to prevent.
+     */
+    "connect-src 'self' https://api.emailjs.com",
     // The primary CTA on every listing is a WhatsApp handoff. Without this a
     // hostile page can frame a listing invisibly and harvest that tap — on a
     // site whose entire proposition is that you are not being scammed.

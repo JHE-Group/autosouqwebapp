@@ -1,5 +1,5 @@
 import BrowsePage from "@/components/carsListings/BrowsePage";
-import { getBrowseData, getBrowseListings } from "@/lib/listingSource";
+import { assertCmsAvailable, getBrowseData, getBrowseListings } from "@/lib/listingSource";
 import { pageMetadata } from "@/lib/seo";
 import { getTranslations } from "next-intl/server";
 
@@ -11,7 +11,11 @@ import { getTranslations } from "next-intl/server";
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.usedCars" });
-  const { isDemo } = await getBrowseData(locale);
+  const data = await getBrowseData(locale);
+  // `noindex` on the site's main commercial URL is not something to publish
+  // because one request timed out.
+  assertCmsAvailable(data, "used-cars metadata");
+  const { isDemo } = data;
   return pageMetadata({
     title: t("title"),
     description: t("description"),
