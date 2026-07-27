@@ -71,6 +71,7 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
               src="/assets/images/brand/logo-horizontal-om-cream-terracotta.svg"
               width={220}
               height={76}
+              unoptimized
             />
           </Link>
           {/* Only rendered on mobile, where the sidebar is a drawer. */}

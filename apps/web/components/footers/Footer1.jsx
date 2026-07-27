@@ -193,6 +193,7 @@ export default function Footer1({ columns = footerData }) {
                     alt="Autosouq.om"
                     width={231}
                     height={80}
+                    unoptimized
                   />
                 </Link>
                 <p>{t("tagline")}</p>

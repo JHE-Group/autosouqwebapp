@@ -6,13 +6,22 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.js");
 /**
  * Derive an `images.remotePatterns` entry from NEXT_PUBLIC_STRAPI_URL.
  *
- * lib/strapi.js:30 turns every CMS media path into an absolute URL on the
- * Strapi origin. The moment `unoptimized` is removed below, next/image starts
- * validating those hostnames and any origin not listed here fails the request
- * with `400 Invalid src prop … hostname is not configured`. Today that is
- * invisible, because Strapi has no gallery images yet and lib/strapi.js:13
- * falls back to local placeholders — so the breakage would first appear in
- * production, on the day a seller uploads a real photo.
+ * lib/strapi.js turns every CMS media path into an absolute URL on the Strapi
+ * origin, and next/image validates those hostnames: an origin not listed here
+ * fails with `400 Invalid src prop … hostname is not configured`. Now that the
+ * optimiser is on, this is load-bearing rather than precautionary — and it is
+ * scoped to `/uploads/**` so /_next/image cannot be used as an open proxy for
+ * arbitrary paths on that host.
+ *
+ * A deploy that changes the Strapi origin must redeploy the web app, since this
+ * is read at build time.
+ *
+ * **Local development gotcha.** With Strapi on localhost, `/_next/image` will
+ * still refuse CMS photos with `400` and log `resolved to private ip`. That is
+ * Next 16's SSRF guard, not this pattern failing — an unmatched host is
+ * rejected *before* any fetch and logs nothing, so the presence of that log
+ * line is how you tell the two apart. It disappears in production, where the
+ * Strapi origin is a public hostname. Do not "fix" it by widening the pattern.
  */
 function strapiRemotePattern() {
   const raw = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
@@ -137,47 +146,31 @@ const nextConfig = {
   },
   images: {
     /*
-     * `unoptimized: true` is DELIBERATELY still here. Removing it is worth
-     * 426–596 KB on the homepage (see design/research/performance-audit.md §8)
-     * but it cannot be flipped on its own, because next/image refuses SVG
-     * unless `dangerouslyAllowSVG` is set — and there are 14 `<Image>` call
-     * sites pointing at .svg files, including the site logo in every header and
-     * footer:
+     * Image optimisation is ON. `unoptimized: true` used to sit here.
      *
-     *   components/headers/Header1.jsx:26,34,194
-     *   components/headers/Header2.jsx:26,186
-     *   components/headers/Header3.jsx:130,290
-     *   components/headers/Header4.jsx:23,410
-     *   components/footers/Footer1.jsx:397
-     *   components/dashboard/Sidebar.jsx:50
-     *   components/dashboard/ListingsTable.jsx:166,184
-     *   components/dashboard/DashBoard.jsx:41,47,53
+     * The comment it carried described a migration whose targets no longer
+     * existed: it named 14 `<Image>` call sites pointing at .svg, listing
+     * Header1/2/3/4, DashBoard and ListingsTable. Header3.jsx has since been
+     * deleted, the four headers were consolidated into SiteHeader, and
+     * DashBoard now inlines its SVGs. The real count was five, all of them the
+     * logo, and each now carries `unoptimized` at the call site:
      *
-     * Flipping this without touching those turns the logo into a broken image
-     * on every page of the site.
+     *   components/headers/SiteHeader.jsx (x3, incl. the mobile-nav lockup)
+     *   components/footers/Footer1.jsx
+     *   components/dashboard/Sidebar.jsx
      *
-     * Do NOT reach for `dangerouslyAllowSVG` as the shortcut. Strapi accepts
-     * SVG uploads, so that flag turns /_next/image into a stored-XSS vector the
-     * first time a seller uploads one.
+     * `dangerouslyAllowSVG` remains the wrong shortcut and is deliberately not
+     * set: Strapi accepts SVG uploads, so it would turn /_next/image into a
+     * stored-XSS vector the first time a seller uploads one. Per-call-site
+     * opt-out keeps the optimiser off SVG without opening that door.
      *
-     * The change that IS safe, as one commit:
-     *   1. add `unoptimized` to each of the 14 SVG call sites above (or drop
-     *      next/image for them entirely — a logo is a plain <img>);
-     *   2. delete the `unoptimized: true` line below;
-     *   3. verify against a real Strapi origin, not the local placeholders,
-     *      that listing photos still resolve.
-     *
-     * Deferred here rather than half-done: the SVG call sites are outside this
-     * change's ownership, and a config flip that renders every page logo-less
-     * is a worse outcome than the bytes it saves.
+     * What this buys: the homepage LCP is a 2560x1280 JPEG (237 KB) that was
+     * being served whole to a 360px phone. It is now emitted as AVIF/WebP at
+     * the device bucket. Listing photos (73-91 KB each, 900x672, twelve to a
+     * browse page) fall by a similar proportion.
      */
-    unoptimized: true,
 
-    /*
-     * Everything below is inert while `unoptimized` is set, and correct the
-     * moment it is removed. It lives here now so that step 2 above cannot be
-     * done without the Strapi hostnames already in place.
-     */
+    /* All of this is live now that the optimiser is on. */
     formats: ["image/avif", "image/webp"],
     // Next's defaults start at 640. 360 and 412 are the real CSS widths of the
     // budget Android phones this site is built for; without them a DPR-1 device
