@@ -31,8 +31,83 @@ function strapiRemotePattern() {
   }
 }
 
+/**
+ * Content-Security-Policy, assembled from what the app actually loads.
+ *
+ * Every source below traces to a real call site, and the list is deliberately
+ * short — a CSP copied from a blog post that allows half the internet protects
+ * nothing. Where a directive is loose, the reason is stated, because the whole
+ * value of this header is that a future reviewer can tell a considered
+ * exception from an accident.
+ */
+function contentSecurityPolicy() {
+  const strapi = process.env.NEXT_PUBLIC_STRAPI_URL || "";
+  return [
+    "default-src 'self'",
+    /*
+     * `'unsafe-inline'` is load-bearing twice over and cannot simply be
+     * dropped: Next.js inlines its own bootstrap/flight payload scripts, and
+     * lib/seo.js emits JSON-LD as inline <script type="application/ld+json">.
+     * Tightening this means threading a per-request nonce through the document
+     * — worth doing, but it is a change to how every page renders, not a
+     * config edit, so it is not smuggled in here.
+     */
+    "script-src 'self' 'unsafe-inline' https://maps.googleapis.com",
+    "style-src 'self' 'unsafe-inline'",
+    // Strapi media (lib/strapi.js absoluteUrl), Maps tiles, and the data: URIs
+    // the sell form builds for local photo previews before upload.
+    ["img-src 'self' data: blob:", strapi, "https://*.googleapis.com", "https://*.gstatic.com"]
+      .filter(Boolean)
+      .join(" "),
+    "font-src 'self' data:",
+    ["connect-src 'self'", strapi, "https://api.emailjs.com", "https://*.googleapis.com"]
+      .filter(Boolean)
+      .join(" "),
+    // The primary CTA on every listing is a WhatsApp handoff. Without this a
+    // hostile page can frame a listing invisibly and harvest that tap — on a
+    // site whose entire proposition is that you are not being scammed.
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /*
+   * Security response headers. There were none before this: no CSP, no
+   * framing protection, no MIME-sniff protection, no HSTS.
+   *
+   * These are set here rather than in the middleware because the middleware
+   * matcher deliberately excludes static assets and file-convention routes,
+   * and headers that only cover *some* responses are the kind of control that
+   * reads as present and is not.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: contentSecurityPolicy() },
+          // Redundant with frame-ancestors for modern browsers; kept for the
+          // older Android WebViews that are a real share of this audience.
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+        ],
+      },
+    ];
+  },
   /*
    * Legacy theme browse URLs → canonical `/used-cars`.
    * Page-level `redirect()` alone is not enough: these routes were being
