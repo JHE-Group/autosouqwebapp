@@ -1,3 +1,15 @@
-# To prevent search engines from seeing the site altogether, uncomment the next two lines:
-# User-Agent: *
-# Disallow: /
+# This is the CMS origin (e.g. cms.autosouq.om), not the website.
+#
+# Nothing here should ever be indexed. Strapi ships this file with the two lines
+# below commented out, which would have left the admin panel and the whole
+# public REST API crawlable on a second origin — including /api/listings, which
+# returns every seller's phone and WhatsApp number in a single response.
+#
+# The website's own robots policy is generated separately and lives in
+# apps/web/app/robots.js. This file governs only the CMS host.
+#
+# Note this is a crawler instruction, not access control: the API stays publicly
+# reachable to anyone who requests it. Rate limiting at the reverse proxy is the
+# control for that — see DEPLOYMENT.md.
+User-Agent: *
+Disallow: /
