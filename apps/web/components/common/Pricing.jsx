@@ -1,6 +1,8 @@
 "use client";
 
 import Slider from "rc-slider";
+// Was in the root layout, where every route paid for it.
+import "rc-slider/assets/index.css";
 
 /**
  * A two-handle range slider.

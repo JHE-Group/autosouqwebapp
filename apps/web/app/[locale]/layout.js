@@ -1,8 +1,15 @@
-import "rc-slider/assets/index.css";
 import "../../public/assets/scss/app.scss";
-import "swiper/css/effect-fade";
-import "swiper/css/grid";
-import "photoswipe/style.css";
+/*
+ * Swiper, PhotoSwipe and rc-slider stylesheets used to be imported here, so
+ * every route paid for them: the homepage, all the blog posts and guides,
+ * /privacy, /terms, /how-it-works, /faq and /contact render no carousel, no
+ * lightbox and no range slider, and still loaded ~35 KB of CSS for them. Each
+ * now sits in the component that owns it, so Next attaches it to that route's
+ * chunk instead.
+ *
+ * `swiper/css/grid` went with them and did not come back: the Grid module is
+ * not registered by either Swiper call site, so it styled nothing.
+ */
 import { Cairo, Inter, Outfit } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { pickMessages } from "@/i18n/clientMessages";

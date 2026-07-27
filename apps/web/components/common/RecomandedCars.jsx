@@ -3,9 +3,10 @@
 import { formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import { carData } from "@/data/cars";
-import { Navigation, Pagination } from "swiper/modules";
+import { A11y, Navigation, Pagination } from "swiper/modules";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
@@ -70,7 +71,11 @@ export default function RecomandedCars() {
           <div className="col-lg-12 relative">
             <Swiper
               {...swiperOptions}
-              modules={[Pagination, Navigation, Pagination]}
+              // A11y was missing, which is why the prev/next arrows had no
+              // role, no tabindex and no accessible name — Swiper only adds
+              // those when the module is registered. Pagination was also listed
+              // twice.
+              modules={[A11y, Navigation, Pagination]}
               className="swiper-container tf-sw-mobile3"
             >
               {carData.map((car, i) => (

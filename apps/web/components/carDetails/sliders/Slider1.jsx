@@ -1,7 +1,23 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { EffectFade, Navigation } from "swiper/modules";
+import { A11y, EffectFade, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+/*
+ * `swiper/css` is the core sheet and it was never imported anywhere.
+ *
+ * Swiper 7 renamed the root element from `.swiper-container` to `.swiper`, but
+ * the vendored theme stylesheet is Swiper 6.8.1 (2021) and still only styles
+ * the old name — so `.swiper` was getting `height: 100%` from the theme SCSS
+ * and nothing else: no `position: relative`, no `overflow: hidden`. Measured in
+ * a real browser at 390px, this gallery root computed `overflow-x: visible`.
+ * The crossfade happens to hide the symptom, because faded slides stack rather
+ * than sit in a row — but the root of the site's most important carousel was
+ * relying on that coincidence. RecomandedCars only escaped it by passing the
+ * legacy `swiper-container` class by hand.
+ */
+import "swiper/css";
+import "swiper/css/effect-fade";
+import "photoswipe/style.css";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import Image from "next/image";
 import {
@@ -77,7 +93,10 @@ export default function Slider1({ carItem, locale = DEFAULT_LOCALE }) {
       <div style={{ position: "relative" }}>
         <Swiper
           {...swiperOptions}
-          modules={[Navigation, EffectFade]}
+          // A11y gives the prev/next controls their role, tabindex and
+          // aria-label. Without it they are bare <div>s — and at 360px they are
+          // the only way past the first photo.
+          modules={[A11y, Navigation, EffectFade]}
           className="swiper mainslider slider home"
           id="my-gallery"
           onSlideChange={(swiper) => setActive(swiper.realIndex)}
