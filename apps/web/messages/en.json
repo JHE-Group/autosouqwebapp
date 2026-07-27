@@ -29,7 +29,8 @@
     "noPhotos": "No photos yet",
     "whatsapp": "Message seller on WhatsApp",
     "soldAsIs": "Sold as-is",
-    "browseAll": "Browse all cars"
+    "browseAll": "Browse all cars",
+    "backToTop": "Back to top"
   },
   "brand": {
     "name": "Autosouq.om",
@@ -190,7 +191,9 @@
       "pages": "Results pages",
       "loading": "Loading listings",
       "filters": "Filters",
-      "filtersCount": "Filters ({count})"
+      "filtersCount": "Filters ({count})",
+      "sortBy": "Sort results by",
+      "perPage": "Cars per page"
     }
   },
   "listing": {

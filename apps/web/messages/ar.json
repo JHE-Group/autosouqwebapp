@@ -29,7 +29,8 @@
     "noPhotos": "لا توجد صور بعد",
     "whatsapp": "راسل البائع على واتساب",
     "soldAsIs": "تُباع كما هي",
-    "browseAll": "تصفّح كل السيارات"
+    "browseAll": "تصفّح كل السيارات",
+    "backToTop": "العودة إلى الأعلى"
   },
   "brand": {
     "name": "Autosouq.om",
@@ -190,7 +191,9 @@
       "pages": "صفحات النتائج",
       "loading": "جارٍ تحميل الإعلانات",
       "filters": "الفلاتر",
-      "filtersCount": "الفلاتر ({count})"
+      "filtersCount": "الفلاتر ({count})",
+      "sortBy": "ترتيب النتائج حسب",
+      "perPage": "عدد السيارات في الصفحة"
     }
   },
   "listing": {

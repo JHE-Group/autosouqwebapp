@@ -118,6 +118,9 @@ export default function FilterPanel({
           selectedValue={allProps[key]}
           onChange={setter}
           options={options}
+          // Same string as the visible facet heading. Without it a screen
+          // reader announces ten identical "combobox" controls in a row.
+          label={t(labelKey)}
         />
       </Facet>
     ) : null;
@@ -136,6 +139,8 @@ export default function FilterPanel({
             MAX={bounds.price[1]}
             priceRange={allProps.price}
             setPriceRange={allProps.setPrice}
+            label={t("price")}
+            formatValue={(v) => formatPrice(v, undefined, locale)}
           />
         </Facet>
       )}
@@ -155,6 +160,8 @@ export default function FilterPanel({
             MAX={bounds.km[1]}
             priceRange={allProps.km}
             setPriceRange={allProps.setKM}
+            label={t("km")}
+            formatValue={(v) => `${plain(v)} km`}
           />
         </Facet>
       )}
@@ -180,6 +187,8 @@ export default function FilterPanel({
             MAX={bounds.year[1]}
             priceRange={allProps.year}
             setPriceRange={allProps.setYear}
+            label={t("year")}
+            formatValue={(v) => String(v)}
           />
         </Facet>
       )}
