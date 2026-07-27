@@ -185,9 +185,18 @@ export default function ListingCard({
 
         <p className="asq-card__specs">
           <span className="asq-card__km">
+            {/* `pick(COPY.kmUnstated, locale)` — neither identifier exists in
+                this file or anywhere in the repo. It was the remnant of a
+                half-finished move from a local copy object to the message
+                catalogue: the key landed in both catalogues, the call site did
+                not. Reaching this branch threw `ReferenceError: COPY is not
+                defined` from a Client Component, and with no error boundary in
+                app/ that unwinds to Next's stock error page — so one listing
+                with a null or string `mileage` blanked the whole of
+                /used-cars and every facet lander, not one card. */}
             {Number.isFinite(car.km)
               ? `${car.km.toLocaleString("en-US")} km`
-              : pick(COPY.kmUnstated, locale)}
+              : t("kmUnstated")}
           </span>
           {car.transmission && (
             <>
