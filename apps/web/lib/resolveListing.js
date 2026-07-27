@@ -16,6 +16,14 @@ import { listingSlug } from "@/lib/seo";
  * The flag is read by app/[locale]/(car-details)/car/[slug]/page.jsx. It is
  * inert on a populated CMS, which is the normal production state.
  */
+/**
+ * Limits on the progressive-strip fallback below. A canonical listing slug is
+ * `{id-}{make}-{model}-{year}-{city}` (lib/seo.js `listingSlug`), so a real one
+ * runs to a handful of tokens; 16 is generous headroom for a long model name.
+ */
+const MAX_SLUG_TOKENS = 16;
+const MAX_STRIP_ATTEMPTS = 3;
+
 function asDemoListing(car) {
   return car ? { ...car, isDemoListing: true } : null;
 }
@@ -51,12 +59,32 @@ export async function resolveListing(slug, locale) {
     });
   if (fromCms) return fromCms;
 
-  // Single-slug fetch with progressive strip (city / trailing tokens).
+  /**
+   * Single-slug fetch with progressive strip (city / trailing tokens).
+   *
+   * Bounded on purpose. This loop used to run once per token, all the way down
+   * to a single token, and `/car/[slug]` is a dynamic route that calls
+   * `resolveListing` twice per request (generateMetadata *and* the page). So an
+   * unauthenticated GET for a made-up 40-token slug turned into ~80 sequential
+   * upstream requests against Strapi, at full CMS latency each, and every
+   * distinct junk slug missed the cache. Measured against the built app: a
+   * 40-token slug took 23× the wall-clock of a 1-token one *with Strapi down*
+   * — with Strapi up and answering in 50ms it is multiple seconds of CMS time
+   * bought with one cheap request, from any number of URLs.
+   *
+   * Bounding it costs nothing real. The strip exists to forgive a *stale* slug
+   * — a renamed model or a missing/changed city suffix — which is one or two
+   * trailing tokens, not twelve. Anything longer is not a stale link, it is
+   * not one of our URLs, and 404 is the correct answer.
+   */
   const parts = raw.split("-").filter(Boolean);
-  for (let i = parts.length; i >= 1; i -= 1) {
-    const key = parts.slice(0, i).join("-");
-    const hit = await getListing(key, locale);
-    if (hit) return hit;
+  if (parts.length <= MAX_SLUG_TOKENS) {
+    const floor = Math.max(1, parts.length - MAX_STRIP_ATTEMPTS);
+    for (let i = parts.length; i >= floor; i -= 1) {
+      const key = parts.slice(0, i).join("-");
+      const hit = await getListing(key, locale);
+      if (hit) return hit;
+    }
   }
 
   return (

@@ -20,11 +20,18 @@ export const listingPages = [
   {
     className: "dropdown2",
     title: "Browse",
-    links: [
-      { href: "/used-cars", text: "All used cars" },
-      { href: "/listing-list", text: "List view" },
-      { href: "/listing-grid-map", text: "Map view" },
-    ],
+    /**
+     * One destination, because there is one browse page.
+     *
+     * "List view" and "Map view" pointed at `/listing-list` and
+     * `/listing-grid-map`, two of the five theme duplicates that
+     * next.config.mjs has 308'd to `/used-cars` since they were retired. They
+     * were rendered in the header and the mobile nav on *every page in both
+     * locales*, so every crawl spent links on a permanent redirect, and a
+     * buyer who tapped "عرض الخريطة" expecting a map landed on the same grid
+     * they were already looking at.
+     */
+    links: [{ href: "/used-cars", text: "All used cars" }],
   },
 ];
 

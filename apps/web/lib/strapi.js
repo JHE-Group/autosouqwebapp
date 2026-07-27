@@ -93,6 +93,21 @@ function storedTitle(listing, locale = DEFAULT_LOCALE) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+/**
+ * Alt text for the nth gallery photo, in the page's own language.
+ *
+ * Alt text is content, not chrome: it is what a blind buyer hears and what a
+ * crawler reads, so an English string inside an Arabic document is the same
+ * defect as an English `<h1>` would be.
+ */
+function galleryAlt(title, n, locale = DEFAULT_LOCALE) {
+  const subject = typeof title === "string" && title.trim() ? title.trim() : null;
+  if (locale === "ar") {
+    return subject ? `${subject} — صورة ${n}` : `صورة السيارة ${n}`;
+  }
+  return subject ? `${subject} — image ${n}` : `Car photo ${n}`;
+}
+
 function derivedTitle(listing, locale = DEFAULT_LOCALE) {
   const make = label(listing.make, locale);
   const model = label(listing.model, locale);
@@ -109,10 +124,27 @@ function derivedTitle(listing, locale = DEFAULT_LOCALE) {
  * the components fall through to their own empty states.
  */
 export function toCar(listing, locale = DEFAULT_LOCALE) {
+  /**
+   * Resolve the title once, up front, because the gallery needs it too.
+   *
+   * The alt text below used to interpolate `listing.title` — the *stored
+   * English* column — directly. Two bugs fell out of that. On /ar every photo
+   * of every car was described to a screen reader in English, on a page whose
+   * whole premise is that it is an Arabic page. And when no English title was
+   * stored (normal: titles are derived, not typed — see `derivedTitle`), the
+   * template stringified `undefined` and shipped `alt="undefined — image 1"`.
+   */
+  const title =
+    storedTitle(listing, locale) ||
+    derivedTitle(listing, locale) ||
+    pick(locale, listing.titleAr, listing.title);
+
   const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
   const images = gallery.map((img, i) => ({
     src: absoluteUrl(img.url),
-    alt: img.alternativeText || `${listing.title} — image ${i + 1}`,
+    // Fall back to the generic noun rather than an empty subject, so a listing
+    // with no title anywhere still gets a usable description instead of "— 1".
+    alt: img.alternativeText || galleryAlt(title, i + 1, locale),
     width: img.width ?? 615,
     height: img.height ?? 462,
   }));
@@ -135,10 +167,7 @@ export function toCar(listing, locale = DEFAULT_LOCALE) {
      * no model relation has nothing to generate from, and one real title in
      * the wrong language beats an empty <h1>.
      */
-    title:
-      storedTitle(listing, locale) ||
-      derivedTitle(listing, locale) ||
-      pick(locale, listing.titleAr, listing.title),
+    title,
     /**
      * The seller's own prose, plus which language it turned out to be in.
      *
@@ -226,17 +255,39 @@ export function toCar(listing, locale = DEFAULT_LOCALE) {
     authorImage: null,
 
     imgSrc: images[0]?.src ?? placeholderFor(listing.slug),
-    imageAlt: images[0]?.alt ?? listing.title,
+    // Same rule as the gallery: the resolved, locale-correct title — not the
+    // raw English column, which is what a card on /ar was announcing before.
+    imageAlt: images[0]?.alt ?? galleryAlt(title, 1, locale),
     images,
     // True only while the listing is running on generated placeholder imagery.
     hasPlaceholderImage: images.length === 0,
   };
 }
 
+/**
+ * How long we are willing to wait for the CMS before giving up on it.
+ *
+ * Every caller below already treats "no answer" as "fall back to demo data",
+ * but without a deadline that fallback could never run: `fetch` has no default
+ * timeout, so a Strapi that accepts the connection and then stalls holds the
+ * request open until the platform kills it. A CMS that is merely *slow* would
+ * take the whole storefront down with it, which is the one failure the
+ * try/catch here was written to prevent.
+ *
+ * 5s is well past a healthy Strapi (tens of ms) and well inside the point at
+ * which a buyer on a phone has already left.
+ */
+const STRAPI_TIMEOUT_MS = 5000;
+
+/** Rows per CMS request, and the most pages `getListings` will walk. */
+const LISTINGS_PAGE_SIZE = 100;
+const MAX_LISTING_PAGES = 20; // 2,000 listings — far beyond launch inventory.
+
 async function strapiFetch(path) {
   const res = await fetch(`${STRAPI_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
     next: { revalidate: 30 },
+    signal: AbortSignal.timeout(STRAPI_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Strapi ${res.status} on ${path}`);
   return res.json();
@@ -248,10 +299,46 @@ async function strapiFetch(path) {
  */
 export async function getListings(locale = DEFAULT_LOCALE) {
   try {
-    const json = await strapiFetch(
-      `/api/listings?${LISTING_POPULATE}&sort=createdAt:desc&pagination[pageSize]=100`,
+    const first = await strapiFetch(
+      `/api/listings?${LISTING_POPULATE}&sort=createdAt:desc&pagination[pageSize]=${LISTINGS_PAGE_SIZE}&pagination[page]=1`,
     );
-    return (json.data ?? []).map((l) => toCar(l, locale));
+    const rows = [...(first.data ?? [])];
+
+    /**
+     * Walk the remaining pages.
+     *
+     * This used to be a single `pageSize=100` request, which is not a page
+     * size so much as a silent cap: Strapi returns the first 100 rows and the
+     * 101st listing simply does not exist as far as the site is concerned. It
+     * would never 404 or error — the car is absent from /used-cars, absent
+     * from every facet, missing from the sitemap, and `/car/{slug}` falls
+     * through to the per-slug lookup. On a marketplace whose whole job is to
+     * show inventory, "we stopped counting at 100" is a data-loss bug that
+     * only appears once the CMS is doing well.
+     *
+     * `pageCount` comes from Strapi's own meta, and MAX_LISTING_PAGES is a
+     * backstop so a malformed meta block cannot spin this loop forever.
+     */
+    const pageCount = Number(first.meta?.pagination?.pageCount) || 1;
+    const lastPage = Math.min(pageCount, MAX_LISTING_PAGES);
+    if (pageCount > MAX_LISTING_PAGES) {
+      console.warn(
+        `[strapi] ${pageCount} pages of listings; reading the first ${MAX_LISTING_PAGES}. Raise MAX_LISTING_PAGES or paginate the browse pages.`,
+      );
+    }
+
+    if (lastPage > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: lastPage - 1 }, (_, i) =>
+          strapiFetch(
+            `/api/listings?${LISTING_POPULATE}&sort=createdAt:desc&pagination[pageSize]=${LISTINGS_PAGE_SIZE}&pagination[page]=${i + 2}`,
+          ),
+        ),
+      );
+      rest.forEach((json) => rows.push(...(json.data ?? [])));
+    }
+
+    return rows.map((l) => toCar(l, locale));
   } catch (err) {
     console.warn(`[strapi] listings unavailable — using demo data. ${err.message}`);
     return [];

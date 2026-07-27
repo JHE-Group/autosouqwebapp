@@ -1,4 +1,5 @@
 import { NextIntlClientProvider } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import { pickMessages } from "@/i18n/clientMessages";
 
 /**
@@ -12,7 +13,17 @@ import { pickMessages } from "@/i18n/clientMessages";
  * Nothing else: per i18n/clientMessages.js, a namespace shipped to a page that
  * does not read it is bytes a buyer on metered data pays for.
  */
-export default async function OtherPagesLayout({ children }) {
+/**
+ * `setRequestLocale` keeps this subtree statically renderable — it is
+ * required in every layout, not only the root one. Without it the
+ * `pickMessages` call below reads the request locale and forces the whole
+ * group to render per request. See (car-listings)/layout.jsx for the
+ * evidence from the build's prerender manifest.
+ */
+export default async function OtherPagesLayout({ children, params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <NextIntlClientProvider messages={await pickMessages("contactPage", "browse", "aboutPage")}>
       {children}

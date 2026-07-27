@@ -34,9 +34,37 @@ export const routing = defineRouting({
   // NICHE.md: Arabic first. The bare root 307s here and x-default points at it.
   defaultLocale: "ar",
   localePrefix: "always",
-  // Don't set a locale cookie from a redirect; it makes the language a user
-  // chose invisible to caches and hard to reason about in a CDN.
+  // Don't sniff Accept-Language. This governs *detection* only.
   localeDetection: false,
+  /**
+   * Don't set a locale cookie at all — it makes the language a user chose
+   * invisible to caches and hard to reason about in a CDN.
+   *
+   * `localeDetection: false` alone does NOT do this, which is what the code
+   * here assumed: next-intl still wrote `Set-Cookie: NEXT_LOCALE=…` on every
+   * response, so every page — including the statically prerendered ones —
+   * came back uncacheable by any shared cache. `localeCookie: false` is the
+   * switch that actually stops it. Verified with `curl -sI /ar`.
+   *
+   * Nothing depends on the cookie: both locales are prefixed, so the locale is
+   * always recoverable from the URL, and the root redirect is unconditional.
+   */
+  localeCookie: false,
+  /**
+   * hreflang is emitted by lib/seo.js in the document head, not by the
+   * middleware.
+   *
+   * Leaving this on gave every response a *second*, conflicting set of
+   * annotations in a `Link:` header, and the two disagreed: the middleware's
+   * `x-default` pointed at the unprefixed path (`/used-cars`), which 307s,
+   * while the head correctly points at `/ar/used-cars`. hreflang pointing at a
+   * redirect is ignored, and a page advertising two different x-defaults is
+   * exactly the "wrong signal" INDEXABLE_LOCALES exists to prevent.
+   *
+   * The middleware also emitted them for URLs that do not exist, because it
+   * runs before the route does — so 404s advertised alternates too.
+   */
+  alternateLinks: false,
 });
 
 export const LOCALES = routing.locales;

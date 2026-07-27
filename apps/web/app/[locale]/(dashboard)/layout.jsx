@@ -1,4 +1,5 @@
 import { NextIntlClientProvider } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import { pickMessages } from "@/i18n/clientMessages";
 
@@ -19,7 +20,17 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function DashboardLayout({ children }) {
+/**
+ * `setRequestLocale` keeps this subtree statically renderable — it is
+ * required in every layout, not only the root one. Without it the
+ * `pickMessages` call below reads the request locale and forces the whole
+ * group to render per request. See (car-listings)/layout.jsx for the
+ * evidence from the build's prerender manifest.
+ */
+export default async function DashboardLayout({ children, params }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <NextIntlClientProvider
       messages={await pickMessages("dashboard", "addListing", "browse")}
