@@ -183,7 +183,7 @@ export default function ListingsTable({ listings = [], title }) {
                     <StatusPill listing={elm} />
                   </td>
                   <td className="column-date" data-label="Posted">
-                    <div className="tfcl-listing-date">{formatPosted(elm)}</div>
+                    <div className="tfcl-listing-date">{formatPosted(elm, locale)}</div>
                   </td>
                   <td className="column-controller" data-label="Action">
                     <div className="inner-controller">
@@ -295,17 +295,23 @@ function StatusPill({ listing }) {
  * and the CMS `createdAt` is not plumbed through. Print an em dash rather than
  * the template's hardcoded "March 22, 2023" on every row.
  */
-function formatPosted(listing) {
+function formatPosted(listing, locale = "en") {
   const raw = listing.postedDate ?? listing.createdAt;
   if (!raw) return "—";
   const date = new Date(raw);
-  return Number.isNaN(date.getTime())
-    ? "—"
-    : date.toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
+  if (Number.isNaN(date.getTime())) return "—";
+  /**
+   * `ar-OM-u-nu-latn`, matching formatGuideDate/formatBlogDate elsewhere.
+   *
+   * Was hardcoded "en-GB", so an Arabic table showed "Mar"/"Sep". The `-u-nu-latn`
+   * extension is the load-bearing part: plain `ar-OM` would switch the day and
+   * year to Arabic-Indic digits (٢٠٢٦), and lib/format.js keeps every numeral on
+   * this site Latin so a date never disagrees with the price beside it.
+   */
+  return date.toLocaleDateString(
+    locale === "ar" ? "ar-OM-u-nu-latn" : "en-GB",
+    { day: "numeric", month: "short", year: "numeric" },
+  );
 }
 
 /**
@@ -316,9 +322,13 @@ function formatPosted(listing) {
  */
 function ListingLabels({ listing }) {
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const hasSpec = "importOrigin" in listing;
   if (!listing.soldAsIs && !hasSpec) return null;
-  const spec = hasSpec ? importOriginLabel(listing.importOrigin, "en") : null;
+  // Was hardcoded "en": /ar showed the seller "GCC spec" for the same car the
+  // buyer-facing card correctly labels "خليجي" — the same fact, two languages,
+  // two screens of the same product.
+  const spec = hasSpec ? importOriginLabel(listing.importOrigin, locale) : null;
   return (
     <div className="tfcl-pill-row">
       {listing.soldAsIs ? (

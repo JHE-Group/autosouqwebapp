@@ -1,5 +1,5 @@
 "use client";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { formatPrice } from "@/lib/format";
 import { activeFilterKeys } from "./filterLogic";
@@ -52,8 +52,14 @@ const REMOVE_STYLE = {
 const range = (value, format) => `${format(value[0])} – ${format(value[1])}`;
 const plain = (n) => Number(n).toLocaleString("en-US");
 
-/** One short, human string per applied filter. */
-export function chipsFor(state) {
+/**
+ * One short, human string per applied filter.
+ *
+ * `locale` is required for the price chip: `formatPrice` defaults its third
+ * argument to "en", so omitting it rendered "1,000 – 5,900 OMR" in the applied
+ * filter bar on /ar while every other price on the same screen read "ر.ع".
+ */
+export function chipsFor(state, locale) {
   const chips = [];
   for (const key of activeFilterKeys(state)) {
     if (key === "features") {
@@ -63,7 +69,7 @@ export function chipsFor(state) {
     } else if (key === "price") {
       chips.push({
         key,
-        text: `${plain(state.price[0])} – ${formatPrice(state.price[1])}`,
+        text: `${plain(state.price[0])} – ${formatPrice(state.price[1], undefined, locale)}`,
       });
     } else if (key === "km") {
       chips.push({ key, text: `${range(state.km, plain)} km` });
@@ -113,7 +119,8 @@ export function clearChip(chip, allProps) {
 
 export default function FilterChips({ allProps, clearFilter, className = "" }) {
   const t = useTranslations("browse.filter");
-  const chips = chipsFor(allProps);
+  const locale = useLocale();
+  const chips = chipsFor(allProps, locale);
   if (!chips.length) return null;
 
   return (

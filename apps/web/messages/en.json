@@ -58,7 +58,8 @@
       "specBody": "Every car says whether it is GCC spec, a US import or a Japan import — and says so plainly when the seller has not told us.",
       "whatsappTitle": "One WhatsApp tap",
       "whatsappBody": "Message the seller straight from the listing. The car and its listed price are already written into the message."
-    }
+    },
+    "heroImageAlt": "A quiet street in Muscat with an ordinary used car parked at the kerb"
   },
   "footer": {
     "tagline": "Oman’s marketplace for affordable used cars, in Arabic and English.",
@@ -476,7 +477,85 @@
     "submitFailed": "That did not send. Nothing has reached us, so please do not assume we have your car — try again.",
     "notConfigured": "Submitting is not switched on yet — there is no WhatsApp number configured to send this to. Your answers are kept on this phone only.",
     "publishHint": "Opens WhatsApp with your answers as a message. You can read it before you send it.",
-    "startAnother": "List another car"
+    "startAnother": "List another car",
+    "options": {
+      "condition": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "needsWork": "Needs work"
+      },
+      "transmission": {
+        "automatic": "Automatic",
+        "manual": "Manual"
+      },
+      "fuel": {
+        "petrol": "Petrol",
+        "diesel": "Diesel",
+        "hybrid": "Hybrid",
+        "electric": "Electric"
+      },
+      "body": {
+        "sedan": "Sedan",
+        "hatchback": "Hatchback",
+        "suv": "SUV",
+        "crossover": "Crossover",
+        "pickup": "Pick-up",
+        "van": "Van",
+        "coupe": "Coupe",
+        "wagon": "Wagon"
+      },
+      "drive": {
+        "fwd": "Front-wheel drive (FWD)",
+        "rwd": "Rear-wheel drive (RWD)",
+        "awd": "All-wheel drive (AWD)",
+        "fourWd": "Four-wheel drive (4WD)"
+      },
+      "lien": {
+        "no": "No — it is fully paid",
+        "yes": "Yes — there is still finance on it",
+        "unsure": "Not sure"
+      }
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Next"
+    },
+    "priceCheck": {
+      "notNumber": "Enter the price in numbers only.",
+      "aboveBand": "Autosouq only lists cars up to {max}. {value} is above the band, so this listing cannot be published here.",
+      "belowBand": "{value} is below the {min} floor. Listings under {min} are not accepted."
+    },
+    "missing": {
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "km": "Kilometres",
+      "spec": "Spec / import origin",
+      "price": "A price inside the band",
+      "city": "City",
+      "whatsapp": "A valid Omani WhatsApp number"
+    },
+    "reviewRow": {
+      "title": "Listing title",
+      "km": "Kilometres",
+      "transmission": "Transmission",
+      "spec": "Spec",
+      "condition": "Condition",
+      "mulkiya": "Mulkiya valid until",
+      "lien": "Under bank lien",
+      "faults": "Needs attention",
+      "noFaults": "Nothing that the seller knows of",
+      "price": "Price",
+      "city": "City",
+      "photos": "Photos",
+      "photosAdded": "{count} added"
+    },
+    "draftStatus": "Your answers are kept on this phone as you type. Nothing has been sent to Autosouq, and photos are not kept.",
+    "asIsNotice": "This listing will carry the “{label}” label, because of the price. That is set by the band, not by you.",
+    "reviewNotice": "Everything above is what you have told us. Autosouq marks a listing as checked only after we have spoken to you and seen the mulkiya — until then buyers see it as “not checked yet”, which is the truth.",
+    "documentsHint": "Service records or a recent inspection report. Buyers at this price trust paperwork more than adjectives. Do not upload your mulkiya or ID here — those carry your personal details and are for the Autosouq check only, never for publication.",
+    "readyNotice": "Everything required is here. Publishing sends the listing to Autosouq for checking — a person reads it, calls you, and it goes live after that. It does not appear on the site the moment you press the button."
   },
   "blog": {
     "brand": "Autosouq.om",

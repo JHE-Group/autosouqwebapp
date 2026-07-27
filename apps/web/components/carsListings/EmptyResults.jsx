@@ -162,7 +162,7 @@ export default function EmptyResults({
   const tField = useTranslations("browse.field");
   const routeLocale = useLocale();
   const locale = localeProp ?? routeLocale;
-  const chips = chipsFor(allProps);
+  const chips = chipsFor(allProps, locale);
   const relaxed = findRelaxedMatches(source, allProps, allProps?.bounds);
 
   return (
