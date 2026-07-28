@@ -4,7 +4,7 @@
  *
  *   apps/cms/src/api/listing/content-types/listing/schema.json   (min/max)
  *   apps/cms/src/api/listing/content-types/listing/lifecycles.ts (BAND)
- *   apps/web/components/dashboard/AddListing.jsx                 (BAND)
+ *   apps/web/lib/priceBand.js                                    (BAND)
  *
  * NICHE.md calls the band "the entire identity of the business". Until now the
  * only thing keeping the three in step was a comment asking the next person to
@@ -32,7 +32,10 @@ const schema = JSON.parse(
 const lifecycles = read(
   "apps/cms/src/api/listing/content-types/listing/lifecycles.ts",
 );
-const addListing = read("apps/web/components/dashboard/AddListing.jsx");
+// The web side's single definition. It used to live in AddListing.jsx; it moved
+// when data/budgetBands.js began partitioning the same range and a second copy
+// of the numbers would have been exactly the drift this script exists to catch.
+const priceBand = read("apps/web/lib/priceBand.js");
 
 const sources = {
   "cms/lifecycles.ts": {
@@ -41,11 +44,11 @@ const sources = {
     STANDARD_MIN: num(lifecycles, "STANDARD_MIN"),
     MAX: num(lifecycles, "MAX"),
   },
-  "web/AddListing.jsx": {
-    ASIS_MIN: num(addListing, "ASIS_MIN"),
-    ASIS_MAX: num(addListing, "ASIS_MAX"),
-    STANDARD_MIN: num(addListing, "STANDARD_MIN"),
-    MAX: num(addListing, "MAX"),
+  "web/priceBand.js": {
+    ASIS_MIN: num(priceBand, "ASIS_MIN"),
+    ASIS_MAX: num(priceBand, "ASIS_MAX"),
+    STANDARD_MIN: num(priceBand, "STANDARD_MIN"),
+    MAX: num(priceBand, "MAX"),
   },
 };
 
@@ -85,6 +88,6 @@ if (problems.length) {
 }
 
 console.log(
-  `✓ price band consistent across schema.json, lifecycles.ts and AddListing.jsx ` +
+  `✓ price band consistent across schema.json, lifecycles.ts and lib/priceBand.js ` +
     `(as-is ${ref.ASIS_MIN}–${ref.ASIS_MAX}, standard ${ref.STANDARD_MIN}–${ref.MAX})`,
 );

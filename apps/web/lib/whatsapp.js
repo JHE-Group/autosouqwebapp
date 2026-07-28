@@ -1,4 +1,5 @@
 import { DEFAULT_LOCALE } from "@/lib/locale";
+import { formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 // WhatsApp click-to-chat helpers for Omani numbers.
 // Spec: https://www.appsflyer.com/blog/deep-linking/whatsapp-deep-link/
@@ -61,7 +62,11 @@ export function listingEnquiryMessage(car, opts = {}) {
   } = opts;
   // localePrefix is "always" — include the locale so English buyers stay on /en.
   const url = `${origin}/${locale}${listingPath(car)}`;
-  const price = `${Number(car.price).toLocaleString("en-US")} ${car.currency || "OMR"}`;
+  // Route through formatPrice so the Arabic message quotes "ر.ع" like the rest
+  // of the site, rather than the English "OMR" code. This message is the
+  // seller's timestamped record of the listed price; it should not disagree
+  // with the listing it was sent from.
+  const price = formatPrice(car.price, car.currency, locale);
 
   // Titles usually already carry the year ("تويوتا يارس 2016") — only prepend
   // it when it is genuinely missing, so we never say "2016 … 2016".

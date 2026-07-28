@@ -23,6 +23,42 @@ const PUBLIC_ACTIONS = [
   "api::feature.feature.find",
 ] as const;
 
+/**
+ * Public actions Strapi grants itself that this product must not expose.
+ *
+ * `PUBLIC_ACTIONS` above is a careful read-only allowlist, but it was purely
+ * additive — it only ever created missing rows. It never revoked anything, and
+ * it never touched the `users-permissions` actions the plugin assigns to the
+ * Public role automatically on first boot. Verified in the installed
+ * dependency: `@strapi/plugin-users-permissions@5.51.0`'s DEFAULT_PERMISSIONS
+ * grants `auth.register`, `auth.forgotPassword`, `auth.resetPassword`,
+ * `auth.emailConfirmation` and `auth.sendEmailConfirmation` to `roleType:
+ * 'public'`, with `allow_register: true` by default.
+ *
+ * Autosouq has no user accounts at all — there is no login, no session, and
+ * every write goes through the admin UI by a human (see
+ * apps/web/lib/submitListing.js). So `POST /api/auth/local/register` was an
+ * unauthenticated, unthrottled, unconfirmed write endpoint into the production
+ * `up_users` table, and `auth.forgotPassword` becomes an unauthenticated
+ * mail-send endpoint the moment an email provider is configured.
+ *
+ * The second-order risk is the one that matters: the plan on record is to give
+ * the *Authenticated* role write access to listings. On the day that lands,
+ * every junk account created in the meantime becomes a valid listing-creation
+ * credential.
+ *
+ * Revoked on **every boot**, not once, so that a mis-click in the admin UI
+ * cannot silently reopen the endpoint and outlive a deploy.
+ */
+const PUBLIC_DENIED_ACTIONS = [
+  "plugin::users-permissions.auth.register",
+  "plugin::users-permissions.auth.forgotPassword",
+  "plugin::users-permissions.auth.resetPassword",
+  "plugin::users-permissions.auth.emailConfirmation",
+  "plugin::users-permissions.auth.sendEmailConfirmation",
+  "plugin::users-permissions.auth.connect",
+] as const;
+
 async function enablePublicPermissions(strapi: Core.Strapi) {
   const role = await strapi.db.query("plugin::users-permissions.role").findOne({
     where: { type: "public" },
@@ -42,6 +78,40 @@ async function enablePublicPermissions(strapi: Core.Strapi) {
         data: { action, role: role.id },
       });
     }
+  }
+
+  for (const action of PUBLIC_DENIED_ACTIONS) {
+    const { count } = await strapi.db
+      .query("plugin::users-permissions.permission")
+      .deleteMany({ where: { action, role: role.id } });
+    if (count) {
+      strapi.log.warn(
+        `Autosouq: revoked public permission ${action} (this product has no user accounts).`,
+      );
+    }
+  }
+
+  /**
+   * Anything else the Public role holds on our own content types is drift.
+   *
+   * `PUBLIC_ACTIONS` is the whole contract — find and findOne, nothing that
+   * writes. apps/web/lib/submitListing.js states "the public Strapi role is
+   * read-only by design" as an invariant, but nothing enforced it: a `create`
+   * or `delete` toggled on in the admin UI, deliberately or by mis-click,
+   * survived every subsequent deploy with nothing to detect it.
+   */
+  const managed = new Set<string>(PUBLIC_ACTIONS);
+  const granted = await strapi.db
+    .query("plugin::users-permissions.permission")
+    .findMany({ where: { role: role.id } });
+
+  for (const permission of granted) {
+    const action: string = permission.action ?? "";
+    if (!action.startsWith("api::") || managed.has(action)) continue;
+    await strapi.db
+      .query("plugin::users-permissions.permission")
+      .delete({ where: { id: permission.id } });
+    strapi.log.warn(`Autosouq: revoked unexpected public permission ${action}.`);
   }
 }
 
@@ -586,7 +656,71 @@ async function repairListingLanguageFields(strapi: Core.Strapi) {
 }
 
 export default {
-  register() {},
+  /**
+   * Runtime-only preflight.
+   *
+   * These checks live here, not in config/database.ts, because config files are
+   * loaded by `strapi build` too — and a build machine legitimately has no
+   * database credentials. Throwing from the config turned `NODE_ENV=production
+   * strapi build` into a hard failure, which would have broken the deploy
+   * pipeline rather than protecting it. `register()` runs only when a server is
+   * actually starting.
+   */
+  register({ strapi }: { strapi: Core.Strapi }) {
+    if (process.env.NODE_ENV !== "production") return;
+
+    /**
+     * SQLite is a development default and must not become a production one by
+     * omission.
+     *
+     * config/database.ts falls back to `sqlite` writing to `.tmp/data.db` — a
+     * gitignored path that, on a rebuildable instance or a container, sits on a
+     * filesystem that does not survive redeploy. A deploy that simply forgot
+     * DATABASE_CLIENT would boot perfectly, accept listings, and lose every one
+     * of them at the next restart with nothing in the logs to say so. Silent
+     * data loss is worth refusing to start over.
+     */
+    const client = strapi.config.get("database.connection.client");
+    const allowSqlite = process.env.ALLOW_SQLITE_IN_PRODUCTION === "true";
+    if (client === "sqlite" && !allowSqlite) {
+      throw new Error(
+        "Refusing to start: the database client is sqlite in production. Set " +
+          "DATABASE_CLIENT=postgres and the DATABASE_* connection variables " +
+          "(see .env.example), or ALLOW_SQLITE_IN_PRODUCTION=true if the file " +
+          "is on a persistent, backed-up volume.",
+      );
+    }
+
+    /**
+     * Behind OVH's reverse proxy, Strapi must be told its own public origin and
+     * to trust X-Forwarded-*. Without PUBLIC_URL it hands out
+     * `http://0.0.0.0:1337` as the base for media and admin links; without
+     * TRUST_PROXY it treats every request as plain http from the proxy's IP.
+     * Both are warnings rather than errors — a same-origin deployment with no
+     * proxy in front is a legitimate, if unusual, setup.
+     */
+    if (!process.env.PUBLIC_URL) {
+      strapi.log.warn(
+        "Autosouq: PUBLIC_URL is not set. Absolute media and admin URLs will be " +
+          "derived from HOST:PORT and will not be reachable from a browser " +
+          "behind a proxy. See DEPLOYMENT.md.",
+      );
+    } else if (!process.env.PUBLIC_URL.startsWith("https://")) {
+      strapi.log.warn(
+        `Autosouq: PUBLIC_URL is not https (${process.env.PUBLIC_URL}). The web ` +
+          "app sends `upgrade-insecure-requests`, so browsers will rewrite CMS " +
+          "image requests to https and they will fail.",
+      );
+    }
+
+    if (process.env.TRUST_PROXY !== "true") {
+      strapi.log.warn(
+        "Autosouq: TRUST_PROXY is not true. If a reverse proxy terminates TLS " +
+          "in front of this server, set it — otherwise protocol detection, " +
+          "client IPs and secure cookies are all wrong.",
+      );
+    }
+  },
 
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     // Neither of these is essential to serving the API, and an unhandled

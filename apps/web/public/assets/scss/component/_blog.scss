@@ -1,0 +1,53 @@
+@use "../abstracts/" as *;
+
+/* Blog index category row + light meta. Section furniture reuses .hp-* */
+
+.blog-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 0 0 32px;
+  padding: 0;
+}
+
+.blog-cats__link {
+  font-family: $font-2;
+  font-size: 15px;
+  font-weight: $fw-medium;
+  color: $color-4;
+  text-decoration: none;
+  @include focusable(-3px);
+
+  &:hover {
+    color: $color-3-text;
+  }
+
+  &.is-active {
+    color: $brand-ink;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+}
+
+.blog-intro {
+  .hp-section-title {
+    margin-bottom: 8px;
+  }
+}
+
+.blog-intro__brand {
+  font-family: $font-1;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.15;
+  color: $brand-ink;
+  margin: 0 0 10px;
+}
+
+.blog-post-meta {
+  color: $color-7;
+}
+
+.blog-post-meta a {
+  color: $color-3-text;
+}

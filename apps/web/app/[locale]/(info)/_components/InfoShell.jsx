@@ -2,6 +2,7 @@ import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
 import { Link } from "@/i18n/navigation";
 import React from "react";
+import { getTranslations } from "next-intl/server";
 
 /**
  * Shared page furniture for the text-only information pages.
@@ -13,8 +14,13 @@ import React from "react";
  *
  * The content column is col-lg-8 — long legal paragraphs at full container
  * width are unreadable on a laptop.
+ *
+ * `breadcrumb` is a key in the `breadcrumb` namespace ("terms", "privacy", …),
+ * not a display string: the crumb has to change language with the route, and a
+ * caller passing literal text is exactly how English leaks into /ar.
  */
-export default function InfoShell({ breadcrumb, children, locale }) {
+export default async function InfoShell({ breadcrumb, children, locale }) {
+  const t = await getTranslations({ locale, namespace: "breadcrumb" });
   return (
     <>
       <div className="header-fixed">
@@ -27,9 +33,9 @@ export default function InfoShell({ breadcrumb, children, locale }) {
               <div className="title-inner style">
                 <div className="title-group fs-12">
                   <Link className="home fw-6 text-color-3" href={`/`}>
-                    Home
+                    {t("home")}
                   </Link>
-                  <span>{breadcrumb}</span>
+                  <span>{t(breadcrumb)}</span>
                 </div>
               </div>
             </div>

@@ -23,8 +23,6 @@ import { listingPages, otherPages } from "@/data/menu";
 /** href → key in the `nav` message namespace. */
 const LABEL_KEYS = {
   "/used-cars": "allUsedCars",
-  "/listing-list": "listView",
-  "/listing-grid-map": "mapView",
   "/how-it-works": "howItWorks",
   "/sell-your-car": "sellYourCar",
   "/guides": "guides",

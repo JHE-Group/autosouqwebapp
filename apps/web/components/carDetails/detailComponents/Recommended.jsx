@@ -34,21 +34,29 @@ export default function Recommended({ cars, locale = DEFAULT_LOCALE }) {
         {items.map((car) => (
           <div key={car.id} className="item flex">
             <div className="image">
-              <Image
-                className="lazyload"
-                alt={car.imageAlt || car.title || ""}
-                src={car.imgSrc}
-                width={450}
-                height={338}
-                sizes="(max-width: 991px) 100vw, 120px"
-              />
+              {/* See Cars.jsx: without this guard a photo-less listing rendered
+                  a collapsed 24px box showing its own alt text — measured on
+                  /ar/car/[slug], where an Arabic buyer saw the literal string
+                  "كيا بيكانتو 2016 — صورة 1" in a squashed row. */}
+              {car.imgSrc ? (
+                <Image
+                  className="lazyload"
+                  alt={car.imageAlt || car.title || ""}
+                  src={car.imgSrc}
+                  width={450}
+                  height={338}
+                  sizes="(max-width: 991px) 100vw, 120px"
+                />
+              ) : (
+                <div className="asq-card__img asq-card__img--none" aria-hidden="true" />
+              )}
             </div>
             <div className="content">
               <h6>
                 <Link href={listingPath(car)}>{car.title}</Link>
               </h6>
               <p className="fs-14 fw-7 text-color-2 font-1">
-                {formatPrice(car.price, car.currency)}
+                {formatPrice(car.price, car.currency, locale)}
               </p>
               {/* Spec disclosure travels with every card, sidebar included. */}
               <ListingSignals car={car} locale={locale} className="mt-1" />

@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import React from "react";
+import { getTranslations } from "next-intl/server";
 
 /**
  * Draft-status banner for the two legal pages.
@@ -12,22 +13,17 @@ import React from "react";
  * bg-1 is the existing terracotta 6% tint token; body text on it is ink
  * (white on terracotta is 2.97:1 and fails AA — see _variables.scss).
  */
-export default function DraftNotice() {
+export default async function DraftNotice() {
+  const t = await getTranslations("legal.draftNotice");
   return (
     <div className="bg-1 border rounded-3 p-4 mb-40" role="note">
-      <p className="fs-16 fw-7 text-color-2 mb-2">
-        Draft — pending legal review. Not yet in force.
-      </p>
+      <p className="fs-16 fw-7 text-color-2 mb-2">{t("title")}</p>
       <p className="font-2 fs-14 lh-24 mb-0">
-        This page is a plain-language draft describing how Autosouq.om actually
-        works. It has not been checked by a qualified lawyer, it has not been
-        approved, and it does not yet form an agreement between you and us. It
-        must be reviewed by counsel before launch. Please do not rely on it, and
-        tell us via{" "}
+        {t("body")}{" "}
         <Link className="fw-6" href="/contact">
-          contact us
+          {t("contactUs")}
         </Link>{" "}
-        if anything on it looks wrong.
+        {t("tail")}
       </p>
     </div>
   );

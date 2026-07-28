@@ -24,11 +24,22 @@ export function getBounds(cars = []) {
   };
 }
 
-export function createInitialState(cars = allCars) {
+/**
+ * @param {object[]} cars
+ * @param {{ price?: [number, number] }} [seed] initial filter values, e.g. from
+ *   a `?price=` link on the homepage. Clamped into the derived bounds, because
+ *   a URL is user input: a band of [4000, 6001] against a catalogue whose
+ *   dearest car is 5,200 must not produce a slider that cannot be dragged back.
+ */
+export function createInitialState(cars = allCars, seed = {}) {
   const bounds = getBounds(cars);
+  const clamp = ([lo, hi], [min, max]) => [
+    Math.max(min, Math.min(lo, max)),
+    Math.min(max, Math.max(hi, min)),
+  ];
   return {
     bounds,
-    price: bounds.price,
+    price: seed.price ? clamp(seed.price, bounds.price) : bounds.price,
     km: bounds.km,
     year: bounds.year,
     body: "Any Body",

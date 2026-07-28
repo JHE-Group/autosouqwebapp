@@ -29,7 +29,7 @@ export default function Cars2({ listings, resultsHeading = "Browse cars" }) {
     currentPage,
     itemPerPage,
     sortingOption,
-  } = useCarFilters(listings, { pageSize: 12 });
+  } = useCarFilters(listings, { pageSize: 12, readPriceFromUrl: true });
 
   // Facet landers put the SEO H1 in the hero; the results block then uses a
   // plain heading so the page does not ship two competing H1s.

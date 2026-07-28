@@ -1,14 +1,22 @@
-import "rc-slider/assets/index.css";
 import "../../public/assets/scss/app.scss";
-import "swiper/css/effect-fade";
-import "swiper/css/grid";
-import "photoswipe/style.css";
-import { Inter, Outfit } from "next/font/google";
+/*
+ * Swiper, PhotoSwipe and rc-slider stylesheets used to be imported here, so
+ * every route paid for them: the homepage, all the blog posts and guides,
+ * /privacy, /terms, /how-it-works, /faq and /contact render no carousel, no
+ * lightbox and no range slider, and still loaded ~35 KB of CSS for them. Each
+ * now sits in the component that owns it, so Next attaches it to that route's
+ * chunk instead.
+ *
+ * `swiper/css/grid` went with them and did not come back: the Grid module is
+ * not registered by either Swiper call site, so it styled nothing.
+ */
+import { Cairo, Inter, Outfit } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { pickMessages } from "@/i18n/clientMessages";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { dirFor, routing } from "@/i18n/routing";
+import { dirFor, isIndexableLocale, routing } from "@/i18n/routing";
+import { getTranslations } from "next-intl/server";
 import ClientShell from "./ClientShell";
 import {
   jsonLdScript,
@@ -39,6 +47,29 @@ const outfit = Outfit({
 });
 
 /**
+ * Arabic face. Inter and Outfit are `subsets: ["latin"]` and carry no Arabic
+ * glyphs at all, so every Arabic string was falling through to whatever the
+ * device happened to have — on a budget Android that is usually Noto Naskh at
+ * Latin leading, which is what "machine-translated" looks like before anyone
+ * reads a word.
+ *
+ * Cairo 400/700 is 27.2 KB for the Arabic subset (measured in
+ * design/research/arabic-seo-strategy.md §6) — 5% of the Font Awesome payload
+ * this theme already ships, so it is not the weight worth arguing about.
+ *
+ * `preload: false` because only the Arabic tree renders it: the class below is
+ * applied on /ar and nowhere else, and an /en visitor should not fetch, or
+ * preload-hint, a face with no glyph they will ever see.
+ */
+const cairo = Cairo({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  display: "swap",
+  variable: "--font-cairo",
+  preload: false,
+});
+
+/**
  * Pre-render both locale trees rather than resolving them per request. Without
  * this, every page under [locale] opts into dynamic rendering the moment it
  * reads the locale, which throws away the static generation the listing pages
@@ -48,26 +79,12 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// Fallbacks only. `generateMetadata` overrides both from the `meta.home`
+// namespace so the default title and description follow the route's language —
+// these were the last two English strings served on every /ar page.
 const title = "Autosouq.om — Affordable used cars in Oman";
-// 156 chars. Google truncates around 160, so keep it under that: the previous
-// version ran to 167 and lost "to reach the seller" in the SERP.
 const description =
   "Oman's marketplace for affordable used cars, OMR 1,500–6,000. Real prices, verified listings, GCC spec or import stated, one WhatsApp tap to the seller.";
-
-/**
- * Root metadata, per locale.
- *
- * `/ar` is served `noindex` while its content is still English behind an
- * Arabic URL. It stays crawlable — a `noindex` only works if the crawler can
- * fetch the page to read it, and blocking in robots.txt instead would leave
- * the URLs indexable-by-reference with no way to see the directive.
- *
- * Remove the `INDEXABLE_LOCALES` guard in the same deploy that finishes
- * messages/ar.json and the Arabic listing copy, alongside the matching change
- * in app/sitemap.js. The two must move together: an indexed Arabic tree with
- * no sitemap entry, or a sitemap entry that is noindex, are both wrong signals.
- */
-const INDEXABLE_LOCALES = ["en"];
 
 /**
  * Locale-level metadata only: robots + shared defaults.
@@ -79,11 +96,27 @@ const INDEXABLE_LOCALES = ["en"];
  */
 export async function generateMetadata({ params }) {
   const { locale } = await params;
-  const indexable = INDEXABLE_LOCALES.includes(locale);
+  const t = await getTranslations({ locale, namespace: "meta.home" });
   return {
     ...metadata,
-    openGraph: { ...metadata.openGraph, locale },
-    robots: indexable
+    title: { default: t("title"), template: "%s | Autosouq.om" },
+    description: t("description"),
+    openGraph: {
+      ...metadata.openGraph,
+      title: t("title"),
+      description: t("description"),
+      locale: locale === "ar" ? "ar_OM" : "en_OM",
+    },
+    twitter: {
+      ...metadata.twitter,
+      title: t("title"),
+      description: t("description"),
+    },
+    // A locale that is not indexable stays crawlable: `noindex` only works if
+    // the crawler can fetch the page to read it, and blocking it in robots.txt
+    // instead would leave the URLs indexable-by-reference with no way to see
+    // the directive. `INDEXABLE_LOCALES` is the single switch — see i18n/routing.js.
+    robots: isIndexableLocale(locale)
       ? { index: true, follow: true }
       : { index: false, follow: true },
   };
@@ -140,7 +173,11 @@ export default async function RootLayout({ children, params }) {
     <html
       lang={locale}
       dir={dirFor(locale)}
-      className={`${inter.variable} ${outfit.variable}`}
+      className={
+        locale === "ar"
+          ? `${inter.variable} ${outfit.variable} ${cairo.variable}`
+          : `${inter.variable} ${outfit.variable}`
+      }
     >
       <body className="body" style={{ transition: "0s" }}>
         {/* Site-wide structured data. Organization and WebSite belong on every

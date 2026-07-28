@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 export default function BackToTop() {
+  const t = useTranslations("common");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scrolled, setScrolled] = useState(0);
   const [scrollHeight, setScrollHeight] = useState(500);
@@ -32,8 +34,14 @@ export default function BackToTop() {
     };
   }, []);
   return (
-    <div
+    /* Was a <div> with onClick: no role, no tabIndex, no key handler and no
+       accessible name, so it was invisible to the keyboard and announced
+       nothing. It renders on every page via ClientShell. A <button> gets focus,
+       Enter/Space and the focus ring for free. */
+    <button
+      type="button"
       onClick={() => scrollToTop()}
+      aria-label={t("backToTop")}
       className={`progress-wrap ${scrolled > 150 ? "active-progress" : ""}`}
     >
       <svg
@@ -51,6 +59,6 @@ export default function BackToTop() {
           }}
         />
       </svg>
-    </div>
+    </button>
   );
 }

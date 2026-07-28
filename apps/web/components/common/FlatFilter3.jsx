@@ -1,6 +1,7 @@
 "use client";
 
 import { formatPrice } from "@/lib/format";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import DropdownSelect from "./DropDownSelect";
 import Pricing from "./Pricing";
@@ -20,6 +21,8 @@ export default function FlatFilter3({
   // results — not to run a search that already ran.
   resultsId = "browse-results",
 }) {
+  const t = useTranslations("browse.filter");
+  const locale = useLocale();
   const toggleBtn = useRef(null);
   const advanceSearch = useRef(null);
   const panelId = useId();
@@ -81,6 +84,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.make}
                       onChange={allProps.setMake}
                       options={filterOptions.make}
+                      label={t("make")}
                     />
                   </div>
                 </div>
@@ -90,6 +94,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.model}
                       onChange={allProps.setModel}
                       options={filterOptions.model}
+                      label={t("model")}
                     />
                   </div>
                 </div>
@@ -99,6 +104,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.door}
                       onChange={allProps.setDoor}
                       options={filterOptions.door}
+                      label={t("doors")}
                     />
                   </div>
                 </div>
@@ -108,6 +114,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.body}
                       onChange={allProps.setBody}
                       options={filterOptions.body}
+                      label={t("bodyType")}
                     />
                   </div>
                 </div>
@@ -120,7 +127,7 @@ export default function FlatFilter3({
                   onClick={() => setAdvancedOpen((open) => !open)}
                   aria-expanded={advancedOpen}
                   aria-controls={panelId}
-                  aria-label="More filters"
+                  aria-label={t("more")}
                 >
                   <svg
                     width={20}
@@ -144,7 +151,7 @@ export default function FlatFilter3({
                     change, so there is no search left to run — this closes the
                     panel and takes the reader to what already matched. */}
                 <button type="submit" className="sc-button" onClick={showResults}>
-                  <span>Find cars</span>
+                  <span>{t("findCars")}</span>
                   {/* Inline, not `far fa-search`: font-awesome.css is never
                       imported, so that class drew a blank box inside the CTA. */}
                   <svg
@@ -185,6 +192,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.fuel}
                       onChange={allProps.setFuel}
                       options={filterOptions.fuel}
+                      label={t("fuel")}
                     />
                   </div>
                 </div>
@@ -194,6 +202,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.transmission}
                       onChange={allProps.setTransmission}
                       options={filterOptions.transmission}
+                      label={t("transmission")}
                     />
                   </div>
                 </div>
@@ -203,6 +212,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.location}
                       onChange={allProps.setLocation}
                       options={filterOptions.location}
+                      label={t("city")}
                     />
                   </div>
                 </div>
@@ -211,6 +221,7 @@ export default function FlatFilter3({
                     selectedValue={allProps.cylinder}
                     onChange={allProps.setCylinder}
                     options={filterOptions.cylinder}
+                    label={t("cylinders")}
                   />
                 </div>
               </div>
@@ -221,6 +232,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.color}
                       onChange={allProps.setColor}
                       options={filterOptions.color}
+                      label={t("colour")}
                     />
                   </div>
                 </div>
@@ -229,7 +241,8 @@ export default function FlatFilter3({
                     <div className="caption flex-two">
                       <div>
                         <span className="fw-6">
-                          KM: {allProps.km[0].toLocaleString("en-US")} km -{" "}
+                          {t("kmLabel")}{" "}
+                          {allProps.km[0].toLocaleString("en-US")} km -{" "}
                           {allProps.km[1].toLocaleString("en-US")} km
                         </span>
                       </div>
@@ -241,6 +254,8 @@ export default function FlatFilter3({
                       MAX={allProps.bounds.km[1]}
                       priceRange={allProps.km}
                       setPriceRange={allProps.setKM}
+                      label={t("km")}
+                      formatValue={(v) => `${Number(v).toLocaleString("en-US")} km`}
                     />
                   </div>
                   {/* /.widget_price */}
@@ -250,7 +265,9 @@ export default function FlatFilter3({
                     <div className="caption flex-two">
                       <div>
                         <span className="fw-6">
-                          Price: {formatPrice(allProps.price[0])} - {formatPrice(allProps.price[1])}
+                          {t("priceLabel")}{" "}
+                          {formatPrice(allProps.price[0], undefined, locale)} -{" "}
+                          {formatPrice(allProps.price[1], undefined, locale)}
                         </span>
                       </div>
                     </div>
@@ -259,6 +276,8 @@ export default function FlatFilter3({
                       MAX={allProps.bounds.price[1]}
                       priceRange={allProps.price}
                       setPriceRange={allProps.setPrice}
+                      label={t("price")}
+                      formatValue={(v) => formatPrice(v, undefined, locale)}
                     />
                   </div>
                   {/* /.widget_price */}
@@ -268,7 +287,7 @@ export default function FlatFilter3({
                     <div className="caption flex-two">
                       <div>
                         <span className="fw-6">
-                          Year: {allProps.year[0]} - {allProps.year[1]}
+                          {t("yearLabel")} {allProps.year[0]} - {allProps.year[1]}
                         </span>
                       </div>
                     </div>
@@ -277,6 +296,8 @@ export default function FlatFilter3({
                       MAX={allProps.bounds.year[1]}
                       priceRange={allProps.year}
                       setPriceRange={allProps.setYear}
+                      label={t("year")}
+                      formatValue={(v) => String(v)}
                     />
                   </div>
                   {/* /.widget_price */}
@@ -289,6 +310,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.make}
                       onChange={allProps.setMake}
                       options={filterOptions.make}
+                      label={t("make")}
                     />
                   </div>
                 </div>
@@ -298,6 +320,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.model}
                       onChange={allProps.setModel}
                       options={filterOptions.model}
+                      label={t("model")}
                     />
                   </div>
                 </div>
@@ -307,6 +330,7 @@ export default function FlatFilter3({
                       selectedValue={allProps.door}
                       onChange={allProps.setDoor}
                       options={filterOptions.door}
+                      label={t("doors")}
                     />
                   </div>
                 </div>
@@ -315,16 +339,17 @@ export default function FlatFilter3({
                     selectedValue={allProps.body}
                     onChange={allProps.setBody}
                     options={filterOptions.body}
+                    label={t("bodyType")}
                   />
                 </div>
               </div>
               <div className="boder-wg" />
               <div className="features-wrap">
-                <h5>Features</h5>
+                <h5>{t("features")}</h5>
                 <div className="box2 grid-5">
                   <div className="form-group wg-box4">
                     <div className="title fs-16 fw-5 lh-20 text-color-2">
-                      Comfort
+                      {t("groupComfort")}
                     </div>
                     <div className="tf-amenities bg-white">
                       {filterOptions.features.slice(0, 3).map((feature, index) => (
@@ -343,7 +368,7 @@ export default function FlatFilter3({
                   </div>
                   <div className="form-group wg-box4">
                     <div className="title fs-16 fw-5 lh-20 text-color-2">
-                      Entertainment
+                      {t("groupEntertainment")}
                     </div>
                     <div className="tf-amenities bg-white">
                       {filterOptions.features.slice(3, 6).map((feature, index) => (
@@ -362,7 +387,7 @@ export default function FlatFilter3({
                   </div>
                   <div className="form-group wg-box4">
                     <div className="title fs-16 fw-5 lh-20 text-color-2">
-                      Safety
+                      {t("groupSafety")}
                     </div>
                     <div className="tf-amenities bg-white">
                       {filterOptions.features.slice(6, 9).map((feature, index) => (
@@ -381,7 +406,7 @@ export default function FlatFilter3({
                   </div>
                   <div className="form-group wg-box4">
                     <div className="title fs-16 fw-5 lh-20 text-color-2">
-                      Interior
+                      {t("groupInterior")}
                     </div>
                     <div className="tf-amenities bg-white">
                       {filterOptions.features.slice(9, 12).map((feature, index) => (
@@ -400,7 +425,7 @@ export default function FlatFilter3({
                   </div>
                   <div className="form-group wg-box4">
                     <div className="title fs-16 fw-5 lh-20 text-color-2">
-                      Exterior
+                      {t("groupExterior")}
                     </div>
                     <div className="tf-amenities bg-white">
                       {filterOptions.features.slice(12, 15).map((feature, index) => (
@@ -418,7 +443,10 @@ export default function FlatFilter3({
                     </div>
                   </div>
                 </div>
-                <a
+                {/* An <a> with no href is not focusable and is announced as
+                    nothing — and this is the only clear-all on the panel. */}
+                <button
+                  type="button"
                   className="tf-btn-arrow wow fadeInUpSmall clear-filter mb-2"
                   onClick={clearFilter}
                 >
@@ -426,8 +454,8 @@ export default function FlatFilter3({
                     className="icon-autodeal-plus "
                     style={{ transform: "rotate(25deg)" }}
                   />{" "}
-                  Clear Filter
-                </a>
+                  {t("clearFilter")}
+                </button>
               </div>
             </div>
           </form>

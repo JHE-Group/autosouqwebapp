@@ -7,15 +7,16 @@ import Banner from "@/components/otherPages/about/Banner";
 import React from "react";
 
 import { pageMetadata } from "@/lib/seo";
+import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta.about" });
   return pageMetadata({
-  title: "About Autosouq — affordable used cars in Oman",
-  description:
-    "Why we list only used cars between OMR 1,500 and 6,000, how we verify a listing, and why GCC-spec or US-import is shown on every car instead of hidden.",
-  path: "/about-us",
-  locale,
+    title: t("title"),
+    description: t("description"),
+    path: "/about-us",
+    locale,
   });
 }
 export default async function page({ params }) {

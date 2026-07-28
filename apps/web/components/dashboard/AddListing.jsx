@@ -60,14 +60,15 @@ import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels
  * Keep these four numbers identical to BAND in lifecycles.ts. NICHE.md calls
  * the band "the entire identity of the business", not a preference.
  */
-const BAND = {
-  ASIS_MIN: 1000,
-  ASIS_MAX: 1499,
-  STANDARD_MIN: 1500,
-  MAX: 6000,
-};
-
-const CURRENCY = "OMR";
+// Moved to lib/priceBand.js so the homepage budget bands can partition exactly
+// this range without a second copy of the numbers. check-price-band.mjs now
+// reads that file for the web side.
+//
+// `import`, not `export … from`: a re-export forwards the names to this
+// module's consumers without binding them locally, so every `BAND.MAX` below
+// was a ReferenceError. Caught by the `no-undef` rule, which exists because
+// exactly this class of mistake once shipped in ListingCard.jsx.
+import { BAND, CURRENCY } from "@/lib/priceBand";
 
 const money = (n) => `${CURRENCY} ${n.toLocaleString("en-US")}`;
 
@@ -80,26 +81,35 @@ function checkPrice(raw) {
   const trimmed = String(raw).trim();
   if (trimmed === "") return { state: "empty" };
 
+  /**
+   * Returns a `reason` code, not a sentence.
+   *
+   * These three messages were English template literals built right here, so
+   * the moment the site enforces its defining rule — the OMR 1,500–6,000 band,
+   * the thing the whole product is — it explained itself in a language the
+   * seller may not read. A pure function is also the wrong place to hold copy:
+   * it has no locale and cannot get one without becoming a hook. So it reports
+   * *what* failed and with which numbers, and the component renders it through
+   * `addListing.priceCheck`.
+   */
   const price = Number(trimmed);
   if (!Number.isFinite(price)) {
-    return { state: "invalid", message: "Enter the price in numbers only." };
+    return { state: "invalid", reason: "notNumber" };
   }
 
   if (price > BAND.MAX) {
     return {
       state: "invalid",
-      message: `Autosouq only lists cars up to ${money(BAND.MAX)}. ${money(
-        price,
-      )} is above the band, so this listing cannot be published here.`,
+      reason: "aboveBand",
+      values: { max: money(BAND.MAX), value: money(price) },
     };
   }
 
   if (price < BAND.ASIS_MIN) {
     return {
       state: "invalid",
-      message: `${money(price)} is below the ${money(
-        BAND.ASIS_MIN,
-      )} floor. Listings under ${money(BAND.ASIS_MIN)} are not accepted.`,
+      reason: "belowBand",
+      values: { min: money(BAND.ASIS_MIN), value: money(price) },
     };
   }
 
@@ -311,18 +321,21 @@ export default function AddListing() {
 
   // Named so the review step can send the seller straight back to the step that
   // is short of something, rather than saying "some fields are missing".
+  // Carries a `key`, not a label: the list is built here but read in the review
+  // step, and an English literal baked in at build time is a string no
+  // translation can reach. Resolved through `addListing.missing` at render.
   const missing = useMemo(() => {
     const list = [];
-    if (!form.make.trim()) list.push({ step: 0, label: "Make" });
-    if (!form.model.trim()) list.push({ step: 0, label: "Model" });
-    if (!form.year) list.push({ step: 0, label: "Year" });
-    if (!form.km) list.push({ step: 0, label: "Kilometres" });
+    if (!form.make.trim()) list.push({ step: 0, key: "make" });
+    if (!form.model.trim()) list.push({ step: 0, key: "model" });
+    if (!form.year) list.push({ step: 0, key: "year" });
+    if (!form.km) list.push({ step: 0, key: "km" });
     // Spec is required: NICHE.md makes "GCC-spec vs US-import is always shown
     // honestly" one of the four promises the marketplace is built on.
-    if (!form.importSpec) list.push({ step: 1, label: "Spec / import origin" });
-    if (!priceOk) list.push({ step: 2, label: "A price inside the band" });
-    if (!form.city) list.push({ step: 4, label: "City" });
-    if (!msisdn) list.push({ step: 4, label: "A valid Omani WhatsApp number" });
+    if (!form.importSpec) list.push({ step: 1, key: "spec" });
+    if (!priceOk) list.push({ step: 2, key: "price" });
+    if (!form.city) list.push({ step: 4, key: "city" });
+    if (!msisdn) list.push({ step: 4, key: "whatsapp" });
     return list;
   }, [form, priceOk, msisdn]);
 
@@ -482,27 +495,32 @@ export default function AddListing() {
                     // `goTo(step + 1)` handler was leaving sellers stuck on the
                     // price step after the first couple of advances.
                     onClick={() =>
-                      setStep((current) => Math.max(current - 1, 0))
+                      // `goTo`, not `setStep`: it also moves focus to the new
+                      // step's heading. Going through setStep replaced the
+                      // heading, the intro and every field while focus stayed
+                      // on the button, so a screen-reader user heard nothing.
+                      goTo(step - 1)
                     }
                     disabled={step === 0}
                   >
-                    Back
+                    {t("nav.back")}
                   </button>
                   <div className="tfcl-step-nav-bar__count" aria-hidden="true">
-                    {step + 1} / {STEPS.length}
+                    {/* Isolated for the same reason as the gallery counter:
+                        the neutral separator otherwise reverses under RTL and
+                        step 2 of 6 reads as "6 / 2". */}
+                    <bdi>
+                      {step + 1} / {STEPS.length}
+                    </bdi>
                   </div>
                   {step < STEPS.length - 1 ? (
                     <button
                       type="button"
                       className="pre-btn"
-                      onClick={() =>
-                        setStep((current) =>
-                          Math.min(current + 1, STEPS.length - 1),
-                        )
-                      }
+                      onClick={() => goTo(step + 1)}
                       data-testid="listing-next"
                     >
-                      Next
+                      {t("nav.next")}
                     </button>
                   ) : (
                     <button
@@ -577,8 +595,7 @@ function DraftStatus({ dirty, onDiscard }) {
     <p className="tfcl-draft-status" role="status">
       {/* Precise about where the draft is, because "saved" on a marketplace
           screen normally means "saved to your account", and this is not that. */}
-      Your answers are kept on this phone as you type. Nothing has been sent to
-      Autosouq, and photos are not kept.{" "}
+      {t("draftStatus")}{" "}
       <button type="button" className="tfcl-linkish" onClick={onDiscard}>
         {t("discard")}
       </button>
@@ -591,6 +608,7 @@ function DraftStatus({ dirty, onDiscard }) {
 function StepCar({ form, set, derivedTitle }) {
   const t = useTranslations("addListing.car");
   const tc = useTranslations("addListing");
+  const tOptions = useTranslations("addListing.options");
 
   return (
     <div className="tfcl-add-listing">
@@ -667,8 +685,8 @@ function StepCar({ form, set, derivedTitle }) {
         >
           <option value="">{tc("select")}</option>
           {TRANSMISSION_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
+            <option key={option.value} value={option.value}>
+              {tOptions(`transmission.${option.key}`)}
             </option>
           ))}
         </select>
@@ -688,6 +706,7 @@ function StepCar({ form, set, derivedTitle }) {
 function StepSpec({ form, set }) {
   const t = useTranslations("addListing.spec");
   const tc = useTranslations("addListing");
+  const tOptions = useTranslations("addListing.options");
 
   return (
     <>
@@ -731,8 +750,8 @@ function StepSpec({ form, set }) {
             >
               <option value="">{tc("select")}</option>
               {CONDITION_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
+                <option key={option.value} value={option.value}>
+                  {tOptions(`condition.${option.key}`)}
                 </option>
               ))}
             </select>
@@ -765,7 +784,7 @@ function StepSpec({ form, set }) {
                   checked={form.underLien === option.value}
                   onChange={(e) => set("underLien", e.target.value)}
                 />
-                <span>{option.label}</span>
+                <span>{tOptions(`lien.${option.key}`)}</span>
               </label>
             ))}
           </div>
@@ -832,6 +851,7 @@ function StepSpec({ form, set }) {
 function StepPrice({ form, set, priceCheck }) {
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing.price");
+  const tCheck = useTranslations("addListing.priceCheck");
 
   return (
     <div className="tfcl-add-listing">
@@ -858,7 +878,7 @@ function StepPrice({ form, set, priceCheck }) {
       <div id="price-feedback" aria-live="polite">
         {priceCheck.state === "invalid" ? (
           <p className="tfcl-amber" role="alert">
-            {priceCheck.message}
+            {tCheck(priceCheck.reason, priceCheck.values)}
           </p>
         ) : null}
 
@@ -1162,26 +1182,44 @@ function StepReview({
 }) {
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing.review");
+  // The review step showed "2,700 OMR" to a seller reading Arabic.
+  const locale = useLocale();
   const tc = useTranslations("addListing");
+  const tRow = useTranslations("addListing.reviewRow");
+  const tOptions = useTranslations("addListing.options");
+  // Stored value -> the label the seller actually picked it by, in their
+  // language. `form.transmission` holds "Automatic", not "أوتوماتيك".
+  const optionLabel = (list, value, group) => {
+    const hit = list.find((o) => o.value === value);
+    return hit ? tOptions(`${group}.${hit.key}`) : null;
+  };
   const spec = IMPORT_SPEC_OPTIONS.find((o) => o.value === form.importSpec);
+  /**
+   * The last screen before publishing, and it was entirely in English.
+   *
+   * Both halves needed translating, not just the labels: the stored values are
+   * the CMS vocabulary, so echoing them raw would have left English answers
+   * under Arabic labels. They resolve back through `addListing.options`, the
+   * same catalogue the pickers that set them read from.
+   */
   const rows = [
-    ["Listing title", derivedTitle || null],
-    ["Kilometres", form.km ? `${Number(form.km).toLocaleString("en-US")} km` : null],
-    ["Transmission", form.transmission || null],
-    ["Spec", spec?.label ?? null],
-    ["Condition", form.condition || null],
-    ["Mulkiya valid until", form.mulkiyaExpiry || null],
+    [tRow("title"), derivedTitle || null],
+    [tRow("km"), form.km ? `${Number(form.km).toLocaleString("en-US")} km` : null],
     [
-      "Under bank lien",
-      LIEN_OPTIONS.find((o) => o.value === form.underLien)?.label ?? null,
+      tRow("transmission"),
+      optionLabel(TRANSMISSION_OPTIONS, form.transmission, "transmission"),
     ],
+    [tRow("spec"), spec?.label ?? null],
+    [tRow("condition"), optionLabel(CONDITION_OPTIONS, form.condition, "condition")],
+    [tRow("mulkiya"), form.mulkiyaExpiry || null],
+    [tRow("lien"), optionLabel(LIEN_OPTIONS, form.underLien, "lien")],
     [
-      "Needs attention",
-      form.noKnownFaults ? "Nothing that the seller knows of" : form.knownFaults || null,
+      tRow("faults"),
+      form.noKnownFaults ? tRow("noFaults") : form.knownFaults || null,
     ],
-    ["Price", priceCheck.state === "empty" ? null : formatPrice(form.price)],
-    ["City", form.city || null],
-    ["Photos", images.length ? `${images.length} added` : null],
+    [tRow("price"), priceCheck.state === "empty" ? null : formatPrice(form.price, undefined, locale)],
+    [tRow("city"), form.city || null],
+    [tRow("photos"), images.length ? tRow("photosAdded", { count: images.length }) : null],
   ];
 
   return (
@@ -1200,14 +1238,11 @@ function StepReview({
         </dl>
         {priceCheck.state === "as-is" ? (
           <p className="tfcl-amber">
-            This listing will carry the “{tCommon("soldAsIs")}” label, because of the
-            price. That is set by the band, not by you.
+            {tc("asIsNotice", { label: tCommon("soldAsIs") })}
           </p>
         ) : null}
         <p className="tfcl-hint">
-          Everything above is what you have told us. Autosouq marks a listing as
-          checked only after we have spoken to you and seen the mulkiya — until
-          then buyers see it as “not checked yet”, which is the truth.
+          {tc("reviewNotice")}
         </p>
       </div>
 
@@ -1261,6 +1296,7 @@ function StepReview({
                 id="listing_body"
                 value={form.body}
                 options={BODY_OPTIONS}
+                group="body"
                 onChange={(v) => set("body", v)}
               />
               <Select
@@ -1268,6 +1304,7 @@ function StepReview({
                 id="listing_fuel"
                 value={form.fuelType}
                 options={FUEL_OPTIONS}
+                group="fuel"
                 onChange={(v) => set("fuelType", v)}
               />
               <Select
@@ -1275,6 +1312,7 @@ function StepReview({
                 id="listing_drive"
                 value={form.driveType}
                 options={DRIVE_OPTIONS}
+                group="drive"
                 onChange={(v) => set("driveType", v)}
               />
               <Select
@@ -1359,10 +1397,7 @@ function StepReview({
 
             <h4 className="mt-3">{t("documents")}</h4>
             <p className="tfcl-hint">
-              Service records or a recent inspection report. Buyers at this price
-              trust paperwork more than adjectives. Do not upload your mulkiya or
-              ID here — those carry your personal details and are for the
-              Autosouq check only, never for publication.
+              {tc("documentsHint")}
             </p>
             <ul className="list-attrach">
               {attachments.map((file, index) => (
@@ -1428,13 +1463,13 @@ function StepReview({
             <p className="tfcl-amber">{tc("stillNeeded")}</p>
             <ul className="tfcl-missing">
               {missing.map((item) => (
-                <li key={item.label}>
+                <li key={item.key}>
                   <button
                     type="button"
                     className="tfcl-linkish"
                     onClick={() => onGoTo(item.step)}
                   >
-                    {item.label}
+                    {tc(`missing.${item.key}`)}
                   </button>
                 </li>
               ))}
@@ -1442,9 +1477,7 @@ function StepReview({
           </div>
         ) : (
           <p className="tfcl-hint">
-            Everything required is here. Publishing sends the listing to Autosouq
-            for checking — a person reads it, calls you, and it goes live after
-            that. It does not appear on the site the moment you press the button.
+            {tc("readyNotice")}
           </p>
         )}
 
@@ -1504,8 +1537,23 @@ function Field({ label, id, hint, children }) {
   );
 }
 
-function Select({ label, id, value, options, onChange }) {
+function Select({ label, id, value, options, group, onChange }) {
   const tc = useTranslations("addListing");
+  /**
+   * Two option shapes, deliberately.
+   *
+   * Word options are `{ value, key }` — `value` is the CMS vocabulary that gets
+   * stored, `key` resolves under `addListing.options.<group>` for display, so an
+   * Arabic seller reads "بنزين" and the listing still stores "Petrol".
+   *
+   * Numeric options (cylinders, doors, seats) stay plain strings: they are
+   * digits, they are identical in both languages, and inventing catalogue keys
+   * for "4" would be ceremony with no reader on the other end.
+   */
+  const tOptions = useTranslations("addListing.options");
+  const labelFor = (option) =>
+    typeof option === "string" ? option : tOptions(`${group}.${option.key}`);
+  const valueOf = (option) => (typeof option === "string" ? option : option.value);
   return (
     <Field label={label} id={id}>
       {/* Native <select> throughout, not the theme's div-based nice-select: on
@@ -1519,8 +1567,8 @@ function Select({ label, id, value, options, onChange }) {
       >
         <option value="">{tc("select")}</option>
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option key={valueOf(option)} value={valueOf(option)}>
+            {labelFor(option)}
           </option>
         ))}
       </select>
@@ -1564,25 +1612,52 @@ async function downscaleToDataUrl(file, maxEdge = 1600, quality = 0.82) {
 
 /* ---------------------------------------------------------------- options -- */
 
-const CONDITION_OPTIONS = ["Excellent", "Good", "Fair", "Needs work"];
-const TRANSMISSION_OPTIONS = ["Automatic", "Manual"];
-const FUEL_OPTIONS = ["Petrol", "Diesel", "Hybrid", "Electric"];
-const BODY_OPTIONS = [
-  "Sedan",
-  "Hatchback",
-  "SUV",
-  "Crossover",
-  "Pick-up",
-  "Van",
-  "Coupe",
-  "Wagon",
+/**
+ * Option lists: a stable English **value** plus a catalogue key for the label.
+ *
+ * These used to be plain string arrays, where the same English string was the
+ * value stored on the listing *and* the text the seller read. That made them
+ * untranslatable without changing the data: localising the array would have
+ * written "ممتازة" into the `condition` field that the CMS, the filters and
+ * `data/cars.js` all expect to read "Excellent".
+ *
+ * Splitting the two is the whole fix. `value` is the CMS vocabulary and never
+ * moves; `key` resolves through `addListing.options.*` so an Arabic seller
+ * picks "ممتازة" and the listing still stores "Excellent". Same shape as
+ * IMPORT_SPEC_OPTIONS above, which already got this right.
+ */
+const CONDITION_OPTIONS = [
+  { value: "Excellent", key: "excellent" },
+  { value: "Good", key: "good" },
+  { value: "Fair", key: "fair" },
+  { value: "Needs work", key: "needsWork" },
 ];
-// Labels match the CMS `driveType` enum (fwd / rwd / awd / four_wd).
+const TRANSMISSION_OPTIONS = [
+  { value: "Automatic", key: "automatic" },
+  { value: "Manual", key: "manual" },
+];
+const FUEL_OPTIONS = [
+  { value: "Petrol", key: "petrol" },
+  { value: "Diesel", key: "diesel" },
+  { value: "Hybrid", key: "hybrid" },
+  { value: "Electric", key: "electric" },
+];
+const BODY_OPTIONS = [
+  { value: "Sedan", key: "sedan" },
+  { value: "Hatchback", key: "hatchback" },
+  { value: "SUV", key: "suv" },
+  { value: "Crossover", key: "crossover" },
+  { value: "Pick-up", key: "pickup" },
+  { value: "Van", key: "van" },
+  { value: "Coupe", key: "coupe" },
+  { value: "Wagon", key: "wagon" },
+];
+// Values match the CMS `driveType` enum (fwd / rwd / awd / four_wd).
 const DRIVE_OPTIONS = [
-  "Front-wheel drive (FWD)",
-  "Rear-wheel drive (RWD)",
-  "All-wheel drive (AWD)",
-  "Four-wheel drive (4WD)",
+  { value: "Front-wheel drive (FWD)", key: "fwd" },
+  { value: "Rear-wheel drive (RWD)", key: "rwd" },
+  { value: "All-wheel drive (AWD)", key: "awd" },
+  { value: "Four-wheel drive (4WD)", key: "fourWd" },
 ];
 // Ranges match the min/max on the CMS content type.
 const CYLINDER_OPTIONS = ["3", "4", "5", "6", "8"];
@@ -1593,9 +1668,9 @@ const SEAT_OPTIONS = ["2", "4", "5", "7", "8", "9"];
 // loan paperwork from a spouse genuinely may not know. Forcing a yes/no would
 // produce a confident wrong answer, which is worse than an honest gap.
 const LIEN_OPTIONS = [
-  { value: "no", label: "No — it is fully paid" },
-  { value: "yes", label: "Yes — there is still finance on it" },
-  { value: "unsure", label: "Not sure" },
+  { value: "no", key: "no" },
+  { value: "yes", key: "yes" },
+  { value: "unsure", key: "unsure" },
 ];
 
 const OMAN_CITIES = [

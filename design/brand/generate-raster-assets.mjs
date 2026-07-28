@@ -119,7 +119,18 @@ async function ico(svg, sizes) {
 }
 
 // --------------------------------------------------------------- og image
-const AR_HEAD = "سيارات مستعملة بأسعار معقولة في عُمان";
+//
+// The price band is baked into these pixels, which is why it drifted: a
+// find-and-replace across the message catalogues fixed every string and could
+// not touch a PNG. The card advertised "OMR 1,500 – 6,000" long after
+// lib/priceBand.js set the floor at 1,000 and NICHE.md documented the
+// sold-as-is tier — understating real inventory by a whole tier on the artifact
+// WhatsApp shows for every shared link, which brand/README.md calls the growth
+// channel. Re-run this script whenever the band moves.
+// "بأسعار مناسبة" / "في المتناول" is the fixed self-description in NICHE.md
+// and in every string in messages/ar.json. The card was the one place using
+// a third word ("معقولة" — reasonable).
+const AR_HEAD = "سيارات مستعملة بأسعار في المتناول في عُمان";
 const AR_SANS = "Geeza Pro, Al Bayan, Baghdad, Arial";
 const LAT_SANS = "Helvetica Neue, Helvetica, Arial, sans-serif";
 
@@ -141,7 +152,7 @@ async function openGraph() {
   <rect x="0" y="${H - 14}" width="${W}" height="14" fill="${TERRACOTTA}"/>
   <text x="${W / 2}" y="408" text-anchor="middle" font-family="${AR_SANS}" font-size="54" fill="${INDIGO}">${AR_HEAD}</text>
   <text x="${W / 2}" y="492" text-anchor="middle" font-family="${LAT_SANS}" font-weight="700" font-size="44" fill="${INDIGO}">Affordable used cars in Oman</text>
-  <text x="${W / 2}" y="556" text-anchor="middle" font-family="${LAT_SANS}" font-weight="600" font-size="30" letter-spacing="0.5" fill="${TERRACOTTA}">OMR 1,500 – 6,000 &#160;·&#160; Verified listings &#160;·&#160; One WhatsApp tap</text>
+  <text x="${W / 2}" y="556" text-anchor="middle" font-family="${LAT_SANS}" font-weight="600" font-size="30" letter-spacing="0.5" fill="${TERRACOTTA}">OMR 1,000 – 6,000 &#160;·&#160; Verified listings &#160;·&#160; One WhatsApp tap</text>
 </svg>`;
 
   // Render the type at 4x and downsample -- librsvg's own AA at 1200px is

@@ -30,6 +30,27 @@
 @import "../css/bootstrap.css";
 
 /**
+ * Keyboard-active option in every dropdown.
+ *
+ * components/common/DropDownSelect.jsx follows the ARIA combobox pattern:
+ * real focus stays on the trigger and the active option is identified by
+ * `aria-activedescendant`. That satisfies assistive tech, but a sighted
+ * keyboard user needs to *see* which row Enter will pick, and nice-select's own
+ * `.option.focus` rule is `background-color: #f6f6f6` — roughly 1.04:1 against
+ * white, which is not an indicator, it is a rounding error.
+ *
+ * `.is-kb-active` is set only while navigating by keyboard, so pointer users
+ * see no change. Indigo because it is the only brand colour that clears 3:1 on
+ * every light surface (abstracts/_variables.scss:297) — the accent cannot be a
+ * focus indicator. Declared here rather than in nice-select.css because that
+ * file is vendor, and after the import so it wins without `!important`.
+ */
+.nice-select .option.is-kb-active {
+  background-color: rgba($brand-indigo, 0.1);
+  box-shadow: inset $focus-ring-width 0 0 0 $focus-ring-color;
+}
+
+/**
   	* Reset Browsers
 	* Elements
   	* Forms
@@ -2206,6 +2227,41 @@ fieldset {
 .flat-toggle .toggle-content {
   display: block;
 }
+
+/**
+ * ...but never when the panel is closed.
+ *
+ * The rule above overrides _widget.scss's `display: none`, which is why the
+ * accordion used to collapse by writing `height: 0` from JavaScript instead —
+ * and that leaves the panel in the accessibility tree and the tab order, so
+ * closed answers were still announced and still tabbable.
+ * components/common/Accordions.jsx now uses the `hidden` attribute; this makes
+ * it win over the line above without needing `!important`.
+ */
+.flat-toggle .toggle-content[hidden] {
+  display: none;
+}
+
+/**
+ * The disclosure header is a <button> now, not a <div>. Strip the UA button
+ * chrome so it renders exactly as the div did, and let the heading that wraps
+ * it contribute no box of its own.
+ */
+.flat-toggle .toggle-title__heading {
+  margin: 0;
+  font: inherit;
+}
+
+.flat-toggle button.toggle-title {
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  justify-content: space-between;
+}
 .clear-filter {
   i::before {
     display: inline-block;
@@ -2524,6 +2580,14 @@ body {
     text-align: left !important;
   }
 
+  /* These two mirror one edge each, and that is all they can safely do.
+     Never put `.start-0` and `.end-0` on the same element: both rules are
+     `!important` at equal specificity, so the later one wins every
+     declaration it repeats — `.end-0`'s `right: auto` cancels `.start-0`'s
+     `right: 0`, and the element ends up anchored to one edge with a
+     shrink-to-fit width instead of spanning. To span, use the logical
+     `inset-inline: 0` (or `style={{ insetInline: 0 }}`), which needs no
+     shim at all. See components/carDetails/StickyContactBar.jsx. */
   .start-0 {
     right: 0 !important;
     left: auto !important;

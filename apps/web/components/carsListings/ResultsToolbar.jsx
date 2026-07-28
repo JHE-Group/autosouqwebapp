@@ -91,6 +91,7 @@ export default function ResultsToolbar({
                 }}
                 addtionalParentClass="list-page"
                 options={pageSizes.map((n) => `Show: ${n}`)}
+                label={t("perPage")}
               />
             </div>
           )}
@@ -100,6 +101,7 @@ export default function ResultsToolbar({
               onChange={setSortingOption}
               addtionalParentClass="list-sort"
               options={SORT_OPTIONS}
+              label={t("sortBy")}
             />
           </div>
         </div>

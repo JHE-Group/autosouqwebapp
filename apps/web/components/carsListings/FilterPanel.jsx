@@ -5,7 +5,7 @@ import { formatPrice } from "@/lib/format";
 import Pricing from "../common/Pricing";
 import DropdownSelect from "../common/DropDownSelect";
 import { isFilterActive, NEUTRAL } from "./filterLogic";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 /**
  * One filter body, used by both the desktop rail and the mobile offcanvas.
@@ -103,6 +103,9 @@ export default function FilterPanel({
 
   const active = (key) => isFilterActive(key, allProps, bounds);
   const plain = (n) => Number(n).toLocaleString("en-US");
+  // formatPrice defaults to the English currency label; without this the price
+  // facet read "5,900 OMR" on /ar beside "ر.ع" everywhere else on the page.
+  const locale = useLocale();
 
   const select = (key, labelKey, options, setter) =>
     hasChoice(options) ? (
@@ -115,6 +118,9 @@ export default function FilterPanel({
           selectedValue={allProps[key]}
           onChange={setter}
           options={options}
+          // Same string as the visible facet heading. Without it a screen
+          // reader announces ten identical "combobox" controls in a row.
+          label={t(labelKey)}
         />
       </Facet>
     ) : null;
@@ -124,7 +130,7 @@ export default function FilterPanel({
       {hasRange(bounds.price) && (
         <Facet
           label={t("price")}
-          value={`${plain(allProps.price[0])} – ${formatPrice(allProps.price[1])}`}
+          value={`${plain(allProps.price[0])} – ${formatPrice(allProps.price[1], undefined, locale)}`}
           active={active("price")}
           onReset={() => allProps.setPrice(bounds.price)}
         >
@@ -133,6 +139,8 @@ export default function FilterPanel({
             MAX={bounds.price[1]}
             priceRange={allProps.price}
             setPriceRange={allProps.setPrice}
+            label={t("price")}
+            formatValue={(v) => formatPrice(v, undefined, locale)}
           />
         </Facet>
       )}
@@ -152,6 +160,8 @@ export default function FilterPanel({
             MAX={bounds.km[1]}
             priceRange={allProps.km}
             setPriceRange={allProps.setKM}
+            label={t("km")}
+            formatValue={(v) => `${plain(v)} km`}
           />
         </Facet>
       )}
@@ -177,6 +187,8 @@ export default function FilterPanel({
             MAX={bounds.year[1]}
             priceRange={allProps.year}
             setPriceRange={allProps.setYear}
+            label={t("year")}
+            formatValue={(v) => String(v)}
           />
         </Facet>
       )}

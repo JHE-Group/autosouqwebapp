@@ -138,7 +138,7 @@ function RelaxedMatch({ car, locale }) {
           <Link href={listingPath(car)}>{car.title}</Link>
         </h6>
         <div className="fs-14 fw-6" style={{ color: INK }}>
-          {formatPrice(car.price, car.currency)}
+          {formatPrice(car.price, car.currency, locale)}
         </div>
         <p className="fs-12 mb-1" style={{ color: "#5C6368" }}>
           {Number.isFinite(car.km) ? `${car.km.toLocaleString("en-US")} km` : "km not stated"}
@@ -162,7 +162,7 @@ export default function EmptyResults({
   const tField = useTranslations("browse.field");
   const routeLocale = useLocale();
   const locale = localeProp ?? routeLocale;
-  const chips = chipsFor(allProps);
+  const chips = chipsFor(allProps, locale);
   const relaxed = findRelaxedMatches(source, allProps, allProps?.bounds);
 
   return (

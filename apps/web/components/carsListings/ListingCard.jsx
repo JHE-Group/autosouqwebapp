@@ -32,16 +32,20 @@ import { listingPath } from "@/lib/seo";
  */
 
 /**
- * Folders that hold stand-in artwork rather than photographs of the car being
- * sold: `/listings` is AI-generated (see that folder's README) and `/car-list`
- * is the purchased theme's stock photography. Neither shows a real car that is
- * really for sale.
+ * Folders holding stand-in artwork rather than photographs of the car for sale.
+ * `/listings` is AI-generated — see that folder's README.
  *
- * Strapi-backed listings always carry an explicit `hasPlaceholderImage`
- * boolean from `toCar()`, so this path fallback only ever classifies the
- * pre-launch demo catalogue — a real listing is never mislabelled by it.
+ * `/car-list` used to be listed here too, as "the purchased theme's stock
+ * photography". It is not photography: every file in it is a single flat
+ * #D2D6E2 rectangle, the theme's unfilled placeholder. data/cars.js now emits
+ * `imgSrc: null` for the 19 demo cars that pointed at it, so the directory is
+ * unreferenced and the entry is gone.
+ *
+ * Strapi-backed listings always carry an explicit `hasPlaceholderImage` from
+ * `toCar()`, so this path fallback only ever classifies the pre-launch demo
+ * catalogue — a real listing is never mislabelled by it.
  */
-const STAND_IN_DIRS = ["/assets/images/listings/", "/assets/images/car-list/"];
+const STAND_IN_DIRS = ["/assets/images/listings/"];
 
 /** Is this picture a stand-in rather than a photograph of this car? */
 export function isPlaceholderPhoto(car) {
@@ -177,7 +181,7 @@ export default function ListingCard({
           <Link href={href}>{car.title}</Link>
         </h3>
 
-        <p className="asq-card__price">{formatPrice(car.price, car.currency)}</p>
+        <p className="asq-card__price">{formatPrice(car.price, car.currency, locale)}</p>
 
         {/* Spec origin on every card, "not stated" shown rather than hidden,
             plus as-is and verification — NICHE.md requires all of them. */}
@@ -185,9 +189,18 @@ export default function ListingCard({
 
         <p className="asq-card__specs">
           <span className="asq-card__km">
+            {/* `pick(COPY.kmUnstated, locale)` — neither identifier exists in
+                this file or anywhere in the repo. It was the remnant of a
+                half-finished move from a local copy object to the message
+                catalogue: the key landed in both catalogues, the call site did
+                not. Reaching this branch threw `ReferenceError: COPY is not
+                defined` from a Client Component, and with no error boundary in
+                app/ that unwinds to Next's stock error page — so one listing
+                with a null or string `mileage` blanked the whole of
+                /used-cars and every facet lander, not one card. */}
             {Number.isFinite(car.km)
               ? `${car.km.toLocaleString("en-US")} km`
-              : pick(COPY.kmUnstated, locale)}
+              : t("kmUnstated")}
           </span>
           {car.transmission && (
             <>

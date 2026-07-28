@@ -180,7 +180,7 @@ export default function TrustBlock({ carItem, locale = DEFAULT_LOCALE }) {
         className="money font"
         style={{ color: INK, marginBottom: 8 }}
       >
-        {formatPrice(carItem.price, carItem.currency)}
+        {formatPrice(carItem.price, carItem.currency, locale)}
       </div>
       <p className="mb-0" style={{ color: MUTED, fontSize: 12, lineHeight: 1.5 }}>
         {t("priceNote")}

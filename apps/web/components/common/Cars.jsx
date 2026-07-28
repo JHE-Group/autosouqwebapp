@@ -7,6 +7,7 @@ import WhatsAppButton from "@/components/common/WhatsAppButton";
 import Image from "next/image";
 import { cars } from "@/data/cars";
 import { DEFAULT_LOCALE } from "@/lib/locale";
+import { getTranslations } from "next-intl/server";
 
 /**
  * The listings section of the home page.
@@ -40,12 +41,15 @@ import { DEFAULT_LOCALE } from "@/lib/locale";
  *   unreachable and the demo array covers that today, but the section should
  *   never render a heading over nothing.
  */
-export default function Cars({
+export default async function Cars({
   parentClass = "hp-section",
   listings,
   locale = DEFAULT_LOCALE,
   limit = 6,
 }) {
+  const t = await getTranslations({ locale, namespace: "homeCars" });
+  const tCard = await getTranslations({ locale, namespace: "browse.card" });
+  const tCommon = await getTranslations({ locale, namespace: "common" });
   // Strapi listings when the CMS has them, the theme demo data otherwise —
   // the same idiom as carsListings/Cars1.
   const source = listings?.length ? listings : cars;
@@ -56,14 +60,13 @@ export default function Cars({
       <div className="container">
         <div className="hp-section-head">
           <div>
-            <h2 className="hp-section-title">Cars listed right now</h2>
+            <h2 className="hp-section-title">{t("title")}</h2>
             <p className="hp-section-lede">
-              Every one of them between OMR 1,500 and 6,000, with its spec and
-              its check status on the card.
+              {t("lede")}
             </p>
           </div>
           <Link href="/used-cars" className="hp-link hp-link--btn">
-            Browse all cars
+            {tCommon("browseAll")}
           </Link>
         </div>
 
@@ -88,7 +91,7 @@ export default function Cars({
                   <div className="top flex-two">
                     <ul className="d-flex gap-8">
                       {car?.featured && (
-                        <li className="flag-tag success">Featured</li>
+                        <li className="flag-tag success">{tCard("featured")}</li>
                       )}
                       {/* Only when there is a number to show. The template
                           rendered the camera icon with an empty count for
@@ -103,13 +106,22 @@ export default function Cars({
                     <div className="year flag-tag">{car.year}</div>
                   </div>
                   <div className="img-style">
-                    <Image
-                      alt={car.images?.[0]?.alt || car.title || ""}
-                      src={car.imgSrc}
-                      width={450}
-                      height={338}
-                      sizes="(max-width: 639px) 100vw, (max-width: 991px) 50vw, 33vw"
-                    />
+                    {/* Guard on `imgSrc`: a listing with no photographs now
+                        carries null rather than a stand-in, and an <Image> with
+                        no src renders a zero-width box that paints the alt text
+                        where the photo should be. ListingCard had this branch
+                        already; this one did not. */}
+                    {car.imgSrc ? (
+                      <Image
+                        alt={car.images?.[0]?.alt || car.title || ""}
+                        src={car.imgSrc}
+                        width={450}
+                        height={338}
+                        sizes="(max-width: 639px) 100vw, (max-width: 991px) 50vw, 33vw"
+                      />
+                    ) : (
+                      <div className="asq-card__img asq-card__img--none" aria-hidden="true" />
+                    )}
                   </div>
                   <PlaceholderPhotoTag car={car} locale={locale} />
                 </div>
@@ -124,7 +136,7 @@ export default function Cars({
                     </Link>
                   </h3>
                   <div className="money fs-20 fw-5 lh-25 text-color-3">
-                    {formatPrice(car.price, car.currency)}
+                    {formatPrice(car.price, car.currency, locale)}
                   </div>
                   <ListingSignals car={car} locale={locale} className="mt-2" />
                   <div className="icon-box flex flex-wrap mt-2">
@@ -144,7 +156,7 @@ export default function Cars({
                     )}
                     {car.location && (
                       <div className="icons flex-three">
-                        <i className="icon-autodeal-location" />
+                        <i className="icon-autodeal-city" aria-hidden="true" />
                         <span>{car.location}</span>
                       </div>
                     )}
@@ -160,7 +172,7 @@ export default function Cars({
                       href={listingPath(car)}
                       className="view-car"
                     >
-                      View car
+                      {tCard("view")}
                     </Link>
                   </div>
                 </div>

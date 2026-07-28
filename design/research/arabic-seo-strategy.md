@@ -573,7 +573,18 @@ Every Arabic string below appeared in a live SERP title or URL during this resea
 | سيارات مستعملة | used cars | OpenSooq title |
 | سيارات رخيصة | cheap cars | Omanista title |
 
-⚠️ **رخيصة ("cheap") is a keyword you must not use in copy.** NICHE.md: *"We say 'affordable', never 'cheap'."* Users search it; incumbents rank for it. The honest resolution is to target the *intent* with brand-safe wording — **بأسعار مناسبة** / **في المتناول** (affordable, within reach) — and accept losing the literal-match traffic. That is the brand rule working as intended; do not quietly break it for traffic.
+**رخيصة ("cheap") is now usable in copy.** *Superseded 28 Jul 2026 — this paragraph
+previously read "a keyword you must not use in copy" and instructed readers not to break
+that rule for traffic. The rule was lifted deliberately, not quietly; see NICHE.md.*
+
+Users search it and incumbents rank for it, and later autocomplete work (gl=OM) found it is
+the phrasing Omani buyers actually use — while `أقل من X`, the shape this document elsewhere
+treats as the price-query pattern, returns **no Oman completions** and resolves to
+UAE/Egypt. Competitor IA had been read as demand evidence; it is not the same thing.
+
+Use it where it matches the query — titles, meta, headings. Keep **بأسعار مناسبة** /
+**في المتناول** for how the brand describes itself. The constraint that remains is on the
+claim, not the adjective: the price must be real and the listing checked.
 
 **Geography — and a genuine trap**
 

@@ -268,6 +268,12 @@ export default function SiteHeader({ variant = "solid" }) {
                         width={LOGO_WIDTH}
                         height={LOGO_HEIGHT}
                         priority
+                        // SVG. next/image refuses it unless `dangerouslyAllowSVG`
+                        // is set, and that flag is not an option here: Strapi
+                        // accepts SVG uploads, so it would turn /_next/image into
+                        // a stored-XSS vector. A fixed-size logo gains nothing
+                        // from the optimiser in any case.
+                        unoptimized
                       />
                       {stickyLogo ? (
                         <Image
@@ -277,7 +283,12 @@ export default function SiteHeader({ variant = "solid" }) {
                           aria-hidden="true"
                           width={LOGO_WIDTH}
                           height={LOGO_HEIGHT}
-                          priority
+                          // Not `priority`: this one is cross-faded in only after
+                          // the header sticks past 200px of scroll, so it is never
+                          // in the first viewport — and its preload was competing
+                          // with the LCP hero's.
+                          loading="lazy"
+                          unoptimized
                         />
                       ) : null}
                     </Link>
@@ -349,6 +360,7 @@ export default function SiteHeader({ variant = "solid" }) {
                 alt="Autosouq.om"
                 width={LOGO_WIDTH}
                 height={LOGO_HEIGHT}
+                unoptimized
               />
             </Link>
             <button

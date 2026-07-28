@@ -3,13 +3,19 @@
 import { formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import { carData } from "@/data/cars";
-import { Navigation, Pagination } from "swiper/modules";
+import { A11y, Navigation, Pagination } from "swiper/modules";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
+import { useLocale, useTranslations } from "next-intl";
 export default function RecomandedCars() {
+  const t = useTranslations("browse.card");
+  const tCommon = useTranslations("common");
+  const tAbout = useTranslations("aboutPage");
+  const locale = useLocale();
   const swiperOptions = {
     speed: 1000,
     spaceBetween: 30,
@@ -49,7 +55,7 @@ export default function RecomandedCars() {
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
-                Recommended Used Cars For You
+                {tAbout("recommendedTitle")}
               </h2>
               <Link
                 href={`/used-cars`}
@@ -57,7 +63,7 @@ export default function RecomandedCars() {
                 data-wow-delay="0.2s"
                 data-wow-duration="1000ms"
               >
-                View all
+                {tCommon("viewAll")}
                 <i className="icon-autodeal-btn-right" />
               </Link>
             </div>
@@ -65,7 +71,11 @@ export default function RecomandedCars() {
           <div className="col-lg-12 relative">
             <Swiper
               {...swiperOptions}
-              modules={[Pagination, Navigation, Pagination]}
+              // A11y was missing, which is why the prev/next arrows had no
+              // role, no tabindex and no accessible name — Swiper only adds
+              // those when the module is registered. Pagination was also listed
+              // twice.
+              modules={[A11y, Navigation, Pagination]}
               className="swiper-container tf-sw-mobile3"
             >
               {carData.map((car, i) => (
@@ -75,7 +85,7 @@ export default function RecomandedCars() {
                       <div className="top flex-two">
                         <ul className="d-flex gap-8">
                           {car?.featured && (
-                            <li className="flag-tag success">Featured</li>
+                            <li className="flag-tag success">{t("featured")}</li>
                           )}
                           <li className="flag-tag style-1">
                             <div className="icon">
@@ -98,7 +108,11 @@ export default function RecomandedCars() {
                             {car?.images?.length || ""}
                           </li>
                         </ul>
-                        <div className="year flag-tag">2024</div>
+                        {/* Was the hardcoded literal `2024`, printed over cars whose real years
+                            are 2008–2019 (data/cars.js). On the page a sceptical buyer
+                            visits to decide whether to trust us, every card carried a
+                            false model year — a NICHE.md violation, not a cosmetic bug. */}
+                        <div className="year flag-tag">{car.year}</div>
                       </div>
                       <ul className="change-heart flex">
                         <li className="box-icon w-32">
@@ -146,14 +160,21 @@ export default function RecomandedCars() {
                         </li>
                       </ul>
                       <div className="img-style">
-                        <Image
-                          className="lazyload"
-                          alt={car.imageAlt || car.title || ""}
-                          src={car.imgSrc}
-                          width={450}
-                          height={338}
-                          sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 33vw"
-                        />
+                        {/* Same guard as Cars.jsx and Recommended.jsx — a
+                            photo-less listing must render a box, not an
+                            <Image> with no src. */}
+                        {car.imgSrc ? (
+                          <Image
+                            className="lazyload"
+                            alt={car.imageAlt || car.title || ""}
+                            src={car.imgSrc}
+                            width={450}
+                            height={338}
+                            sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 33vw"
+                          />
+                        ) : (
+                          <div className="asq-card__img asq-card__img--none" aria-hidden="true" />
+                        )}
                       </div>
                     </div>
                     {/* Order: identity -> price -> disclosures -> wear -> place ->
@@ -167,7 +188,7 @@ export default function RecomandedCars() {
                         </Link>
                       </h5>
                       <div className="money fs-20 fw-5 lh-25 text-color-3">
-                        {formatPrice(car.price, car.currency)}
+                        {formatPrice(car.price, car.currency, locale)}
                       </div>
                       <ListingSignals car={car} className="mt-2" />
                       <div className="icon-box flex flex-wrap mt-2">
@@ -187,7 +208,7 @@ export default function RecomandedCars() {
                         )}
                         {car.location && (
                           <div className="icons flex-three">
-                            <i className="icon-autodeal-location" />
+                            <i className="icon-autodeal-city" aria-hidden="true" />
                             <span>{car.location}</span>
                           </div>
                         )}
@@ -203,7 +224,7 @@ export default function RecomandedCars() {
                           href={listingPath(car)}
                           className="view-car"
                         >
-                          View car
+                          {t("view")}
                         </Link>
                       </div>
                     </div>

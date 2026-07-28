@@ -60,17 +60,39 @@ export default function StickyContactBar({ car, locale = DEFAULT_LOCALE }) {
 
   return (
     <div
-      className="autosouq-sticky-contact d-lg-none position-fixed bottom-0 start-0 end-0 bg-white border-top px-3 pt-2"
+      className="autosouq-sticky-contact d-lg-none position-fixed bottom-0 bg-white border-top px-3 pt-2"
       style={{
-        // `start-0 end-0` are Bootstrap's logical inset utilities, so the bar
-        // spans correctly under dir="rtl" with no mirrored rule.
+        /**
+         * `insetInline: 0` rather than Bootstrap's `start-0 end-0`.
+         *
+         * The comment that used to sit here said those two utilities were
+         * logical and needed no mirrored rule. They are not: we ship the LTR
+         * Bootstrap build, where `.start-0` is `left: 0` and `.end-0` is
+         * `right: 0`, and style.scss carries a hand-written `[dir="rtl"]` shim
+         * that flips each of them. Both shim rules are `!important` at equal
+         * specificity, so on an element carrying *both* classes the later one
+         * simply wins each declaration: `.end-0` set `left: 0` and, fatally,
+         * `right: auto` — overriding the `right: 0` that `.start-0` had just
+         * set.
+         *
+         * A `position: fixed` box with one inset and `width: auto`
+         * shrink-to-fit. So on /ar — the default, indexed tree — this bar
+         * stopped spanning the viewport on phones: the white backing and
+         * border-top covered part of the screen and the price/CTA row
+         * collapsed against one edge. That is the primary WhatsApp CTA, on the
+         * device this audience actually uses, on the language we lead with.
+         *
+         * The logical property needs no shim and cannot be split in half by
+         * one, which is why it is the fix rather than reordering the CSS.
+         */
+        insetInline: 0,
         paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
         zIndex: 1030,
       }}
     >
       <div className="d-flex justify-content-between align-items-center mb-2 gap-2">
         <span className="fw-bold fs-5 text-nowrap" style={{ color: BRAND_INK }}>
-          {formatPrice(car.price, car.currency)}
+          {formatPrice(car.price, car.currency, locale)}
         </span>
         {/* One pill, never the whole signal row: "GCC spec", or the amber
             "Spec not stated by seller" when the seller withheld it. Both are

@@ -8,7 +8,9 @@
     "build": "pnpm --filter @autosouq/web --filter @autosouq/cms build",
     "lint": "pnpm --filter @autosouq/web lint",
     "check:band": "node scripts/check-price-band.mjs",
-    "check": "pnpm check:band && pnpm lint"
+    "check": "pnpm check:band && pnpm lint",
+    "test:carousels": "node scripts/test-carousels.mjs",
+    "check:photos": "node scripts/check-listing-photos.mjs"
   },
   "engines": {
     "node": ">=20"

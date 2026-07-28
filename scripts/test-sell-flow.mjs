@@ -54,9 +54,23 @@ async function main() {
     page.waitForURL(/\/en\/sell-your-car/, { timeout: 20000 }),
     navSell.click(),
   ]);
-  await page.waitForLoadState("networkidle");
+  /*
+   * Wait for the thing we actually need, not for `networkidle`.
+   *
+   * `waitForLoadState("networkidle")` is tied to a *document* navigation
+   * lifecycle. The click above is a Next.js client-side transition, so no new
+   * document loads and that state never re-fires — the wait ran to its 30s
+   * timeout with **zero requests in flight**, and this step had been failing on
+   * every run. Verified it fails identically with and without the route change
+   * that prompted this fix, so it was the harness, not the site.
+   *
+   * Waiting for the link to be visible is both more robust and closer to what
+   * the test means: the page is ready when the control we are about to click
+   * is there.
+   */
   // Prefer in-page CTAs (not the header button, which also goes to add-listing).
   const addLinks = page.getByRole("link", { name: /^add a listing$/i });
+  await addLinks.first().waitFor({ state: "visible", timeout: 20000 });
   if ((await addLinks.count()) < 1) fail("sell-your-car missing Add a listing");
   await Promise.all([
     page.waitForURL(/\/en\/add-listing/, { timeout: 20000 }),

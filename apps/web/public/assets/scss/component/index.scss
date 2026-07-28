@@ -8,3 +8,7 @@
 @forward './dashboard';
 @forward './widget';
 @forward './compare';
+@forward './blog';
+// Last: repoints the shared font variables for the Arabic tree, so it must
+// come after every rule that reads them.
+@forward './arabic';

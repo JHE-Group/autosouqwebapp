@@ -97,8 +97,8 @@ importers:
         specifier: ^1.80.6
         version: 1.102.0
       swiper:
-        specifier: ^11.1.14
-        version: 11.2.10
+        specifier: ^14.0.6
+        version: 14.0.6
     devDependencies:
       eslint:
         specifier: ^9
@@ -106,6 +106,9 @@ importers:
       eslint-config-next:
         specifier: 16.2.11
         version: 16.2.11(@typescript-eslint/parser@8.65.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      globals:
+        specifier: ^17.8.0
+        version: 17.8.0
 
 packages:
 
@@ -4509,6 +4512,10 @@ packages:
     resolution: {integrity: sha512-ob/2LcVVaVGCYN+r14cnwnoDPUufjiYgSqRhiFD0Q1iI4Odora5RE8Iv1D24hAz5oMophRGkGz+yuvQmmUMnMw==}
     engines: {node: '>=18'}
 
+  globals@17.8.0:
+    resolution: {integrity: sha512-Zz/LMDZScFmkakeL2cTHzf+PbWKdpU3uclqkZT7TjDG58j5WPt0PpA+n9uPI24fZtlw07q0OtEi84K+umsRzqQ==}
+    engines: {node: '>=18'}
+
   globalthis@1.0.4:
     resolution: {integrity: sha512-DpLKbNU4WylpxJykQujfCcwYWiV/Jhm50Goo0wrVILAv5jOr9d+H+UR3PhSCD2rCCEIg0uc+G+muBTwD54JhDQ==}
     engines: {node: '>= 0.4'}
@@ -7074,8 +7081,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  swiper@11.2.10:
-    resolution: {integrity: sha512-RMeVUUjTQH+6N3ckimK93oxz6Sn5la4aDlgPzB+rBrG/smPdCTicXyhxa+woIpopz+jewEloiEE3lKo1h9w2YQ==}
+  swiper@14.0.6:
+    resolution: {integrity: sha512-ArptjmcZMBvpLCbvzSKuqvQpjjITCbZdymiGOrbZQffQ3ZSjgpvMByXX0WZBUt+FV4PPIumdYfZ9ZdBbFsdH6g==}
     engines: {node: '>= 4.7.0'}
 
   swr@2.4.2:
@@ -13158,6 +13165,8 @@ snapshots:
 
   globals@16.4.0: {}
 
+  globals@17.8.0: {}
+
   globalthis@1.0.4:
     dependencies:
       define-properties: 1.2.1
@@ -16022,7 +16031,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  swiper@11.2.10: {}
+  swiper@14.0.6: {}
 
   swr@2.4.2(react@18.3.1):
     dependencies:

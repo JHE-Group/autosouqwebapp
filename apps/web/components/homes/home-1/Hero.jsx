@@ -17,13 +17,16 @@ export default async function Hero() {
   return (
     <section className="hp-hero">
       <div className="hp-hero__media">
-        {/* The homepage LCP element. `priority` emits fetchpriority=high and a
+        {/* Alt text is content, not chrome: this was a hardcoded English
+            sentence describing the LCP image of the *Arabic* homepage.
+
+            The homepage LCP element. `priority` emits fetchpriority=high and a
             preload and cancels the lazy default; without it the browser waits
             for HTML -> CSS -> layout before even requesting it. Dimensions
             match the actual file (2560x1280). */}
         <Image
           className="hp-hero__img"
-          alt="A quiet street in Muscat with an ordinary used car parked at the kerb"
+          alt={t("heroImageAlt")}
           src={slide.imgSrc}
           width={2560}
           height={1280}
@@ -34,8 +37,23 @@ export default async function Hero() {
 
       <div className="container hp-hero__container">
         <div className="hp-hero__panel">
-          <h1 className="hp-hero__title">{t("name")}</h1>
-          <p className="hp-hero__headline">{t("heroHeadline")}</p>
+          {/*
+            The brand name is the *display* line, not the heading.
+
+            These two were the other way round, which put `Autosouq.om` — a
+            Latin string, identical in both languages — in the `<h1>` of the
+            site's highest-authority page. On /ar that meant the one heading on
+            the x-default, priority-1.0 URL supported none of its own <title>
+            ("سيارات مستعملة بأسعار في المتناول في عُمان"), while the Arabic
+            text that does carry the query sat in a <p> underneath it.
+
+            Only the tags swap. Both classes set their own font-size,
+            line-height and margin (scss/component/_slider.scss:1864-1882), so
+            the hero renders pixel-identically; what changes is which line the
+            document outline and a screen reader's heading list call the page.
+          */}
+          <p className="hp-hero__title">{t("name")}</p>
+          <h1 className="hp-hero__headline">{t("heroHeadline")}</h1>
           <p className="hp-hero__lede">{t("heroLede")}</p>
 
           <ul className="hp-hero__facts">
