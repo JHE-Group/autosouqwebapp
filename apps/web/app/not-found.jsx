@@ -2,6 +2,14 @@ import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/lib/locale";
 
 /**
+ * Unknown probe URLs currently hit this root not-found page outside the locale
+ * middleware. Next 16 may need request headers while resolving that unmatched
+ * request, so keeping the page static turns scanner traffic like `/wp-login.php`
+ * into a 500 (`app-static-to-dynamic-error`) instead of a real 404.
+ */
+export const dynamic = "force-dynamic";
+
+/**
  * The last-resort 404, for URLs that never reach a locale segment.
  *
  * `app/[locale]/not-found.jsx` handles `notFound()` thrown *inside* the locale
