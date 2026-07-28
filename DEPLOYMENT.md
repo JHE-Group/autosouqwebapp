@@ -109,7 +109,14 @@ The four that are specific to running on OVH:
 | `FRONTEND_URL` | `https://www.autosouq.om` | CORS allowlist. **The CMS refuses to boot in production without it** rather than silently fall back to a localhost-only list. |
 | `DATABASE_CLIENT` + `DATABASE_*` | `postgres` + connection details | **The CMS refuses to boot on SQLite in production.** The SQLite default writes to a gitignored `.tmp/data.db` that does not survive a rebuild — a deploy that forgot this variable would accept listings and lose them all at the next restart, silently. |
 
-On OVH Managed PostgreSQL set `DATABASE_SSL=true`.
+**OVH Managed PostgreSQL specifics.** TLS is enforced and the certificate is
+signed by OVH's own CA, which is not in Node's default trust store — so
+`DATABASE_SSL=true` on its own fails with `SELF_SIGNED_CERT_IN_CHAIN`. Download
+the CA from the OVH console and pass it as `DATABASE_SSL_CA`. Do not set
+`DATABASE_SSL_REJECT_UNAUTHORIZED=false` to silence it: that keeps the
+encryption and throws away the authentication. Two other things catch people —
+OVH does not use port 5432 by default, and this server's IP must be on the
+service's authorised-IP list or connections are refused before TLS starts.
 
 The server logs a warning at startup for `PUBLIC_URL` and `TRUST_PROXY` if they
 look wrong. Read the first twenty lines of the log after a deploy.
