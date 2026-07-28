@@ -10,7 +10,11 @@ const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337"
  * always wins, so these disappear listing by listing as photos arrive.
  */
 const PLACEHOLDER_DIR = "/assets/images/listings";
-const PLACEHOLDER_FALLBACK = "/assets/images/car-list/car1.jpg";
+// Was `/assets/images/car-list/car1.jpg` — one of the theme's *unfilled*
+// placeholders, every pixel #D2D6E2. A 9 KB request to paint a grey box is
+// worse than the CSS no-photo state, which costs nothing and says the same
+// thing honestly. A listing with no slug now simply has no photo.
+const PLACEHOLDER_FALLBACK = null;
 
 /**
  * Whether a listing with no photos may borrow a generated stand-in.

@@ -5,7 +5,7 @@ export default function manifest() {
     name: "Autosouq.om — Affordable used cars in Oman",
     short_name: "Autosouq",
     description:
-      "Oman's marketplace for affordable used cars, OMR 1,500–6,000. Real prices, verified listings, GCC-spec or US-import shown honestly, and one WhatsApp tap to reach the seller.",
+      "Oman's marketplace for affordable used cars, OMR 1,000–6,000. Real prices, verified listings, GCC-spec or US-import shown honestly, and one WhatsApp tap to reach the seller.",
     id: "/",
     start_url: "/",
     scope: "/",
