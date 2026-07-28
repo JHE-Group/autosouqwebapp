@@ -20,8 +20,10 @@ import { getListings } from "@/lib/strapi";
  *
  * What is deliberately NOT in here:
  *
- * - **Dashboard routes** (`/dashboard`, `/my-*`, `/add-listing`,
- *   `/change-password`, `/message`). Private; robots.js disallows + layout noindex.
+ * - **Dashboard routes** (`/dashboard`, `/my-*`, `/change-password`,
+ *   `/message`). Private; robots.js disallows + layout noindex.
+ * - **The public add-listing form** (`/add-listing`). It is noindex/follow and
+ *   crawlable so search engines can read that directive.
  * - **Theme browse duplicates** (`/listing-grid*`, `/listing-list*`) — they
  *   canonicalise to `/used-cars` and are not nominated.
  * - **Demo catalogue URLs.** Sitemap uses CMS listings only. Empty Strapi ⇒

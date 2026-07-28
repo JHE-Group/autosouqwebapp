@@ -21,15 +21,16 @@ import { pickMessages } from "@/i18n/clientMessages";
  *
  * This group gives the form the ordinary site chrome instead. The URL is
  * unchanged — route groups do not appear in the path — so every existing link
- * to `/add-listing` still resolves, and `app/robots.js` still disallows it.
+ * to `/add-listing` still resolves.
  *
  * When accounts do exist, the honest move is to bring the form back under a
  * real authenticated shell, not to restore this one.
  */
 export const metadata = {
   // Kept `noindex` as it was under (dashboard). /sell-your-car is the
-  // indexable page that explains selling; this is the form behind it, and
-  // app/robots.js disallows the path in both locales.
+  // indexable page that explains selling; this is the form behind it. It stays
+  // crawlable so search engines can read the noindex directive instead of
+  // treating a robots-blocked URL as indexable-by-reference.
   robots: { index: false, follow: true },
 };
 
