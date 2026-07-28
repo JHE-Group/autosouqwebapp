@@ -34,16 +34,16 @@ export const USED_CARS_FACETS = [
     footer: true,
     footerKey: "usedCarsMuscat",
     title: {
-      en: "Used cars for sale in Muscat — OMR 1,500–6,000",
-      ar: "سيارات مستعملة للبيع في مسقط — 1,500–6,000 ر.ع",
+      en: "Used cars for sale in Muscat — OMR 1,000–6,000",
+      ar: "سيارات مستعملة للبيع في مسقط — من 1,000 إلى 6,000 ر.ع",
     },
     h1: {
       en: "Used cars for sale in Muscat",
       ar: "سيارات مستعملة للبيع في مسقط",
     },
     description: {
-      en: "Browse affordable used cars in Muscat and Seeb, OMR 1,500 to 6,000. Real prices, GCC-spec or import stated, one WhatsApp tap to the seller.",
-      ar: "تصفّح سيارات مستعملة بأسعار في المتناول في مسقط والسيب، من 1,500 إلى 6,000 ر.ع. أسعار حقيقية، وتوضيح خليجي أو مستورد، وتواصل واتساب مباشر مع البائع.",
+      en: "Browse affordable used cars in Muscat and Seeb, OMR 1,000 to 6,000. Real prices, GCC-spec or import stated, one WhatsApp tap to the seller.",
+      ar: "تصفّح سيارات مستعملة بأسعار في المتناول في مسقط والسيب، من 1,000 إلى 6,000 ر.ع. أسعار حقيقية، وتوضيح خليجي أو مستورد، وتواصل واتساب مباشر مع البائع.",
     },
     lead: {
       en: "Cars listed across Muscat Governorate — Muscat, Seeb, Bawshar, Muttrah and nearby areas — in the Autosouq price band.",
@@ -100,16 +100,16 @@ export const USED_CARS_FACETS = [
     footer: true,
     footerKey: "gccSpecCars",
     title: {
-      en: "GCC-spec used cars in Oman — OMR 1,500–6,000",
-      ar: "سيارات خليجية مستعملة في عُمان — 1,500–6,000 ر.ع",
+      en: "GCC-spec used cars in Oman — OMR 1,000–6,000",
+      ar: "سيارات خليجية مستعملة في عُمان — من 1,000 إلى 6,000 ر.ع",
     },
     h1: {
       en: "GCC-spec used cars",
       ar: "سيارات خليجية مستعملة",
     },
     description: {
-      en: "Used cars in Oman stated as GCC spec, in the OMR 1,500–6,000 band. Real prices and one WhatsApp tap to the seller.",
-      ar: "سيارات مستعملة في عُمان موضّحة كمواصفات خليجية، ضمن نطاق 1,500–6,000 ر.ع. أسعار حقيقية وتواصل واتساب مع البائع.",
+      en: "Used cars in Oman stated as GCC spec, in the OMR 1,000–6,000 band. Real prices and one WhatsApp tap to the seller.",
+      ar: "سيارات مستعملة في عُمان موضّحة كمواصفات خليجية، ضمن نطاق من 1,000 إلى 6,000 ر.ع. أسعار حقيقية وتواصل واتساب مع البائع.",
     },
     lead: {
       en: "Only listings where the seller stated GCC spec. Import origin is shown on every Autosouq card.",

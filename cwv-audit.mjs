@@ -228,6 +228,7 @@ for (const vp of VIEWPORTS) {
   for (const locale of ["ar", "en"]) {
     for (const route of ROUTES) {
       if (onlyRoute && route[0] !== onlyRoute) continue;
+      if (process.env.ONLY_VP && vp.name !== process.env.ONLY_VP) continue;
       process.stderr.write(`${vp.name} ${locale} ${route[0]}\n`);
       try {
         const r = await measure(browser, vp, locale, route);
