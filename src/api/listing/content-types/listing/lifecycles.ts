@@ -43,9 +43,18 @@ function applyBand(data: Record<string, unknown>, currentPrice?: number) {
     );
   }
 
-  // Derived, not chosen: 1,000–1,499 is always "sold as-is", and anything at
-  // or above 1,500 never carries the label.
-  data.soldAsIs = price <= BAND.ASIS_MAX;
+  /**
+   * Derived, not chosen: below 1,500 is always "sold as-is", and anything at
+   * or above 1,500 never carries the label.
+   *
+   * Compare against `STANDARD_MIN`, not `<= ASIS_MAX`. `price` is
+   * `numeric(10,2)`, so 1499.50 is a storable value that the old comparison
+   * put on the *standard* side of the line while sitting below the OMR 1,500
+   * floor NICHE.md defines — a car sold without the as-is label that is, by
+   * the band's own definition, sold as-is. The unused `STANDARD_MIN` constant
+   * was the tell that the boundary had been written from the wrong end.
+   */
+  data.soldAsIs = price < BAND.STANDARD_MIN;
 }
 
 async function resolveStoredPrice(where: Record<string, unknown> | undefined) {

@@ -44,7 +44,9 @@ const config: Core.Config.Middlewares = [
       credentials: false,
     },
   },
-  'strapi::poweredBy',
+  // 'strapi::poweredBy' removed: it sent `X-Powered-By: Strapi <strapi.io>` on
+  // every response — a free version fingerprint for anyone scanning for known
+  // Strapi advisories. It buys nothing operationally.
   'strapi::query',
   'strapi::body',
   'strapi::session',
