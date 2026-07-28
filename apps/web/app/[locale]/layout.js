@@ -19,6 +19,7 @@ import { dirFor, isIndexableLocale, routing } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import ClientShell from "./ClientShell";
 import {
+  SOCIAL_IMAGE,
   jsonLdScript,
   organizationJsonLd,
   webSiteJsonLd,
@@ -130,18 +131,28 @@ const metadata = {
     template: "%s | Autosouq.om",
   },
   description,
-  // og:image / twitter:image are injected by Next from app/opengraph-image.png
-  // and app/twitter-image.png — don't restate them here or they double up.
+  /**
+   * `images` is stated, not inherited.
+   *
+   * The comment that stood here said Next injects og:image/twitter:image from
+   * app/opengraph-image.png and app/twitter-image.png, and that restating them
+   * would make them double up. Both halves were wrong: declaring an
+   * `openGraph` object in this segment *replaces* the parent's, file-convention
+   * images and all — so the live site emitted none, on any page, while still
+   * declaring `twitter:card: summary_large_image`. See lib/seo.js SOCIAL_IMAGE.
+   */
   openGraph: {
     type: "website",
     siteName: "Autosouq.om",
     title,
     description,
+    images: SOCIAL_IMAGE.openGraph,
   },
   twitter: {
     card: "summary_large_image",
     title,
     description,
+    images: SOCIAL_IMAGE.twitter,
   },
 };
 

@@ -22,6 +22,40 @@ import { DEFAULT_LOCALE, INDEXABLE_LOCALES } from "@/i18n/routing";
 
 // Must match app/layout.js, which sets `metadataBase` from the same variable.
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.autosouq.om";
+
+/**
+ * The social share image, stated explicitly rather than left to Next's file
+ * convention.
+ *
+ * `app/opengraph-image.png` and `app/twitter-image.png` exist, and the layout
+ * used to carry a comment saying Next injects them automatically and that
+ * restating them here would make them double up. Neither half was true. A
+ * deeper segment that declares an `openGraph` object **replaces** the parent's
+ * wholesale — file-convention images included — and every real route lives
+ * under `app/[locale]/`, which declares one. Measured on the live site: zero
+ * `og:image` and zero `twitter:image` on every page. The only route that ever
+ * emitted them was the stock 404, which resolves at `app/` where the files sit.
+ *
+ * Every page also declares `twitter:card: summary_large_image` — a card that
+ * promises a large image — so the pages were advertising an image they never
+ * supplied.
+ *
+ * This is not a cosmetic SEO detail here: NICHE.md makes WhatsApp the primary
+ * channel and lib/whatsapp.js puts a listing URL in every seller enquiry, so
+ * every link the product generates was unfurling as a bare grey box.
+ *
+ * Paths are relative on purpose — `metadataBase` (app/[locale]/layout.js)
+ * resolves them to absolute URLs, which is what both protocols require.
+ */
+const SOCIAL_ALT =
+  "Autosouq.om — affordable used cars in Oman, OMR 1,000 to 6,000. Verified listings, real prices, one WhatsApp tap.";
+
+export const SOCIAL_IMAGE = {
+  openGraph: [
+    { url: "/opengraph-image.png", width: 1200, height: 630, alt: SOCIAL_ALT },
+  ],
+  twitter: [{ url: "/twitter-image.png", alt: SOCIAL_ALT }],
+};
 export const SITE_NAME = "Autosouq.om";
 
 /**
@@ -185,8 +219,14 @@ export function pageMetadata({
       description,
       siteName: SITE_NAME,
       locale: locale === "ar" ? "ar_OM" : "en_OM",
+      images: SOCIAL_IMAGE.openGraph,
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: SOCIAL_IMAGE.twitter,
+    },
     ...(robots ? { robots } : {}),
   };
 }
