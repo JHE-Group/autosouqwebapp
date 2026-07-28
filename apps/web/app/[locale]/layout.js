@@ -28,7 +28,7 @@ import { Analytics } from "@vercel/analytics/next";
 
 // Must be absolute for og:image / canonical to resolve. Falls back to the
 // production origin so a build without the env var still emits real URLs.
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://autosouq.om";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.autosouq.om";
 
 // The theme declared `font-family: Inter` in 45 places and loaded it with an
 // @import sitting *after* seven other @imports in style.scss — invalid CSS, so

@@ -21,7 +21,7 @@ import { IMPORT_ORIGIN } from "@/lib/listingLabels";
 import { DEFAULT_LOCALE, INDEXABLE_LOCALES } from "@/i18n/routing";
 
 // Must match app/layout.js, which sets `metadataBase` from the same variable.
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://autosouq.om";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.autosouq.om";
 export const SITE_NAME = "Autosouq.om";
 
 /**

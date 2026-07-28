@@ -14,6 +14,34 @@ must be HTTPS.
 
 ---
 
+## Host: `www.autosouq.om`, and only that
+
+The site is served from **`https://www.autosouq.om`**. Everything derived from
+`NEXT_PUBLIC_SITE_URL` — every canonical, every hreflang annotation, every
+sitemap `<loc>`, the `Sitemap:` line in robots.txt, and the Open Graph `url` —
+uses that value verbatim. Point it at the apex while serving from `www` and
+every page declares a canonical on a host it is not served from, which is the
+one thing a canonical must never do.
+
+**Redirect the apex to www with a 301** at the DNS/proxy layer:
+
+```
+https://autosouq.om/*  ->  301  ->  https://www.autosouq.om/*
+```
+
+Not a 302, and not both hosts answering 200 — two hosts serving identical
+content splits every ranking signal between them and doubles the crawl. Verify
+after deploying:
+
+```bash
+curl -sI https://autosouq.om | head -3        # expect 301 -> https://www.autosouq.om
+curl -s https://www.autosouq.om/robots.txt    # Sitemap: must say www
+```
+
+The code's fallback is `https://www.autosouq.om` so a forgotten variable fails
+toward the right host rather than the wrong one — but set the variable anyway,
+because the fallback is a safety net, not configuration.
+
 ## The one rule that catches everyone
 
 > **Every `NEXT_PUBLIC_*` variable is baked into the web app at BUILD time.**
@@ -78,7 +106,7 @@ The four that are specific to running on OVH:
 |---|---|---|
 | `PUBLIC_URL` | `https://cms.autosouq.om` | Without it Strapi derives absolute URLs from `HOST:PORT` and hands out **`http://0.0.0.0:1337`** as the base for admin links, password-reset emails and every media URL. |
 | `TRUST_PROXY` | `true` | Makes Strapi trust `X-Forwarded-*`. Without it, it sees every request as plain http from the proxy's IP: wrong protocol in generated URLs, wrong client IP in logs, `secure` cookies may not set. Leave `false` if nothing proxies it, since a trusted `X-Forwarded-For` is otherwise spoofable. |
-| `FRONTEND_URL` | `https://autosouq.om` | CORS allowlist. **The CMS refuses to boot in production without it** rather than silently fall back to a localhost-only list. |
+| `FRONTEND_URL` | `https://www.autosouq.om` | CORS allowlist. **The CMS refuses to boot in production without it** rather than silently fall back to a localhost-only list. |
 | `DATABASE_CLIENT` + `DATABASE_*` | `postgres` + connection details | **The CMS refuses to boot on SQLite in production.** The SQLite default writes to a gitignored `.tmp/data.db` that does not survive a rebuild — a deploy that forgot this variable would accept listings and lose them all at the next restart, silently. |
 
 On OVH Managed PostgreSQL set `DATABASE_SSL=true`.
@@ -160,7 +188,7 @@ monorepo `node_modules` (or runs an install on the box).
 | Variable | Exact shape | Notes |
 |---|---|---|
 | `NEXT_PUBLIC_STRAPI_URL` | `https://cms.autosouq.om` | **No trailing slash** — it is concatenated (`${STRAPI_URL}${path}`), so a slash yields `//uploads/…`. Must be the **public** hostname: a `127.0.0.1` or private address makes server fetches work while every image 400s, because Next refuses to optimise upstreams that resolve to a private IP. Must be **https** — see 2.3. |
-| `NEXT_PUBLIC_SITE_URL` | `https://autosouq.om` | Origin only, no path, no trailing slash. Feeds canonicals, hreflang, sitemap, `robots.txt`, OG images and WhatsApp deep links. |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.autosouq.om` | Origin only, no path, no trailing slash. Feeds canonicals, hreflang, sitemap, `robots.txt`, OG images and WhatsApp deep links. |
 | `NEXT_PUBLIC_AUTOSOUQ_WHATSAPP` | `968XXXXXXXX` | **Digits only**, no `+`, no spaces. Omani mobile (7 or 9 after the country code). **Currently unset — see the launch checklist.** |
 | `NEXT_PUBLIC_EMAILJS_*` | all three or none | Any missing and the contact form is replaced by a notice. |
 
@@ -224,9 +252,9 @@ in the repo and cannot be.
 ## 4. After deploying
 
 ```bash
-curl -sI https://autosouq.om | grep -i content-security-policy   # names the real CMS host?
-curl -s  https://autosouq.om/robots.txt | head                    # real domain, not localhost?
-curl -s  https://autosouq.om/sitemap.xml | grep -c "<url>"        # ~80, real domain?
+curl -sI https://www.autosouq.om | grep -i content-security-policy   # names the real CMS host?
+curl -s  https://www.autosouq.om/robots.txt | head                    # real domain, not localhost?
+curl -s  https://www.autosouq.om/sitemap.xml | grep -c "<url>"        # ~80, real domain?
 curl -sI https://cms.autosouq.om/api/listings                     # 200, https, CORS as expected?
 curl -s  https://cms.autosouq.om/robots.txt                       # Disallow: / — CMS is not indexable
 ```
@@ -238,8 +266,8 @@ CMS is http or on a private address.
 Run the smoke tests against the deployed site:
 
 ```bash
-BUY_FLOW_BASE=https://autosouq.om  node scripts/test-buy-flow.mjs
-CAROUSEL_BASE=https://autosouq.om  node scripts/test-carousels.mjs
+BUY_FLOW_BASE=https://www.autosouq.om  node scripts/test-buy-flow.mjs
+CAROUSEL_BASE=https://www.autosouq.om  node scripts/test-carousels.mjs
 ```
 
 ## 5. Known operational behaviour
