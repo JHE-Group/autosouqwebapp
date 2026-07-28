@@ -58,7 +58,11 @@ export function listingEnquiryMessage(car, opts = {}) {
   const {
     locale = DEFAULT_LOCALE,
     // Must be absolute — a relative path is useless in the seller's chat.
-    origin = process.env.NEXT_PUBLIC_SITE_URL || "https://autosouq.om",
+    // `www`, not the apex: the apex 308s to www, and this URL is the one thing
+    // the whole product funnels into — a seller's timestamped record of the
+    // listing and its price. lib/seo.js and app/[locale]/layout.js both fall
+    // back to www; this line was the only one that did not.
+    origin = process.env.NEXT_PUBLIC_SITE_URL || "https://www.autosouq.om",
   } = opts;
   // localePrefix is "always" — include the locale so English buyers stay on /en.
   const url = `${origin}/${locale}${listingPath(car)}`;

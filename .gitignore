@@ -4,9 +4,13 @@ node_modules
 .turbo
 dist
 build
-.env
-.env.local
-.env.*.local
+# Every dotenv form except the checked-in templates. The previous three-line
+# list (.env, .env.local, .env.*.local) left `.env.production` tracked — and
+# that is a first-class Next.js convention file that `next build` loads, so it
+# is exactly where a real production secret would land.
+.env*
+!.env.example
+!.env*.example
 *.log
 .strapi
 .tmp

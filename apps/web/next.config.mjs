@@ -104,6 +104,23 @@ function contentSecurityPolicy() {
     // hostile page can frame a listing invisibly and harvest that tap — on a
     // site whose entire proposition is that you are not being scammed.
     "frame-ancestors 'none'",
+    /**
+     * The Google Maps *embed*, which is not the Maps SDK.
+     *
+     * This policy previously declared no `frame-src`, so framing fell back to
+     * `default-src 'self'` and the location map on every listing detail page
+     * was blocked outright — a 360px blank box under the "الموقع" heading.
+     * The omission was reasoned about correctly for `ListingMap` (the SDK,
+     * genuinely unreachable behind the redirects below) and missed
+     * `CarDetails1.jsx`, a separate Google consumer on a different page.
+     *
+     * It stayed invisible because `data/cars.js` carries no coordinates, so
+     * only a real CMS listing with lat/lng renders the iframe.
+     *
+     * Both hosts: the `output=embed` URL can redirect to `maps.google.com`,
+     * and `frame-src` is enforced against redirect targets too.
+     */
+    "frame-src https://www.google.com https://maps.google.com",
     "form-action 'self'",
     "base-uri 'self'",
     "object-src 'none'",
@@ -113,6 +130,9 @@ function contentSecurityPolicy() {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Don't advertise the framework and its version to anyone scanning for
+  // known advisories. Next sends `X-Powered-By: Next.js` unless told not to.
+  poweredByHeader: false,
   /*
    * Security response headers. There were none before this: no CSP, no
    * framing protection, no MIME-sniff protection, no HSTS.
