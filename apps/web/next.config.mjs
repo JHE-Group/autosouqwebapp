@@ -77,7 +77,19 @@ function contentSecurityPolicy() {
      * img-src and font/style entries for it, deliberately.
      */
     ["img-src 'self' data:", strapi].filter(Boolean).join(" "),
-    "font-src 'self'",
+    /*
+     * `data:` is required — Swiper's core stylesheet embeds its `swiper-icons`
+     * font as a base64 WOFF in an `@font-face` rule, and that sheet is now
+     * imported by both carousel components.
+     *
+     * This was briefly dropped on the grounds that nothing used it, which was
+     * true of the *previous* build and stopped being true in the same change
+     * that imported `swiper/css`. The sell-flow smoke test caught it as a
+     * console CSP violation on every page carrying a carousel. Checked before
+     * restoring: this is the only `data:` font in the built CSS — next/font
+     * self-hosts Inter, Outfit and Cairo under /_next/static.
+     */
+    "font-src 'self' data:",
     /*
      * EmailJS only. Not `${strapi}`: every CMS call is server-side, and a grep
      * for `fetch(` across components/ and app/ returns nothing — the browser

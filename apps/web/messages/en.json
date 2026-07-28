@@ -558,7 +558,9 @@
     "asIsNotice": "This listing will carry the “{label}” label, because of the price. That is set by the band, not by you.",
     "reviewNotice": "Everything above is what you have told us. Autosouq marks a listing as checked only after we have spoken to you and seen the mulkiya — until then buyers see it as “not checked yet”, which is the truth.",
     "documentsHint": "Service records or a recent inspection report. Buyers at this price trust paperwork more than adjectives. Do not upload your mulkiya or ID here — those carry your personal details and are for the Autosouq check only, never for publication.",
-    "readyNotice": "Everything required is here. Publishing sends the listing to Autosouq for checking — a person reads it, calls you, and it goes live after that. It does not appear on the site the moment you press the button."
+    "readyNotice": "Everything required is here. Publishing sends the listing to Autosouq for checking — a person reads it, calls you, and it goes live after that. It does not appear on the site the moment you press the button.",
+    "metaTitle": "Add a listing — Autosouq.om",
+    "metaDescription": "Tell us about your car. We check every listing before it goes live."
   },
   "blog": {
     "brand": "Autosouq.om",
@@ -701,7 +703,8 @@
     "howItWorks": "How it works",
     "sellYourCar": "Sell your car",
     "terms": "Terms & Conditions",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "addListing": "Add a listing"
   },
   "meta": {
     "home": {
