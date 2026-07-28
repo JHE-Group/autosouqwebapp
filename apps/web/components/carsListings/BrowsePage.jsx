@@ -1,6 +1,4 @@
-import { Suspense } from "react";
 import Cars2 from "@/components/carsListings/Cars2";
-import ListingGridSkeleton from "@/components/carsListings/ListingCardSkeleton";
 import PriceBandNote from "@/components/common/PriceBandNote";
 import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
@@ -54,35 +52,7 @@ export default function BrowsePage({
           </div>
         </div>
       </section>
-      {/*
-        Cars2 reads `?price=` via useSearchParams, which needs a Suspense
-        boundary — without one Next opts this whole route out of static
-        rendering and the card grid disappears from the server HTML, taking the
-        crawlable listing links with it. The boundary is scoped to the results
-        block so the hero, the breadcrumb and the price-band note stay
-        prerendered.
-
-        The fallback is the six-card skeleton the route group used to render as
-        a loading.jsx, before that file was removed for holding these pages
-        dynamic. Same reasoning as then: six, not twelve, because a twelve-card
-        skeleton resolving to three cars is its own small dishonesty about how
-        much inventory is coming.
-      */}
-      <Suspense
-        fallback={
-          <section className="tf-section">
-            <div className="container">
-              <ListingGridSkeleton
-                count={6}
-                variant="grid"
-                className="asq-results asq-results--grid list-car-grid-4 gap-30"
-              />
-            </div>
-          </section>
-        }
-      >
-        <Cars2 listings={listings} resultsHeading={resultsHeading} />
-      </Suspense>
+      <Cars2 listings={listings} resultsHeading={resultsHeading} />
       <SiteFooter locale={locale} />
     </>
   );

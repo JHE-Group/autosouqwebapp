@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { allCars } from "@/data/cars";
+import { parsePriceParam } from "@/data/budgetBands";
 import { createInitialState, reducer } from "@/reducer/carFilterReducer";
 import { buildFilterOptions } from "@/lib/carOptions";
 import { activeFilterCount, applyFilters } from "./filterLogic";
@@ -18,36 +19,53 @@ import { activeFilterCount, applyFilters } from "./filterLogic";
  *
  * @param {object[]} listings Strapi listings; the demo catalogue when empty.
  * @param {number}   pageSize how many cards a page holds in this layout.
- * @param {[number, number]} [initialPrice] starting price range, e.g. decoded
- *   from a `?price=` link on the homepage.
+ * @param {boolean} [readPriceFromUrl] apply `?price=min-max` after hydration.
  *
- *   Passed in rather than read here. This hook is shared by five layouts, and
- *   calling `useSearchParams()` inside it would opt **all** of them into
- *   client-side rendering — hooks cannot be conditional, so an `if (fromUrl)`
- *   flag does not help. The build proved it: the first attempt failed
- *   prerendering `/[locale]/listing-grid-map`, a legacy route that never asked
- *   for any of this. Routing stays the caller's business.
+ *   Read from `window.location` in an effect rather than with
+ *   `useSearchParams()`, and that choice is the whole point. Two earlier
+ *   attempts were wrong in instructive ways:
+ *
+ *   1. Calling `useSearchParams()` inside this hook opted **all five** layouts
+ *      that share it into client rendering — hooks cannot be conditional, so a
+ *      flag does not help. The build caught it, failing to prerender
+ *      `/[locale]/listing-grid-map`.
+ *   2. Moving the call into Cars2 and wrapping it in `<Suspense>` fixed that
+ *      but relocated the damage: `useSearchParams()` forces its subtree to
+ *      client-render during static generation, so `/used-cars` and every facet
+ *      shipped a skeleton and **zero crawlable listing links** in their server
+ *      HTML. Measured — 0, against 6 on the homepage, which has no boundary.
+ *      On the site's main commercial page, whose internal links are how a
+ *      crawler reaches the listings, that is a bad trade.
+ *
+ *   Reading after hydration keeps the grid server-rendered and crawlable. The
+ *   cost is honest and small: a buyer arriving from a budget link sees the full
+ *   grid for one frame before it narrows. Better a brief flash for one entry
+ *   path than an uncrawlable results page for everyone.
  */
 export default function useCarFilters(
   listings,
-  { pageSize = 6, defaultGrid = false, initialPrice = null } = {},
+  { pageSize = 6, defaultGrid = false, readPriceFromUrl = false } = {},
 ) {
   // Strapi listings when the CMS has them, the theme demo data otherwise.
   const source = useMemo(() => (listings?.length ? listings : allCars), [listings]);
   const filterOptions = useMemo(() => buildFilterOptions(source), [source]);
 
-  /**
-   * Seed in the reducer's initialiser, not an effect.
-   *
-   * An effect would paint the whole unfiltered catalogue and then narrow it, so
-   * a buyer who tapped "OMR 1,500–2,500" would watch every car flash past
-   * before the ones they asked for — on a metered connection, having
-   * downloaded the difference.
-   */
   const [state, dispatch] = useReducer(reducer, source, (cars) => ({
-    ...createInitialState(cars, initialPrice ? { price: initialPrice } : {}),
+    ...createInitialState(cars),
     itemPerPage: pageSize,
   }));
+
+  // Apply `?price=` once, on mount. `window` rather than `useSearchParams` for
+  // the reason set out above; the empty dep array is deliberate, since this
+  // seeds an initial value and must not fight the user's own slider afterwards.
+  useEffect(() => {
+    if (!readPriceFromUrl || typeof window === "undefined") return;
+    const parsed = parsePriceParam(
+      new URLSearchParams(window.location.search).get("price"),
+    );
+    if (parsed) dispatch({ type: "SET_PRICE", payload: parsed });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [isGrid, setIsGrid] = useState(defaultGrid);
 

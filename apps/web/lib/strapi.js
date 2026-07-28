@@ -12,7 +12,35 @@ const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337"
 const PLACEHOLDER_DIR = "/assets/images/listings";
 const PLACEHOLDER_FALLBACK = "/assets/images/car-list/car1.jpg";
 
+/**
+ * Whether a listing with no photos may borrow a generated stand-in.
+ *
+ * **Off in production.** This is the one switch standing between the folder of
+ * AI-generated cars and a real seller's listing, and the collision is not
+ * hypothetical — it is the likely case. The stand-ins are named by slug, and
+ * the ten slugs they carry are the ten most ordinary cars in the band:
+ * `toyota-corolla-2015-xli`, `nissan-sunny-2019`, `honda-civic-2013` and so
+ * on. Strapi mints a listing's slug from its title automatically, and the
+ * gallery is optional. So a real seller who lists a Toyota Corolla 2015 XLI
+ * and skips the photos would have been handed a generated photograph of a
+ * silver Corolla that does not exist — specific colour, specific wheels,
+ * specific body condition — on a car a buyer can go and inspect.
+ *
+ * public/assets/images/listings/README.md states the rule in three words:
+ * "Never let these reach real buyers." The default path broke it.
+ *
+ * Left on outside production so the site still demos with plausible cards, and
+ * openable in production only by someone who sets the variable deliberately —
+ * the same shape as `demoSeedingEnabled()` in apps/cms/src/index.ts, and for
+ * the same reason.
+ */
+function placeholdersAllowed() {
+  if (process.env.NEXT_PUBLIC_ALLOW_PLACEHOLDER_PHOTOS === "true") return true;
+  return process.env.NODE_ENV !== "production";
+}
+
 function placeholderFor(slug) {
+  if (!placeholdersAllowed()) return null;
   return slug ? `${PLACEHOLDER_DIR}/${slug}.jpg` : PLACEHOLDER_FALLBACK;
 }
 
@@ -254,6 +282,13 @@ export function toCar(listing, locale = DEFAULT_LOCALE) {
     authorName: null,
     authorImage: null,
 
+    /**
+     * `null` rather than a stand-in when placeholders are off. Every card and
+     * the gallery already have a no-photo branch — ListingCard renders
+     * `.asq-card__img--none`, which costs no request — and "no photo yet" is
+     * both true and less misleading than the wrong photo. `hasPlaceholderImage`
+     * below still fires, so the buyer is told why the frame is empty.
+     */
     imgSrc: images[0]?.src ?? placeholderFor(listing.slug),
     // Same rule as the gallery: the resolved, locale-correct title — not the
     // raw English column, which is what a card on /ar was announcing before.
