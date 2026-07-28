@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useReducer, useState } from "react";
-import { allCars } from "@/data/cars";
 import { parsePriceParam } from "@/data/budgetBands";
 import { createInitialState, reducer } from "@/reducer/carFilterReducer";
 import { buildFilterOptions } from "@/lib/carOptions";
@@ -46,8 +45,18 @@ export default function useCarFilters(
   listings,
   { pageSize = 6, defaultGrid = false, readPriceFromUrl = false } = {},
 ) {
-  // Strapi listings when the CMS has them, the theme demo data otherwise.
-  const source = useMemo(() => (listings?.length ? listings : allCars), [listings]);
+  /**
+   * Trust what the server handed down. No demo fallback here.
+   *
+   * This used to substitute `allCars` whenever `listings` was empty, which
+   * silently overrode the server's decision: lib/listingSource.js stops serving
+   * the demo catalogue in production, and this line put it straight back. The
+   * result was a live site rendering twelve cars that do not exist while the
+   * server believed it had rendered an empty state.
+   *
+   * One place decides whether demo data is allowed, and it is the server.
+   */
+  const source = useMemo(() => listings ?? [], [listings]);
   const filterOptions = useMemo(() => buildFilterOptions(source), [source]);
 
   const [state, dispatch] = useReducer(reducer, source, (cars) => ({

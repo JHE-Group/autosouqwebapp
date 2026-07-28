@@ -24,13 +24,42 @@ import { getListingsResult } from "@/lib/strapi";
  *
  * So: render from `listings`, decide indexability from `cms`.
  */
+/**
+ * Whether the demo catalogue may stand in for real inventory.
+ *
+ * Same shape and same reason as `placeholdersAllowed()` in lib/strapi.js: a
+ * pre-launch convenience must not be able to reach a real buyer by default.
+ * Set NEXT_PUBLIC_ALLOW_DEMO_LISTINGS=true to force it on in production — for a
+ * staging deploy or a stakeholder demo, deliberately and temporarily.
+ */
+function demoFallbackAllowed() {
+  if (process.env.NEXT_PUBLIC_ALLOW_DEMO_LISTINGS === "true") return true;
+  return process.env.NODE_ENV !== "production";
+}
+
 export async function getBrowseData(locale) {
   // Next memoizes the underlying fetch per request, so asking twice in one
   // render (generateMetadata *and* the page) costs one round trip.
   const { listings: cms, ok } = await getListingsResult(locale);
   return {
-    /** What the page shows — CMS when it has anything, demo cars otherwise. */
-    listings: cms?.length ? cms : allCars,
+    /**
+     * What the page shows. CMS when it has anything; the demo catalogue only
+     * outside production.
+     *
+     * The fallback used to apply everywhere, and `noindex` was treated as
+     * sufficient protection. It is not — it protects Google, not the person
+     * looking at the page. On a live domain with an empty CMS a real visitor
+     * saw twelve cars that do not exist, on a site whose entire argument is
+     * that its listings are real. The demo cars carry no phone number, so
+     * nobody could act on one, but "you cannot contact the fictional car" is a
+     * poor defence of showing it.
+     *
+     * In production an empty CMS now renders the empty state, which every
+     * surface already has and which says something true. The fallback stays on
+     * outside production, where it does its actual job: letting the site be
+     * developed and demoed without a CMS running.
+     */
+    listings: cms?.length ? cms : demoFallbackAllowed() ? allCars : [],
     /** Real inventory only, never demo data. Gate indexability on this. */
     cms: cms ?? [],
     /** True while the visible catalogue is stand-ins rather than real cars. */
