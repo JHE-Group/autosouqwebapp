@@ -212,7 +212,8 @@ monorepo `node_modules` (or runs an install on the box).
 | `NEXT_PUBLIC_STRAPI_URL` | `https://app.autosouq.om` | **No trailing slash** — it is concatenated (`${STRAPI_URL}${path}`), so a slash yields `//uploads/…`. Must be the **public** hostname: a `127.0.0.1` or private address makes server fetches work while every image 400s, because Next refuses to optimise upstreams that resolve to a private IP. Must be **https** — see 2.3. |
 | `NEXT_PUBLIC_SITE_URL` | `https://www.autosouq.om` | Origin only, no path, no trailing slash. Feeds canonicals, hreflang, sitemap, `robots.txt`, OG images and WhatsApp deep links. |
 | `NEXT_PUBLIC_AUTOSOUQ_WHATSAPP` | `968XXXXXXXX` | **Digits only**, no `+`, no spaces. Omani mobile (7 or 9 after the country code). **Currently unset — see the launch checklist.** |
-| `NEXT_PUBLIC_EMAILJS_*` | all three or none | Any missing and the contact form is replaced by a notice. |
+| `NEXT_PUBLIC_EMAILJS_*` | all three or none |
+| `NEXT_PUBLIC_ALLOW_DEMO_LISTINGS` | `true` only while the CMS is empty | Any missing and the contact form is replaced by a notice. |
 
 `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is **not needed**: the only map component is
 reachable solely from routes that are permanently redirected, so no live page
