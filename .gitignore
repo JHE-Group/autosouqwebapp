@@ -19,3 +19,8 @@ apps/cms/build
 apps/cms/.cache
 coverage
 .vercel
+
+# Strapi data exports — contain user, role and permission records.
+# Never commit a database dump.
+.migration/
+*.tar.gz.enc
