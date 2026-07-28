@@ -14,6 +14,20 @@ import { absoluteUrl, SITE_URL } from "@/lib/seo";
  * public, and several of those routes are one click from a form. Paths are
  * listed per locale because `localePrefix: "always"` means bare `/dashboard`
  * is not the live URL.
+ *
+ * **`/add-listing` is deliberately NOT in this list**, though it used to be.
+ * It is not an account page — it is the public sell form, linked from the
+ * homepage hero CTA, the homepage empty state and four blog posts in both
+ * locales. Disallowing a URL we link to sitewide is how a page ends up
+ * "Indexed, though blocked by robots.txt": the crawler is told to follow the
+ * link but forbidden from fetching the page, so it can never read the
+ * `noindex` that would have kept it out, and lists the bare URL with no
+ * snippet instead.
+ *
+ * The `noindex, follow` on app/[locale]/(sell)/layout.jsx is the instrument
+ * that keeps it out of the index — and a `noindex` only works if the crawler
+ * is allowed to fetch the page and read it. Same reasoning as the canonical
+ * note above; robots.txt controls crawling, not indexing.
  */
 const ACCOUNT_PATHS = [
   "/dashboard",
@@ -21,7 +35,6 @@ const ACCOUNT_PATHS = [
   "/my-listing",
   "/my-favorite",
   "/my-review",
-  "/add-listing",
   "/change-password",
   "/message",
 ];
