@@ -40,15 +40,33 @@ export function H3({ children }) {
  * restored on the element. Same approach and same reasoning as
  * app/(info)/_components/BulletList — the SCSS is owned elsewhere this sprint.
  */
-const BULLETS = { listStyle: "disc", paddingLeft: "1.25rem" };
-const NUMBERS = { listStyle: "decimal", paddingLeft: "1.25rem" };
+const BULLETS = { listStyle: "disc", paddingInlineStart: "1.25rem" };
+const NUMBERS = { listStyle: "decimal", paddingInlineStart: "1.25rem" };
 
+/**
+ * The marker has to be set on the `li`, not inherited from the list.
+ *
+ * The reset is `ul, li { list-style: none }` — it matches the `li` *directly*,
+ * and a rule matching the element always beats a value inherited from its
+ * parent. Setting `list-style` on the ul/ol above (what this file did) never
+ * reached the marker: measured in the browser, `ul` computed `disc` while
+ * every `li` computed `none`, so these pages rendered with no bullets at all.
+ *
+ * It mattered most on ordered lists — the ROP ownership-transfer procedure in
+ * the guides rendered as unnumbered paragraphs, losing the step order.
+ *
+ * `inherit` rather than a literal so one `li` serves both the bulleted and the
+ * numbered case, taking whichever the parent declares. `paddingInlineStart`
+ * above rather than `paddingLeft` so the indent follows the writing direction
+ * — Arabic is the default locale, and a physical `left` would paint markers on
+ * the wrong side of RTL prose.
+ */
 function Items({ items }) {
   return items.map((item, index) => (
     <li
       key={index}
       className="font-2 fs-16 lh-26 mb-2"
-      style={{ display: "list-item" }}
+      style={{ display: "list-item", listStyleType: "inherit" }}
     >
       {item}
     </li>

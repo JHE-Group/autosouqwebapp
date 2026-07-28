@@ -2269,13 +2269,26 @@ fieldset {
     font-size: 12px;
   }
 }
-.mobile-menu .navigation li > ul {
-  display: block !important;
-  height: 0px;
-  overflow: hidden;
-  padding: 0px 15px;
-  transition: 0.5s;
-}
+/**
+ * The theme's jQuery accordion rule is gone.
+ *
+ * It was `display: block !important; height: 0; overflow: hidden`, and it only
+ * ever worked because the old jQuery wrote an inline `height` from
+ * `scrollHeight` on toggle. components/headers/MobileNav.jsx replaced that JS
+ * with `hidden={!open}` and left this behind, so nothing set a height any more:
+ * tapping a submenu chevron added `.open`, removed `hidden`, rotated the
+ * chevron and flipped `aria-expanded` to `true` while the ul stayed 0px. The
+ * submenu could not be opened at all on mobile.
+ *
+ * `display: block !important` also beat `_header.scss`'s
+ * `.mobile-menu .navigation > li > ul[hidden] { display: none }`, which left
+ * the collapsed links in the tab order — focusable, 48px tall, clipped out of
+ * sight (WCAG 2.4.7).
+ *
+ * _header.scss:749-766 already styles this list correctly and does the
+ * collapsing via `[hidden]`, so deleting the rule is the whole fix. The
+ * third-level rule below is kept for whenever a third level exists.
+ */
 .mobile-menu .navigation li > ul > li > ul {
   padding: 0px 15px;
 }

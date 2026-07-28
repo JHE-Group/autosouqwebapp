@@ -7,7 +7,7 @@ import React from "react";
  * element rather than by adding a rule to the SCSS (owned elsewhere this
  * sprint). Layout only — no colour, no new tokens.
  */
-const LIST_STYLE = { listStyle: "disc", paddingLeft: "1.25rem" };
+const LIST_STYLE = { listStyle: "disc", paddingInlineStart: "1.25rem" };
 
 export default function BulletList({ items, className = "mb-30" }) {
   return (
@@ -16,7 +16,11 @@ export default function BulletList({ items, className = "mb-30" }) {
         <li
           key={index}
           className="font-2 fs-16 lh-26 mb-2"
-          style={{ display: "list-item" }}
+          // The marker must be set on the li: the reset matches `li` directly,
+          // so it beats anything inherited from the ul above. Setting it only
+          // on the parent left every list on these pages with no bullets at
+          // all. See components/guides/Prose.jsx for the full note.
+          style={{ display: "list-item", listStyleType: "inherit" }}
         >
           {item}
         </li>
