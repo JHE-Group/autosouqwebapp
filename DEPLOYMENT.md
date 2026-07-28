@@ -72,7 +72,7 @@ step, not a note.
 - **pnpm 10.12.1** (`packageManager`).
 - **PostgreSQL.** Not SQLite — see 1.3.
 - A **reverse proxy terminating TLS** (nginx / HAProxy / OVH load balancer) in
-  front of Strapi on `cms.autosouq.om` or similar.
+  front of Strapi on `app.autosouq.om` or similar.
 
 ### 1.2 Install and build
 
@@ -104,7 +104,7 @@ The four that are specific to running on OVH:
 
 | Variable | Value | Why |
 |---|---|---|
-| `PUBLIC_URL` | `https://cms.autosouq.om` | Without it Strapi derives absolute URLs from `HOST:PORT` and hands out **`http://0.0.0.0:1337`** as the base for admin links, password-reset emails and every media URL. |
+| `PUBLIC_URL` | `https://app.autosouq.om` | Without it Strapi derives absolute URLs from `HOST:PORT` and hands out **`http://0.0.0.0:1337`** as the base for admin links, password-reset emails and every media URL. |
 | `TRUST_PROXY` | `true` | Makes Strapi trust `X-Forwarded-*`. Without it, it sees every request as plain http from the proxy's IP: wrong protocol in generated URLs, wrong client IP in logs, `secure` cookies may not set. Leave `false` if nothing proxies it, since a trusted `X-Forwarded-For` is otherwise spoofable. |
 | `FRONTEND_URL` | `https://www.autosouq.om` | CORS allowlist. **The CMS refuses to boot in production without it** rather than silently fall back to a localhost-only list. |
 | `DATABASE_CLIENT` + `DATABASE_*` | `postgres` + connection details | **The CMS refuses to boot on SQLite in production.** The SQLite default writes to a gitignored `.tmp/data.db` that does not survive a rebuild — a deploy that forgot this variable would accept listings and lose them all at the next restart, silently. |
@@ -118,7 +118,7 @@ look wrong. Read the first twenty lines of the log after a deploy.
 
 ```nginx
 server {
-  server_name cms.autosouq.om;
+  server_name app.autosouq.om;
   # ... TLS config ...
 
   # Strapi's per-file upload limit is 12 MB (UPLOAD_SIZE_LIMIT_MB).
@@ -187,7 +187,7 @@ monorepo `node_modules` (or runs an install on the box).
 
 | Variable | Exact shape | Notes |
 |---|---|---|
-| `NEXT_PUBLIC_STRAPI_URL` | `https://cms.autosouq.om` | **No trailing slash** — it is concatenated (`${STRAPI_URL}${path}`), so a slash yields `//uploads/…`. Must be the **public** hostname: a `127.0.0.1` or private address makes server fetches work while every image 400s, because Next refuses to optimise upstreams that resolve to a private IP. Must be **https** — see 2.3. |
+| `NEXT_PUBLIC_STRAPI_URL` | `https://app.autosouq.om` | **No trailing slash** — it is concatenated (`${STRAPI_URL}${path}`), so a slash yields `//uploads/…`. Must be the **public** hostname: a `127.0.0.1` or private address makes server fetches work while every image 400s, because Next refuses to optimise upstreams that resolve to a private IP. Must be **https** — see 2.3. |
 | `NEXT_PUBLIC_SITE_URL` | `https://www.autosouq.om` | Origin only, no path, no trailing slash. Feeds canonicals, hreflang, sitemap, `robots.txt`, OG images and WhatsApp deep links. |
 | `NEXT_PUBLIC_AUTOSOUQ_WHATSAPP` | `968XXXXXXXX` | **Digits only**, no `+`, no spaces. Omani mobile (7 or 9 after the country code). **Currently unset — see the launch checklist.** |
 | `NEXT_PUBLIC_EMAILJS_*` | all three or none | Any missing and the contact form is replaced by a notice. |
@@ -255,8 +255,8 @@ in the repo and cannot be.
 curl -sI https://www.autosouq.om | grep -i content-security-policy   # names the real CMS host?
 curl -s  https://www.autosouq.om/robots.txt | head                    # real domain, not localhost?
 curl -s  https://www.autosouq.om/sitemap.xml | grep -c "<url>"        # ~80, real domain?
-curl -sI https://cms.autosouq.om/api/listings                     # 200, https, CORS as expected?
-curl -s  https://cms.autosouq.om/robots.txt                       # Disallow: / — CMS is not indexable
+curl -sI https://app.autosouq.om/api/listings                     # 200, https, CORS as expected?
+curl -s  https://app.autosouq.om/robots.txt                       # Disallow: / — CMS is not indexable
 ```
 
 Then open a listing page and **tap a photo** — that exercises the one path where
