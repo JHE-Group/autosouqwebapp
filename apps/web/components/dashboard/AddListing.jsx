@@ -60,14 +60,15 @@ import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels
  * Keep these four numbers identical to BAND in lifecycles.ts. NICHE.md calls
  * the band "the entire identity of the business", not a preference.
  */
-const BAND = {
-  ASIS_MIN: 1000,
-  ASIS_MAX: 1499,
-  STANDARD_MIN: 1500,
-  MAX: 6000,
-};
-
-const CURRENCY = "OMR";
+// Moved to lib/priceBand.js so the homepage budget bands can partition exactly
+// this range without a second copy of the numbers. check-price-band.mjs now
+// reads that file for the web side.
+//
+// `import`, not `export … from`: a re-export forwards the names to this
+// module's consumers without binding them locally, so every `BAND.MAX` below
+// was a ReferenceError. Caught by the `no-undef` rule, which exists because
+// exactly this class of mistake once shipped in ListingCard.jsx.
+import { BAND, CURRENCY } from "@/lib/priceBand";
 
 const money = (n) => `${CURRENCY} ${n.toLocaleString("en-US")}`;
 

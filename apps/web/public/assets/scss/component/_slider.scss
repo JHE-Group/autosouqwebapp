@@ -2240,3 +2240,76 @@ $hp-hero-scrim-top: linear-gradient(
     border-color: $color-3;
   }
 }
+
+/* Shop by budget — homepage band short-links.
+   Full-width rows on a phone, three-up on desktop. Rows rather than a chip
+   scroller: at 360px a scroller hides the higher bands off-screen with no
+   reliable affordance, and RTL horizontal overflow is inconsistent. */
+.hp-budget__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-3;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 900px) {
+  .hp-budget__list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: $space-4;
+  }
+}
+
+.hp-budget__rung {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  // `min-block-size`, never `height`: _arabic.scss forces line-height 1.85 on
+  // Arabic list text, so a label that wraps must be allowed to grow the row.
+  min-block-size: 56px;
+  padding-block: $space-3;
+  padding-inline: $space-4;
+  border: 1px solid $color-8;
+  border-radius: $radius-control;
+  background: $color-1;
+  // The theme's base typography is unowned, so declare rather than inherit.
+  font-family: $font-2;
+  font-size: $fs-base;
+  line-height: $lh-sm;
+  color: $color-2;
+  text-decoration: none;
+  @include transition3;
+  @include focusable;
+}
+
+.hp-budget__label {
+  font-weight: 600;
+}
+
+.hp-budget__count {
+  font-size: $fs-sm;
+  color: $color-7; // 6.11:1 on white
+  white-space: nowrap;
+}
+
+a.hp-budget__rung:hover {
+  background: $color-3;
+  border-color: $color-3;
+  color: $color-on-accent;
+}
+
+// Both label and count must flip on the accent fill — leaving the count at
+// $color-7 over terracotta is an untested pairing that fails contrast.
+a.hp-budget__rung:hover .hp-budget__count {
+  color: $color-on-accent;
+}
+
+// A band with no cars is not a link. Muted, still legible, still present:
+// the band is a fact about the product, not about today's stock.
+.hp-budget__rung--empty {
+  color: $color-7;
+  background: $bg-color4;
+  cursor: default;
+}

@@ -4,9 +4,21 @@
 
 ## The niche
 
-Autosouq.om is Oman's marketplace for **affordable used cars only: OMR 1,500 to 6,000**.
-Nothing above 6,000 is ever listed. Cars from **1,000–1,499** may be accepted but are labelled
-**"sold as-is"**.
+Autosouq.om is Oman's marketplace for **affordable used cars only: OMR 1,000 to 6,000**.
+Nothing above 6,000 is ever listed, and nothing below 1,000.
+
+The band has two tiers, and the split is a disclosure rule, not a second product:
+
+| Tier | Range | Rule |
+|---|---|---|
+| **Sold as-is** | OMR 1,000–1,499 | Accepted, and **labelled "sold as-is"** on the card and the listing |
+| **Standard** | OMR 1,500–6,000 | The main band |
+
+*The headline here used to read "OMR 1,500 to 6,000", with the 1,000–1,499 tier explained in
+the sentence after it. That is the number a reader quotes, so it made the floor ambiguous —
+while the code has always enforced 1,000. `scripts/check-price-band.mjs` asserts the four
+constants agree across the CMS schema, the CMS lifecycle hooks and the seller form; this file
+now agrees with them too.*
 
 This price band is the entire identity of the business — we are deliberately **NOT** a general car
 site, **not** a new-car site, **not** a luxury site.

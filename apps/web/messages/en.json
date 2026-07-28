@@ -106,7 +106,7 @@
   "browse": {
     "hub": {
       "title": "Used cars in Oman under OMR 6,000",
-      "lead": "Autosouq — affordable used cars from OMR 1,500 to 6,000. Real listed prices, GCC-spec or import stated, and one WhatsApp tap to the seller.",
+      "lead": "Autosouq — affordable used cars from OMR 1,000 to 6,000. Real listed prices, GCC-spec or import stated, and one WhatsApp tap to the seller.",
       "resultsHeading": "Browse cars"
     },
     "field": {
@@ -713,7 +713,7 @@
     },
     "usedCars": {
       "title": "Used cars in Oman under OMR 6,000",
-      "description": "Browse affordable used cars across Oman, OMR 1,500 to 6,000. Real prices, verified listings, GCC-spec or import stated, and one WhatsApp tap to the seller."
+      "description": "Browse affordable used cars across Oman, OMR 1,000 to 6,000. Real prices, verified listings, GCC-spec or import stated, and one WhatsApp tap to the seller."
     },
     "guides": {
       "title": "Guides to buying a used car in Oman",
@@ -748,5 +748,18 @@
       "description": "What Autosouq.om collects, why, and what we do not do with it. Plain-language draft pending legal review before launch."
     },
     "listingNotFound": "Listing not found"
+  },
+  "budget": {
+    "title": "Shop by budget",
+    "lede": "Real asking prices, OMR 1,000–6,000. The number beside each band is what is listed right now.",
+    "srPrefix": "Used cars priced",
+    "amount": "OMR <amt>{amount}</amt>",
+    "count": "{count, plural, =0 {None right now} one {1 car} other {# cars}}",
+    "band": {
+      "asIs": "1,000–1,500",
+      "entry": "1,500–2,500",
+      "mid": "2,500–4,000",
+      "upper": "4,000–6,000"
+    }
   }
 }

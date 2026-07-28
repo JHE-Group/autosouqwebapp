@@ -4,8 +4,9 @@ import Banner from "@/components/common/Banner";
 import Cars from "@/components/common/Cars";
 import Guides from "@/components/homes/home-1/Guides";
 import Hero from "@/components/homes/home-1/Hero";
+import ShopByBudget from "@/components/homes/home-1/ShopByBudget";
 import TrustPromises from "@/components/homes/home-1/TrustPromises";
-import { getListings } from "@/lib/strapi";
+import { getBrowseData } from "@/lib/listingSource";
 import { pageMetadata } from "@/lib/seo";
 import { getTranslations } from "next-intl/server";
 
@@ -63,7 +64,19 @@ export default async function Home({ params }) {
   // pages. The home page used to render `data/cars.js` unconditionally, so the
   // real CMS listings — and the trust signals that only exist on them — never
   // appeared on it.
-  const listings = await getListings(locale);
+  /*
+   * `getBrowseData`, not `getListings`, because the budget section needs both
+   * halves separately: `listings` to render (demo fallback included, so the
+   * grid is never bare) and `cms` to count from.
+   *
+   * Deliberately no `assertCmsAvailable` here. That guard is right on the facet
+   * routes, where the alternative is caching a wrong 404 — but it throws, and
+   * throwing on `/` would take the site's highest-authority page down for a
+   * thirty-second CMS restart. The homepage degrades instead: with no real
+   * inventory every band counts zero and renders as plain text, which is
+   * honest, and the grid below still shows something.
+   */
+  const { listings, cms } = await getBrowseData(locale);
   return (
     <>
       <div className="header-fixed">
@@ -72,6 +85,10 @@ export default async function Home({ params }) {
       <main>
         <Hero />
         <TrustPromises />
+        {/* After the trust promise, before the grid: "is there anything at my
+            number?" narrows the hero's claim, and is only worth asking once we
+            have said why to believe the prices. */}
+        <ShopByBudget listings={cms} locale={locale} />
         <Cars listings={listings} locale={locale} />
         <Guides />
         <Banner />

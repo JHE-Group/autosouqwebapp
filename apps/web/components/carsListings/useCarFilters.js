@@ -18,14 +18,34 @@ import { activeFilterCount, applyFilters } from "./filterLogic";
  *
  * @param {object[]} listings Strapi listings; the demo catalogue when empty.
  * @param {number}   pageSize how many cards a page holds in this layout.
+ * @param {[number, number]} [initialPrice] starting price range, e.g. decoded
+ *   from a `?price=` link on the homepage.
+ *
+ *   Passed in rather than read here. This hook is shared by five layouts, and
+ *   calling `useSearchParams()` inside it would opt **all** of them into
+ *   client-side rendering — hooks cannot be conditional, so an `if (fromUrl)`
+ *   flag does not help. The build proved it: the first attempt failed
+ *   prerendering `/[locale]/listing-grid-map`, a legacy route that never asked
+ *   for any of this. Routing stays the caller's business.
  */
-export default function useCarFilters(listings, { pageSize = 6, defaultGrid = false } = {}) {
+export default function useCarFilters(
+  listings,
+  { pageSize = 6, defaultGrid = false, initialPrice = null } = {},
+) {
   // Strapi listings when the CMS has them, the theme demo data otherwise.
   const source = useMemo(() => (listings?.length ? listings : allCars), [listings]);
   const filterOptions = useMemo(() => buildFilterOptions(source), [source]);
 
+  /**
+   * Seed in the reducer's initialiser, not an effect.
+   *
+   * An effect would paint the whole unfiltered catalogue and then narrow it, so
+   * a buyer who tapped "OMR 1,500–2,500" would watch every car flash past
+   * before the ones they asked for — on a metered connection, having
+   * downloaded the difference.
+   */
   const [state, dispatch] = useReducer(reducer, source, (cars) => ({
-    ...createInitialState(cars),
+    ...createInitialState(cars, initialPrice ? { price: initialPrice } : {}),
     itemPerPage: pageSize,
   }));
 
