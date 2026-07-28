@@ -2,7 +2,6 @@
 
 import { formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
-import { carData } from "@/data/cars";
 import { A11y, Navigation, Pagination } from "swiper/modules";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -11,11 +10,25 @@ import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import { useLocale, useTranslations } from "next-intl";
-export default function RecomandedCars() {
+/**
+ * The "Recommended" carousel on /about-us.
+ *
+ * `listings` is required. This used to import `carData` from data/cars.js and
+ * map it directly, so /about-us — `index, follow`, sitemap-nominated, and
+ * about nothing except the listings being real — shipped eight fabricated cars
+ * with prices no matter what the CMS held. Every other surface routes through
+ * lib/listingSource.js; this one did not.
+ *
+ * Renders nothing when there is nothing real to show, rather than reaching for
+ * a stand-in: the same shape the rest of the app uses for an empty catalogue.
+ */
+export default function RecomandedCars({ listings, locale: localeProp }) {
   const t = useTranslations("browse.card");
   const tCommon = useTranslations("common");
   const tAbout = useTranslations("aboutPage");
-  const locale = useLocale();
+  const activeLocale = useLocale();
+  const locale = localeProp ?? activeLocale;
+  const cars = listings ?? [];
   const swiperOptions = {
     speed: 1000,
     spaceBetween: 30,
@@ -44,6 +57,11 @@ export default function RecomandedCars() {
       },
     },
   };
+
+  // Nothing real to show — render nothing rather than a heading over an empty
+  // carousel. Hooks above are unconditional, so this early return is safe.
+  if (cars.length === 0) return null;
+
   return (
     <section className="tf-section3">
       <div className="container">
@@ -78,7 +96,7 @@ export default function RecomandedCars() {
               modules={[A11y, Navigation, Pagination]}
               className="swiper-container tf-sw-mobile3"
             >
-              {carData.map((car, i) => (
+              {cars.map((car, i) => (
                 <SwiperSlide key={i} className="swiper-slide">
                   <div className="box-car-list hv-one">
                     <div className="image-group relative">
@@ -190,7 +208,15 @@ export default function RecomandedCars() {
                       <div className="money fs-20 fw-5 lh-25 text-color-3">
                         {formatPrice(car.price, car.currency, locale)}
                       </div>
-                      <ListingSignals car={car} className="mt-2" />
+                      {/* `locale` was missing here, and ListingSignals
+                          defaults to DEFAULT_LOCALE ("ar") — so /en/about-us
+                          rendered the Arabic pills خليجي and وارد أمريكي beside
+                          English copy. Every other card call site threads it. */}
+                      <ListingSignals
+                        car={car}
+                        locale={locale}
+                        className="mt-2"
+                      />
                       <div className="icon-box flex flex-wrap mt-2">
                         <div className="icons flex-three">
                           <i className="icon-autodeal-km1" />

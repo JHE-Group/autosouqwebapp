@@ -597,9 +597,20 @@
     "recommendedTitle": "Recommended Used Cars For You",
     "whyLede": "The reasons to use Autosouq instead of the general classifieds: real prices, verified listings, GCC spec or import stated plainly, and one WhatsApp tap to the seller."
   },
+  "errorPage": {
+    "title": "Something went wrong",
+    "body": "This page didn't load. It is usually temporary — please try again.",
+    "retry": "Try again"
+  },
+  "notFound": {
+    "title": "We couldn't find that page",
+    "body": "The car may have sold, or the link may be out of date. Everything currently listed is on the browse page.",
+    "home": "Go to the home page"
+  },
   "homeCars": {
     "title": "Cars listed right now",
-    "lede": "Every one of them from OMR 1,000 to 6,000, with its spec and its check status on the card."
+    "lede": "Every one of them from OMR 1,000 to 6,000, with its spec and its check status on the card.",
+    "empty": "No cars are listed at the moment. New ones go up as soon as they are checked — <cta>list yours</cta>."
   },
   "contactPage": {
     "h1": "Contact us",

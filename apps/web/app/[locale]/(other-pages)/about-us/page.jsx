@@ -7,6 +7,7 @@ import Banner from "@/components/otherPages/about/Banner";
 import React from "react";
 
 import { pageMetadata } from "@/lib/seo";
+import { getBrowseData } from "@/lib/listingSource";
 import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata({ params }) {
@@ -21,6 +22,17 @@ export async function generateMetadata({ params }) {
 }
 export default async function page({ params }) {
   const { locale } = await params;
+  /**
+   * Real listings, through the same gate as every other page.
+   *
+   * `RecomandedCars` took no props and mapped `data/cars.js` directly, so this
+   * page shipped eight fabricated cars — with prices, spec pills and
+   * `/car/{slug}` links — whether or not the CMS had any inventory. It is
+   * `index, follow` and sitemap-nominated, and its entire subject is that the
+   * listings on this site are real ones that were checked. It was the single
+   * surface bypassing the demo gate that every other page respects.
+   */
+  const { listings } = await getBrowseData(locale);
   return (
     <>
       <div className="header-fixed">
@@ -29,7 +41,7 @@ export default async function page({ params }) {
       <Banner />
       <div className="mt-5 pt-5"></div>
       <Features />
-      <RecomandedCars />
+      <RecomandedCars listings={listings} locale={locale} />
       <SiteFooter locale={locale} />
     </>
   );

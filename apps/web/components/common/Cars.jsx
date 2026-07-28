@@ -5,7 +5,6 @@ import ListingSignals from "@/components/common/ListingSignals";
 import PlaceholderPhotoTag from "@/components/common/PlaceholderPhotoTag";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
 import Image from "next/image";
-import { cars } from "@/data/cars";
 import { DEFAULT_LOCALE } from "@/lib/locale";
 import { getTranslations } from "next-intl/server";
 
@@ -50,9 +49,23 @@ export default async function Cars({
   const t = await getTranslations({ locale, namespace: "homeCars" });
   const tCard = await getTranslations({ locale, namespace: "browse.card" });
   const tCommon = await getTranslations({ locale, namespace: "common" });
-  // Strapi listings when the CMS has them, the theme demo data otherwise —
-  // the same idiom as carsListings/Cars1.
-  const source = listings?.length ? listings : cars;
+  /**
+   * Render exactly what the server resolved — never a local fallback.
+   *
+   * This used to read `listings?.length ? listings : cars`, substituting the
+   * `data/cars.js` demo array back in whenever the CMS returned nothing. That
+   * is the same defect `carsListings/useCarFilters.js` was fixed for, and it
+   * silently overrode the one gate that decides whether invented inventory may
+   * be shown at all: `getBrowseData()` correctly returns `[]` in production
+   * with the demo flag off, and this line put six fabricated cars back on the
+   * home page anyway — `index, follow`, with prices, above a ShopByBudget
+   * panel that read the CMS directly and truthfully printed "None right now"
+   * in all four bands.
+   *
+   * The decision belongs to `lib/listingSource.js` and nowhere else. If the
+   * demo catalogue is wanted, that gate is what turns it on.
+   */
+  const source = listings ?? [];
   const shown = source.slice(0, limit);
 
   return (
@@ -72,12 +85,13 @@ export default async function Cars({
 
         {shown.length === 0 ? (
           <p className="hp-empty">
-            No cars are listed at the moment. New ones go up as soon as they are
-            checked —{" "}
-            <Link href="/add-listing" className="hp-link">
-              list yours
-            </Link>
-            .
+            {t.rich("empty", {
+              cta: (chunks) => (
+                <Link href="/add-listing" className="hp-link">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </p>
         ) : (
           <div className="hp-cars__grid">
