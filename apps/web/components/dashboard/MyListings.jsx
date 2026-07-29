@@ -9,12 +9,17 @@ import { useTranslations } from "next-intl";
  * found" was a literal string that never matched the five rows underneath;
  * ListingsTable counts the array it is given.
  *
- * Empty until auth + seller listing API exist — never show demo inventory as
- * the signed-in seller's cars.
+ * Rows come from the page, which reads them server-side via
+ * `/api/seller/listings` — scoped by the session token, so a seller sees their
+ * own cars and only those. Drafts are included and marked pending: a listing
+ * awaiting review is the state a seller most wants to see, and hiding it would
+ * read as the submission having been lost.
+ *
+ * Still never demo inventory. The default is `[]`, not a sample.
  */
-export default function MyListings() {
+export default function MyListings({ listings = [] }) {
   const t = useTranslations("dashboard");
-  const myListings = [];
+  const myListings = listings;
 
   return (
     <div className="container">

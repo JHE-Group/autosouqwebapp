@@ -251,6 +251,63 @@ export async function getToken() {
 }
 
 /**
+ * The signed-in seller's own listings, drafts included.
+ *
+ * Goes to `/api/seller/listings`, which scopes by the token rather than by
+ * anything we send. The ordinary content API cannot answer this — `find`
+ * returns published documents only, and `seller` is `private` so it is not even
+ * filterable — and adding a filter would be the wrong fix, since a
+ * client-supplied owner is a request to be lied to.
+ *
+ * Returns `[]` rather than throwing. A dashboard that renders empty during a
+ * CMS outage is a bad afternoon; one that 500s is a support call.
+ */
+export async function getMyListings() {
+  const token = await getToken();
+  if (!token) return [];
+
+  try {
+    const res = await fetch(`${STRAPI_URL}/api/seller/listings`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+
+    if (!res.ok) return [];
+
+    const body = await res.json().catch(() => null);
+    const rows = Array.isArray(body?.data) ? body.data : [];
+
+    /**
+     * Translate the CMS's vocabulary into the table's.
+     *
+     * ListingsTable predates the API and speaks its own dialect: `status` as
+     * "Live" / "Sold" / "Pending", and `km` rather than `mileage`. Adapting
+     * here rather than rewriting the component keeps one shape for a table that
+     * is also rendered on /dashboard, and keeps the CMS free to name its own
+     * fields — `state` is derived from `publishedAt`, which is Strapi's word,
+     * not a seller's.
+     *
+     * A published listing marked sold reads "Sold" rather than "Live": the
+     * seller's question is whether the car is still available, not whether the
+     * document is published.
+     */
+    return rows.map((row) => ({
+      ...row,
+      km: typeof row.mileage === "number" ? row.mileage : undefined,
+      status:
+        row.state === "live"
+          ? row.listingStatus === "sold"
+            ? "Sold"
+            : "Live"
+          : "Pending",
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Who is signed in, or null.
  *
  * Validated against the CMS on every call rather than decoded locally. A JWT
