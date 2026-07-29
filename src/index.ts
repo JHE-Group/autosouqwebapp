@@ -35,28 +35,60 @@ const PUBLIC_ACTIONS = [
  * `auth.emailConfirmation` and `auth.sendEmailConfirmation` to `roleType:
  * 'public'`, with `allow_register: true` by default.
  *
- * Autosouq has no user accounts at all — there is no login, no session, and
- * every write goes through the admin UI by a human (see
- * apps/web/lib/submitListing.js). So `POST /api/auth/local/register` was an
- * unauthenticated, unthrottled, unconfirmed write endpoint into the production
- * `up_users` table, and `auth.forgotPassword` becomes an unauthenticated
- * mail-send endpoint the moment an email provider is configured.
+ * `auth.forgotPassword` becomes an unauthenticated mail-send endpoint the
+ * moment an email provider is configured, and the confirmation actions are
+ * meaningless until one is — no provider is configured, so they stay shut.
  *
- * The second-order risk is the one that matters: the plan on record is to give
- * the *Authenticated* role write access to listings. On the day that lands,
- * every junk account created in the meantime becomes a valid listing-creation
- * credential.
+ * ## Why `auth.register` is no longer on this list
  *
- * Revoked on **every boot**, not once, so that a mis-click in the admin UI
- * cannot silently reopen the endpoint and outlive a deploy.
+ * It was, and the reason it was is worth keeping in view. The note read:
+ *
+ *   "The plan on record is to give the Authenticated role write access to
+ *    listings. On the day that lands, every junk account created in the
+ *    meantime becomes a valid listing-creation credential."
+ *
+ * That day is this commit, so the ordering that warning asked for has been
+ * honoured rather than ignored: the seller write-rules in
+ * src/api/listing/controllers/listing.ts landed *first* and were tested against
+ * a running instance before this line was touched. An account is therefore no
+ * longer a blank cheque. What a junk account can now do is create a **draft**
+ * it owns — invisible to the public API, unable to set `verified` or
+ * `featured`, and requiring a human to press Publish before it is on the site.
+ *
+ * The residual risk is table growth in `up_users`, not published spam. That is
+ * an operational annoyance rather than a trust failure, and it is the price of
+ * having sellers at all.
+ *
+ * Two things this does NOT yet have, both deliberate and both worth fixing
+ * before this sees real traffic: no rate limit on registration, and no
+ * verification that the account belongs to a real person. Phone OTP replaces
+ * email/password precisely to close the second one.
  */
 const PUBLIC_DENIED_ACTIONS = [
-  "plugin::users-permissions.auth.register",
   "plugin::users-permissions.auth.forgotPassword",
   "plugin::users-permissions.auth.resetPassword",
   "plugin::users-permissions.auth.emailConfirmation",
   "plugin::users-permissions.auth.sendEmailConfirmation",
   "plugin::users-permissions.auth.connect",
+] as const;
+
+/**
+ * What a signed-in seller may do, granted on every boot.
+ *
+ * Mirrors `PUBLIC_ACTIONS` in intent: a small, explicit allowlist rather than
+ * whatever the admin UI happens to hold. `create`, `update` and `delete` are
+ * all mediated by the listing controller, which stamps ownership, forces the
+ * draft state and refuses to touch another seller's rows — the permission is
+ * what makes those code paths reachable, not what decides their limits.
+ *
+ * `find`/`findOne` are absent on purpose: they are already public, and granting
+ * them here would imply the Authenticated role sees something extra, which it
+ * does not.
+ */
+const AUTHENTICATED_ACTIONS = [
+  "api::listing.listing.create",
+  "api::listing.listing.update",
+  "api::listing.listing.delete",
 ] as const;
 
 async function enablePublicPermissions(strapi: Core.Strapi) {
@@ -112,6 +144,36 @@ async function enablePublicPermissions(strapi: Core.Strapi) {
       .query("plugin::users-permissions.permission")
       .delete({ where: { id: permission.id } });
     strapi.log.warn(`Autosouq: revoked unexpected public permission ${action}.`);
+  }
+}
+
+/**
+ * Grant the Authenticated role exactly the listing writes a seller needs.
+ *
+ * Additive only, unlike the Public role above. The Public role is a security
+ * boundary facing the open internet, so drift there is revoked; the
+ * Authenticated role is an internal product decision, and an admin who grants
+ * something extra deliberately should not have it silently undone on the next
+ * restart.
+ */
+async function enableAuthenticatedPermissions(strapi: Core.Strapi) {
+  const role = await strapi.db.query("plugin::users-permissions.role").findOne({
+    where: { type: "authenticated" },
+  });
+
+  if (!role) return;
+
+  for (const action of AUTHENTICATED_ACTIONS) {
+    const existing = await strapi.db
+      .query("plugin::users-permissions.permission")
+      .findOne({ where: { action, role: role.id } });
+
+    if (!existing) {
+      await strapi.db.query("plugin::users-permissions.permission").create({
+        data: { action, role: role.id },
+      });
+      strapi.log.info(`Autosouq: granted authenticated permission ${action}.`);
+    }
   }
 }
 
@@ -795,6 +857,14 @@ export default {
       await enablePublicPermissions(strapi);
     } catch (err) {
       strapi.log.error(`Autosouq: could not set public permissions — ${err}`);
+    }
+
+    try {
+      await enableAuthenticatedPermissions(strapi);
+    } catch (err) {
+      strapi.log.error(
+        `Autosouq: could not set authenticated permissions — ${err}`,
+      );
     }
 
     // Taxonomies first, and unconditionally: they are reference data, they are
