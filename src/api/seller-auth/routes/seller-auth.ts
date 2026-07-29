@@ -38,5 +38,24 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/seller/listings',
+      handler: 'seller-auth.listings',
+      config: {
+        /**
+         * Authenticated, and scoped to the caller by the controller.
+         *
+         * A seller has to be able to see their own drafts, and the ordinary
+         * content API cannot serve that: `find` returns published documents
+         * only, and `seller` is `private`, so it cannot even be filtered on.
+         * Adding a filter would be the wrong fix anyway — a client-supplied
+         * `filters[seller]` is a request to be lied to. The owner comes from
+         * the token here and from nowhere else.
+         */
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

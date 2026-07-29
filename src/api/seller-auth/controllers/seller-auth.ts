@@ -57,6 +57,29 @@ type RegisterCtx = {
   badRequest: (message: string) => unknown;
 };
 
+type ListingsCtx = {
+  state?: { user?: { id?: number } };
+  body?: unknown;
+  unauthorized: (message: string) => unknown;
+};
+
+/** What a seller is shown about their own car. */
+const SELLER_LISTING_FIELDS = [
+  'title',
+  'slug',
+  'price',
+  'currency',
+  'year',
+  'mileage',
+  'listingStatus',
+  'soldAsIs',
+  'verified',
+  'featured',
+  'importOrigin',
+  'createdAt',
+  'updatedAt',
+] as const;
+
 export default {
   async register(ctx: RegisterCtx) {
     const strapi = (global as unknown as { strapi: Core.Strapi }).strapi;
@@ -153,5 +176,50 @@ export default {
       strapi.log.error(`Autosouq: seller registration failed — ${err}`);
       return ctx.badRequest('Could not create your account. Please try again.');
     }
+  },
+
+  /**
+   * The caller's own listings, drafts included.
+   *
+   * Scoped by `ctx.state.user`, never by anything in the request. There is no
+   * pagination or filtering parameter on purpose: every input this endpoint
+   * could accept is an input that could widen the scope, and a seller with
+   * enough cars to need paging is a conversation, not a bug.
+   *
+   * `status: 'draft'` is the Strapi 5 way of asking for every document in its
+   * working state — a published listing still has a draft version, so this
+   * returns the seller's whole shelf rather than only their unpublished cars.
+   * `publishedAt` distinguishes the two for the caller.
+   */
+  async listings(ctx: ListingsCtx) {
+    const strapi = (global as unknown as { strapi: Core.Strapi }).strapi;
+    const userId = ctx.state?.user?.id;
+
+    if (!userId) {
+      return ctx.unauthorized('You must be signed in.');
+    }
+
+    const rows = await strapi.documents('api::listing.listing').findMany({
+      filters: { seller: { id: userId } } as never,
+      fields: SELLER_LISTING_FIELDS as never,
+      status: 'draft',
+      sort: { createdAt: 'desc' } as never,
+      limit: 100,
+    });
+
+    ctx.body = {
+      data: (rows ?? []).map((row: Record<string, unknown>) => ({
+        ...row,
+        /**
+         * Derived rather than exposed raw.
+         *
+         * `publishedAt` is a Strapi implementation detail, and the thing the
+         * seller actually wants to know is whether anyone can see the car yet.
+         * "pending" is the honest word for a draft: it is with us, it is not
+         * live, and nobody has to know what draftAndPublish is to read it.
+         */
+        state: row.publishedAt ? 'live' : 'pending',
+      })),
+    };
   },
 };

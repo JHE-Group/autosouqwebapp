@@ -89,6 +89,18 @@ const AUTHENTICATED_ACTIONS = [
   "api::listing.listing.create",
   "api::listing.listing.update",
   "api::listing.listing.delete",
+  /**
+   * The seller's own listings, drafts included.
+   *
+   * A custom route still needs a permission row: without this the handler is
+   * unreachable and `GET /api/seller/listings` answers 403 to a perfectly valid
+   * token, which reads as a broken session rather than a missing grant. Its
+   * sibling `/seller/register` needs no entry because it is `auth: false`.
+   *
+   * Granting it exposes nothing extra — the controller scopes to
+   * `ctx.state.user` and takes no parameter that could widen that.
+   */
+  "api::seller-auth.seller-auth.listings",
 ] as const;
 
 async function enablePublicPermissions(strapi: Core.Strapi) {
