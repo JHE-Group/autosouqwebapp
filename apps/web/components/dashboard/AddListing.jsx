@@ -362,7 +362,11 @@ export default function AddListing() {
     setSubmitting(true);
     setSubmitError(null);
 
-    const result = await submitListing(form, { locale, title: derivedTitle });
+    const result = await submitListing(form, {
+      locale,
+      title: derivedTitle,
+      images,
+    });
 
     setSubmitting(false);
 

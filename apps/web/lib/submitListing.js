@@ -144,31 +144,54 @@ function submitViaWhatsApp(form, { locale, title }) {
 }
 
 /**
+ * Turn one of the form's downscaled data URLs back into a file.
+ *
+ * The photo step already resizes to a 1600px edge at JPEG q0.82 so a preview
+ * can live in component state, which means the bytes are upload-ready by the
+ * time they get here — nothing is re-encoded.
+ *
+ * Sent as multipart rather than as the data URLs themselves: base64 is a third
+ * larger, and ten photos from a phone camera is exactly the payload where a
+ * third matters most, on exactly the connection least able to spare it.
+ */
+function dataUrlToFile(dataUrl, index) {
+  const [header, encoded] = String(dataUrl).split(",");
+  if (!encoded) return null;
+
+  const mime = /data:([^;]+)/.exec(header)?.[1] ?? "image/jpeg";
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+
+  return new File([bytes], `photo-${index + 1}.jpg`, { type: mime });
+}
+
+/**
  * The real path: post the listing as the signed-in seller.
  *
  * Goes to our own route handler, never to the CMS. `connect-src 'self'` blocks
  * the direct call, and the token lives in an httpOnly cookie this code cannot
- * read — which is the point. /api/listings reads the session, attributes the
- * listing and forwards it.
+ * read — which is the point. /api/listings reads the session, uploads the
+ * photos, attributes the listing and forwards it.
  *
  * Nothing here says anything about ownership or publish state. Both are decided
  * in the CMS controller, which stamps the seller from the token and forces the
- * draft. A submission therefore lands in the review queue by construction
- * rather than by this function remembering to ask for it.
- *
- * Photos are still missing. The form collects them and this sends none: media
- * needs a multipart upload to /api/upload and then a relation on the listing,
- * which is its own commit. A draft with no gallery is one a human is going to
- * open anyway — every draft is — so this loses nothing that was not already
- * going to be a conversation.
+ * draft. A submission lands in the review queue by construction rather than by
+ * this function remembering to ask for it.
  */
-async function submitViaApi(form, { locale, title } = {}) {
+async function submitViaApi(form, { locale, title, images = [] } = {}) {
   try {
-    const res = await fetch("/api/listings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, title }),
+    const body = new FormData();
+    body.append("payload", JSON.stringify({ ...form, title }));
+
+    images.forEach((dataUrl, index) => {
+      const file = dataUrlToFile(dataUrl, index);
+      if (file) body.append("photos", file);
     });
+
+    // No Content-Type header: the browser has to set it, because only it knows
+    // the multipart boundary it just generated.
+    const res = await fetch("/api/listings", { method: "POST", body });
 
     const data = await res.json().catch(() => null);
 
@@ -198,7 +221,9 @@ export function canSubmitListing() {
  *   ok:false + reason:"not-configured" means nothing was sent and the caller
  *   must tell the seller so, rather than clearing the form.
  */
-export function submitListing(form, { locale = "ar", title } = {}) {
-  if (SUBMIT_MODE === "api") return submitViaApi(form, { locale, title });
+export function submitListing(form, { locale = "ar", title, images = [] } = {}) {
+  if (SUBMIT_MODE === "api") return submitViaApi(form, { locale, title, images });
+  // The WhatsApp path never carried photos — it asks the seller to attach them
+  // in the chat — so `images` is deliberately not threaded into it.
   return submitViaWhatsApp(form, { locale, title });
 }

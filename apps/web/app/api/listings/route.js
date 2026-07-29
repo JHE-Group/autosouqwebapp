@@ -18,6 +18,10 @@ import { getSession, getToken } from "@/lib/auth";
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
 const TIMEOUT_MS = 15000;
+// Ten phone photos over Omani mobile data is a different order of wait from a
+// JSON post, and timing out mid-upload would tell a seller their listing failed
+// after they had already sent the expensive part.
+const UPLOAD_TIMEOUT_MS = 60000;
 
 /** The enum the CMS accepts. Anything else is dropped rather than guessed at. */
 const IMPORT_ORIGINS = new Set(["gcc", "us-import", "japan-import", "other"]);
@@ -60,6 +64,70 @@ function slugify(title) {
 /** A short, non-guessable suffix for the collision retry. */
 function slugSuffix() {
   return Math.random().toString(36).slice(2, 6);
+}
+
+/**
+ * Ceilings on what one submission may attach.
+ *
+ * The form already caps at 10 photos and downscales each to a 1600px edge, so
+ * these are not the primary limit — they are what stops a caller who is not
+ * using the form. `/api/listings` accepts multipart from a session cookie, and
+ * a seller with an account is not the same thing as a seller using our UI.
+ *
+ * 6 MB per file sits under the CMS's own 12 MB `sizeLimit` (config/plugins.ts)
+ * so ours is the error that fires, in our wording. Note nginx in front of
+ * Strapi has its own `client_max_body_size` and the smaller always wins — see
+ * DEPLOYMENT.md.
+ */
+const MAX_PHOTOS = 10;
+const MAX_PHOTO_BYTES = 6 * 1024 * 1024;
+const ALLOWED_PHOTO_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/heic",
+  "image/heif",
+]);
+
+/**
+ * Push the photos to the CMS and return their ids.
+ *
+ * Uploaded before the listing exists rather than after, on purpose. Media
+ * attached afterwards means a second write that can fail on its own, leaving a
+ * listing whose gallery is silently empty and a seller who was told it worked.
+ * Uploading first inverts the failure: if it breaks, no listing is created and
+ * the seller is told to try again, with nothing half-made behind them.
+ *
+ * The cost is orphaned files if the listing create then fails. That is a
+ * housekeeping problem in the media library, not a lie told to a seller.
+ */
+async function uploadPhotos(files, token) {
+  if (!files.length) return { ok: true, ids: [] };
+
+  const body = new FormData();
+  for (const file of files) body.append("files", file, file.name);
+
+  const res = await fetch(`${STRAPI_URL}/api/upload`, {
+    method: "POST",
+    // No Content-Type: fetch sets the multipart boundary itself.
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+    cache: "no-store",
+    signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+  });
+
+  if (!res.ok) {
+    const payload = await res.json().catch(() => null);
+    return {
+      ok: false,
+      error: payload?.error?.message ?? "Your photos could not be uploaded.",
+    };
+  }
+
+  const uploaded = await res.json().catch(() => null);
+  const ids = Array.isArray(uploaded) ? uploaded.map((f) => f?.id).filter(Boolean) : [];
+  return { ok: true, ids };
 }
 
 /**
@@ -107,11 +175,46 @@ export async function POST(request) {
     );
   }
 
+  /**
+   * Multipart, because the photos travel with it.
+   *
+   * The fields arrive as one JSON blob under `payload` rather than as
+   * individual parts: the form has three dozen of them, and reconstructing
+   * their types out of multipart strings — numbers, booleans, empties — is a
+   * conversion layer that exists only to be got subtly wrong.
+   */
   let form;
+  let photos = [];
   try {
-    form = await request.json();
+    const data = await request.formData();
+    form = JSON.parse(data.get("payload") ?? "{}");
+    photos = data.getAll("photos").filter((f) => typeof f?.arrayBuffer === "function");
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request." }, { status: 400 });
+  }
+
+  if (photos.length > MAX_PHOTOS) {
+    return NextResponse.json(
+      { ok: false, error: `Please attach no more than ${MAX_PHOTOS} photos.` },
+      { status: 400 },
+    );
+  }
+
+  for (const photo of photos) {
+    if (!ALLOWED_PHOTO_TYPES.has(photo.type)) {
+      // Named rather than generic: a seller who just tried to attach a PDF of
+      // the mulkiya needs to know it is the file type, not the file.
+      return NextResponse.json(
+        { ok: false, error: "Photos must be images — JPEG, PNG, WebP or HEIC." },
+        { status: 400 },
+      );
+    }
+    if (photo.size > MAX_PHOTO_BYTES) {
+      return NextResponse.json(
+        { ok: false, error: "One of your photos is too large. Please use photos under 6 MB." },
+        { status: 400 },
+      );
+    }
   }
 
   const title =
@@ -163,6 +266,12 @@ export async function POST(request) {
     );
   }
 
+  // Photos first: see uploadPhotos for why the failure order matters.
+  const uploaded = await uploadPhotos(photos, token);
+  if (!uploaded.ok) {
+    return NextResponse.json({ ok: false, error: uploaded.error }, { status: 400 });
+  }
+
   const post = (slug) =>
     fetch(`${STRAPI_URL}/api/listings`, {
       method: "POST",
@@ -170,7 +279,13 @@ export async function POST(request) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ data: { ...payload, slug } }),
+      body: JSON.stringify({
+        data: {
+          ...payload,
+          slug,
+          ...(uploaded.ids.length ? { gallery: uploaded.ids } : {}),
+        },
+      }),
       cache: "no-store",
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });

@@ -101,6 +101,31 @@ const AUTHENTICATED_ACTIONS = [
    * `ctx.state.user` and takes no parameter that could widen that.
    */
   "api::seller-auth.seller-auth.listings",
+  /**
+   * Photo upload for a listing's gallery.
+   *
+   * This is the widest grant on the list and worth being clear-eyed about: it
+   * lets any account write files to the CMS's disk, and the web app's own
+   * limits (10 photos, 6 MB, images only) do not bind a caller who skips the
+   * web app and posts to app.autosouq.om directly with their own token.
+   *
+   * What does bind them is config/plugins.ts, which is already careful: uploads
+   * are capped at 12 MB and restricted to an enumerated list of image types
+   * plus PDF, with executables explicitly denied. SVG is excluded there for a
+   * documented reason — gallery images open as top-level documents, so an SVG
+   * would be stored XSS on this origin.
+   *
+   * The residual risk is volume: an account can fill the disk 12 MB at a time,
+   * and nothing rate-limits that any more than it rate-limits registration.
+   * Both belong to the same gap, and phone OTP plus a rate limit close them
+   * together. Until then this is an operational exposure on a server we watch,
+   * not a route to anyone else's data.
+   *
+   * `destroy` is deliberately NOT granted: nothing in the seller flow deletes a
+   * file, and an account able to delete media could empty another seller's
+   * gallery.
+   */
+  "plugin::upload.content-api.upload",
 ] as const;
 
 async function enablePublicPermissions(strapi: Core.Strapi) {
