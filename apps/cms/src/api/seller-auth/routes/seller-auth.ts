@@ -35,7 +35,24 @@ export default {
         // like an ordinary content permission somebody could toggle off.
         auth: false,
         policies: [],
-        middlewares: [],
+        /**
+         * Ten attempts per address per fifteen minutes.
+         *
+         * The obvious sizing — five per hour — was tried and is wrong twice
+         * over. The limiter counts *attempts*, not accounts, so a seller who
+         * fumbles the form five times (mistyped email, password too short,
+         * malformed number) is locked out for an hour having created nothing.
+         * And an hour's lockout paired with a message saying "a few minutes"
+         * is a support call.
+         *
+         * Ten in fifteen minutes leaves room to get the form wrong repeatedly
+         * while still capping a loop at forty accounts an hour from one
+         * address, down from unbounded. Sized for the shared case too: an
+         * office or a café behind a single NAT is one address here.
+         */
+        middlewares: [
+          { name: 'global::rate-limit', config: { max: 10, windowMs: 15 * 60 * 1000 } },
+        ],
       },
     },
     {
