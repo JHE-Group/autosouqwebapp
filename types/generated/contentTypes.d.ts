@@ -750,6 +750,11 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
         },
         number
       >;
+    seller: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    > &
+      Schema.Attribute.Private;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
     soldAsIs: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     title: Schema.Attribute.String & Schema.Attribute.Required;
