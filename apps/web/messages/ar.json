@@ -772,5 +772,33 @@
       "mid": "2,500–4,000",
       "upper": "4,000–6,000"
     }
+  },
+  "auth": {
+    "signInTitle": "تسجيل الدخول",
+    "signInDescription": "سجّل الدخول لإضافة سيارتك على أوتوسوق.",
+    "signInHeading": "تسجيل الدخول",
+    "signInLead": "سجّل الدخول لإضافة سيارة أو إدارة إعلاناتك.",
+    "signUpTitle": "إنشاء حساب",
+    "signUpDescription": "أنشئ حسابًا في أوتوسوق لإضافة سيارتك.",
+    "signUpHeading": "إنشاء حساب",
+    "signUpLead": "تحتاج إلى حساب قبل إضافة سيارة. الأمر لا يستغرق سوى دقيقة.",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "مثال: أحمد الراشدي",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "you@example.com",
+    "whatsapp": "رقم الواتساب",
+    "whatsappPlaceholder": "9123 4567",
+    "optional": "(اختياري)",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "8 أحرف على الأقل",
+    "passwordHint": "8 أحرف على الأقل.",
+    "createAccount": "إنشاء حساب",
+    "signIn": "تسجيل الدخول",
+    "working": "يرجى الانتظار…",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "noAccount": "ليس لديك حساب؟",
+    "genericError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "networkError": "تعذر الوصول إلى الخادم. تحقق من اتصالك ثم حاول مرة أخرى.",
+    "signInToContinue": "سجّل الدخول لإضافة سيارتك"
   }
 }

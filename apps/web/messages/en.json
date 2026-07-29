@@ -772,5 +772,33 @@
       "mid": "2,500–4,000",
       "upper": "4,000–6,000"
     }
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "signInDescription": "Sign in to list your car on Autosouq.",
+    "signInHeading": "Sign in",
+    "signInLead": "Sign in to list a car or manage the ones you have listed.",
+    "signUpTitle": "Create an account",
+    "signUpDescription": "Create an Autosouq account to list your car.",
+    "signUpHeading": "Create an account",
+    "signUpLead": "You need an account before you can list a car. It takes a minute.",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "e.g. Ahmed Al-Rashdi",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "whatsapp": "WhatsApp number",
+    "whatsappPlaceholder": "9123 4567",
+    "optional": "(optional)",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "passwordHint": "At least 8 characters.",
+    "createAccount": "Create account",
+    "signIn": "Sign in",
+    "working": "Please wait…",
+    "haveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "genericError": "Something went wrong. Please try again.",
+    "networkError": "We could not reach the server. Please check your connection and try again.",
+    "signInToContinue": "Sign in to list your car"
   }
 }
