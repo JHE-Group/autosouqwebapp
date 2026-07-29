@@ -175,20 +175,38 @@ function demoSeedingEnabled(): boolean {
   return process.env.NODE_ENV !== "production";
 }
 
-async function seedDemoData(strapi: Core.Strapi) {
-  if (!demoSeedingEnabled()) {
-    strapi.log.info(
-      "Autosouq: demo seeding skipped (production). Set SEED_DEMO_DATA=true to force it.",
-    );
-    return;
-  }
+/** The taxonomy id maps, keyed by slug, that a listing needs to be built. */
+type TaxonomyDocs = {
+  cityDocs: Record<string, string>;
+  makeDocs: Record<string, string>;
+  modelDocs: Record<string, string>;
+  bodyTypeDocs: Record<string, string>;
+  conditionDocs: Record<string, string>;
+  transmissionDocs: Record<string, string>;
+  fuelTypeDocs: Record<string, string>;
+  colorDocs: Record<string, string>;
+  featureDocs: Record<string, string>;
+};
 
-  const existing = await strapi.documents("api::listing.listing").findMany({
-    limit: 1,
-  });
-
-  if (existing.length > 0) return;
-
+/**
+ * Reference data — the vocabulary every listing is built from.
+ *
+ * This is NOT demo content, and it deliberately does not share the demo guard.
+ * "Toyota", "Corolla" and "Muscat" are not stand-ins for real rows; they are
+ * the rows a seller picks from, and without them the admin offers empty
+ * dropdowns and a listing can only be typed as free text.
+ *
+ * It used to live inside `seedDemoData`, below the "does a listing already
+ * exist" early return, which had two consequences on a hosted deployment:
+ * production never got taxonomies at all, and the only way to ask for them was
+ * to also accept ten photoless demo cars. A single hand-made listing was enough
+ * to block the whole thing silently.
+ *
+ * Safe on every boot: `findOrCreate` matches on slug and returns the existing
+ * id, so this adds missing rows and touches nothing already there. It does not
+ * update or delete — renaming a make in the admin will not be undone here.
+ */
+async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
   const cities = [
     { name: "Muscat", nameAr: "مسقط", slug: "muscat" },
     { name: "Salalah", nameAr: "صلالة", slug: "salalah" },
@@ -296,6 +314,53 @@ async function seedDemoData(strapi: Core.Strapi) {
     { name: "4WD", nameAr: "دفع رباعي", slug: "four-wd" },
     { name: "Agency service history", nameAr: "صيانة وكالة", slug: "agency-service" },
   ]);
+
+  return {
+    cityDocs,
+    makeDocs,
+    modelDocs,
+    bodyTypeDocs,
+    conditionDocs,
+    transmissionDocs,
+    fuelTypeDocs,
+    colorDocs,
+    featureDocs,
+  };
+}
+
+/**
+ * The ten stand-in cars, and the guards that keep them off a real site.
+ *
+ * Unchanged in substance from when this lived in `seedDemoData`: still gated on
+ * `demoSeedingEnabled()`, still refuses to run when any listing already exists.
+ * The only difference is that failing those checks no longer takes the
+ * taxonomies down with it.
+ */
+async function seedDemoListings(strapi: Core.Strapi, docs: TaxonomyDocs) {
+  if (!demoSeedingEnabled()) {
+    strapi.log.info(
+      "Autosouq: demo seeding skipped (production). Set SEED_DEMO_DATA=true to force it.",
+    );
+    return;
+  }
+
+  const existing = await strapi.documents("api::listing.listing").findMany({
+    limit: 1,
+  });
+
+  if (existing.length > 0) return;
+
+  const {
+    cityDocs,
+    makeDocs,
+    modelDocs,
+    bodyTypeDocs,
+    conditionDocs,
+    transmissionDocs,
+    fuelTypeDocs,
+    colorDocs,
+    featureDocs,
+  } = docs;
 
   // Anchored to real listings observed on Hatla2ee / OpenSooq / YallaMotor Oman.
   // Realism rules that keep this from reading as fake to an Omani buyer:
@@ -732,10 +797,15 @@ export default {
       strapi.log.error(`Autosouq: could not set public permissions — ${err}`);
     }
 
+    // Taxonomies first, and unconditionally: they are reference data, they are
+    // idempotent, and the demo listings below need the id maps they return.
+    // Kept separate from the demo guard so a production database gets its
+    // vocabulary without also getting ten stand-in cars.
     try {
-      await seedDemoData(strapi);
+      const docs = await seedTaxonomies(strapi);
+      await seedDemoListings(strapi, docs);
     } catch (err) {
-      strapi.log.error(`Autosouq: demo seeding failed — ${err}`);
+      strapi.log.error(`Autosouq: seeding failed — ${err}`);
     }
 
     // One-shot migration for the first-seed language mix-up. Off by default so
