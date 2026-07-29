@@ -48,6 +48,12 @@ const config: Core.Config.Middlewares = [
   // every response — a free version fingerprint for anyone scanning for known
   // Strapi advisories. It buys nothing operationally.
   'strapi::query',
+  /**
+   * After `strapi::query` so `ctx.query` is parsed, and before `strapi::body`
+   * so a refused replace is rejected without its multipart payload being read
+   * off the wire first. See src/middlewares/upload-guard.ts for what it stops.
+   */
+  'global::upload-guard',
   'strapi::body',
   'strapi::session',
   'strapi::favicon',

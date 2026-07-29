@@ -44,12 +44,69 @@ function stripPrivilegedFields(data: Record<string, unknown>) {
 /** The stored document, narrowed to the part ownership checks care about. */
 type OwnedListing = { seller?: { id?: number } | null } | null;
 
+/**
+ * Query keys that decide which version of a document a request sees.
+ *
+ * All three are on Strapi's own allowlist (`ALLOWED_QUERY_PARAM_KEYS` in
+ * @strapi/utils), so `api.rest.strictParams` does not stop them and they reach
+ * the document service intact. Every handler below therefore has to strip the
+ * whole set and state the version itself — clamping only `status` leaves two
+ * other doors into the same cohort logic.
+ */
+const VERSION_QUERY_KEYS = ['status', 'publicationFilter', 'hasPublishedVersion'] as const;
+
+/**
+ * Force which version of a document this request may act on.
+ *
+ * The reason this is a helper rather than a line in `create` is a real bug that
+ * shipped in this file: `create` clamped the state and `update` did not, so a
+ * seller could file a draft and then `PUT /api/listings/<id>?status=published`
+ * to publish it themselves — straight past the review queue that is the entire
+ * point of the draft. Reproduced against a running instance before fixing.
+ *
+ * The same omission applied to `find` and `findOne`, which were left stock in
+ * the belief that the public API returns published documents only. It does not:
+ * `CoreService.getFetchParams` spreads the caller's params *after* its own
+ * `status: 'published'` default, so `?status=draft` overrides it and every
+ * unreviewed submission — with the seller's phone number in it — was readable by
+ * anyone. Also reproduced.
+ *
+ * One helper, called by all five handlers, so the next handler added to this
+ * file has an obvious thing to call rather than a comment to notice.
+ */
+function forceVersion(ctx: { query?: Record<string, unknown> }, status: 'draft' | 'published') {
+  const query = { ...(ctx.query ?? {}) };
+  for (const key of VERSION_QUERY_KEYS) delete query[key];
+  ctx.query = { ...query, status };
+}
+
 export default factories.createCoreController('api::listing.listing', ({ strapi }) => ({
+  /**
+   * Read: published only, whatever the caller asks for.
+   *
+   * These were stock, on the assumption stated elsewhere in this file that the
+   * public API returns published documents by default. It does — until a caller
+   * passes `?status=draft`, which overrides the default and returned every
+   * unreviewed submission, WhatsApp number included, to anyone who asked.
+   *
+   * A seller reading their own drafts is served by `GET /api/seller/listings`,
+   * which scopes to the token instead of trusting a query parameter.
+   */
+  async find(ctx) {
+    forceVersion(ctx, 'published');
+    return await super.find(ctx);
+  },
+
+  async findOne(ctx) {
+    forceVersion(ctx, 'published');
+    return await super.findOne(ctx);
+  },
+
   /**
    * Create: always owned by the caller, always a draft.
    *
    * The draft is the review queue. `draftAndPublish` is already on for this
-   * content type and the public `find` only returns published documents, so the
+   * content type and `find` above is now clamped to published documents, so the
    * admin panel's Publish button is the approval step — no bespoke moderation
    * state, and no way for a new listing to reach an indexed page before a human
    * has looked at it.
@@ -64,10 +121,9 @@ export default factories.createCoreController('api::listing.listing', ({ strapi 
     stripPrivilegedFields(data);
     ctx.request.body.data = data;
 
-    // Not merely the default: Strapi 5 honours `?status=published` on the
-    // content API, so leaving this alone would let a caller publish by query
-    // string and walk straight past the queue.
-    ctx.query = { ...ctx.query, status: 'draft' };
+    // Strapi 5 honours `?status=published` on the content API, so without this
+    // a caller could publish by query string and walk straight past the queue.
+    forceVersion(ctx, 'draft');
 
     const response = await super.create(ctx);
 
@@ -136,6 +192,10 @@ export default factories.createCoreController('api::listing.listing', ({ strapi 
     stripPrivilegedFields(data);
     ctx.request.body.data = data;
 
+    // The bug this file shipped with: without it, a seller edits their own draft
+    // with `?status=published` and publishes it themselves.
+    forceVersion(ctx, 'draft');
+
     return await super.update(ctx);
   },
 
@@ -158,6 +218,10 @@ export default factories.createCoreController('api::listing.listing', ({ strapi 
     if (!existing || !ownerId || ownerId !== user.id) {
       return ctx.notFound('Listing not found.');
     }
+
+    // Same cohort clamp: a `?status=published` delete would drop the published
+    // version of a document out of band.
+    forceVersion(ctx, 'draft');
 
     return await super.delete(ctx);
   },

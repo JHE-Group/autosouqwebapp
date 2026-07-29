@@ -17,7 +17,13 @@ build
 .pnpm-store
 *.tsbuildinfo
 apps/cms/.tmp
-apps/cms/public/uploads
+# Uploaded media stays out of git, but the DIRECTORY has to exist: the local
+# upload provider checks for it at boot and Strapi refuses to start without it
+# ("The upload folder ... doesn't exist or is not accessible"). Ignoring the
+# path outright meant a fresh clone — which is exactly how the CMS branch is
+# deployed to OVH — could not boot until someone mkdir'd it by hand.
+apps/cms/public/uploads/*
+!apps/cms/public/uploads/.gitkeep
 apps/cms/dist
 apps/cms/build
 apps/cms/.cache

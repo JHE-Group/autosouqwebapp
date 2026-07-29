@@ -78,6 +78,15 @@ const SELLER_LISTING_FIELDS = [
   'importOrigin',
   'createdAt',
   'updatedAt',
+  /**
+   * Needed to tell a live listing from a pending one.
+   *
+   * Omitting it did not fail loudly — it made `state` below read 'pending' for
+   * every row, so a seller's published car would have been labelled "Pending
+   * review" on /my-listing indefinitely. Phase-4 testing only ever had drafts,
+   * so nothing in it could have caught this.
+   */
+  'publishedAt',
 ] as const;
 
 export default {
@@ -199,6 +208,15 @@ export default {
       return ctx.unauthorized('You must be signed in.');
     }
 
+    /**
+     * `status: 'draft'` asks for every document in its working state — a
+     * published listing still has a draft version — so this returns the
+     * seller's whole shelf rather than only their unpublished cars.
+     *
+     * But the draft version's own `publishedAt` is null by construction, so it
+     * cannot be what distinguishes the two. The published version is fetched
+     * separately below and the document ids compared.
+     */
     const rows = await strapi.documents('api::listing.listing').findMany({
       filters: { seller: { id: userId } } as never,
       fields: SELLER_LISTING_FIELDS as never,
@@ -207,18 +225,34 @@ export default {
       limit: 100,
     });
 
+    const live = await strapi.documents('api::listing.listing').findMany({
+      filters: { seller: { id: userId } } as never,
+      fields: ['id'] as never,
+      status: 'published',
+      limit: 100,
+    });
+
+    const liveIds = new Set(
+      (live ?? []).map((row: Record<string, unknown>) => row.documentId),
+    );
+
     ctx.body = {
       data: (rows ?? []).map((row: Record<string, unknown>) => ({
         ...row,
         /**
          * Derived rather than exposed raw.
          *
-         * `publishedAt` is a Strapi implementation detail, and the thing the
-         * seller actually wants to know is whether anyone can see the car yet.
-         * "pending" is the honest word for a draft: it is with us, it is not
-         * live, and nobody has to know what draftAndPublish is to read it.
+         * `publishedAt` is a Strapi implementation detail, and what the seller
+         * wants to know is whether anyone can see the car yet. "pending" is the
+         * honest word for a draft: it is with us, it is not live, and nobody has
+         * to know what draftAndPublish is to read it.
+         *
+         * Keyed on whether a published version of this document exists, NOT on
+         * the row's own `publishedAt` — that is always null here, because these
+         * rows are the draft versions. Reading it directly is the bug this
+         * replaces, which labelled every listing "pending" forever.
          */
-        state: row.publishedAt ? 'live' : 'pending',
+        state: liveIds.has(row.documentId) ? 'live' : 'pending',
       })),
     };
   },
