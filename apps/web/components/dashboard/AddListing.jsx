@@ -345,17 +345,47 @@ export default function AddListing() {
   const [submitState, setSubmitState] = useState(null);
   const submitAvailable = canSubmitListing();
 
-  const handlePublish = () => {
-    if (!canPublish) return;
-    const result = submitListing(form, { locale, title: derivedTitle });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  /**
+   * Async since the API path landed.
+   *
+   * `submitListing` used to be synchronous — the WhatsApp path just opened a
+   * window — and this handler read `result.ok` directly. Under SUBMIT_MODE
+   * "api" it returns a Promise, so that read would have been `undefined` and
+   * every successful submission would have reported failure. Both paths still
+   * return the same shape; only the awaiting is new.
+   */
+  const handlePublish = async () => {
+    if (!canPublish || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+
+    const result = await submitListing(form, { locale, title: derivedTitle });
+
+    setSubmitting(false);
+
     if (result.ok) {
       setSubmitState("sent");
       // The draft is deliberately NOT cleared: nothing is published yet, and a
-      // seller who closes WhatsApp without sending would otherwise lose
+      // seller whose submission failed downstream would otherwise lose
       // everything they typed.
-    } else {
-      setSubmitState(result.reason === "not-configured" ? "not-configured" : "failed");
+      return;
     }
+
+    // The CMS owns the useful rejections — the price band above all, which
+    // names the limit. Showing it beats a generic failure the seller cannot act
+    // on. `signed-out` is called out separately because retyping the form is
+    // not the fix for it.
+    setSubmitError(result.error ?? null);
+    setSubmitState(
+      result.reason === "not-configured"
+        ? "not-configured"
+        : result.reason === "signed-out"
+          ? "signed-out"
+          : "failed",
+    );
   };
 
   /* ----------------------------------------------------------- stepping -- */
@@ -483,6 +513,8 @@ export default function AddListing() {
                     onGoTo={goTo}
                     onPublish={handlePublish}
                     submitState={submitState}
+                    submitting={submitting}
+                    submitError={submitError}
                     submitAvailable={submitAvailable}
                   />
                 ) : null}
@@ -1178,6 +1210,8 @@ function StepReview({
   onGoTo,
   onPublish,
   submitState,
+  submitting,
+  submitError,
   submitAvailable,
 }) {
   const tCommon = useTranslations("common");
@@ -1481,17 +1515,21 @@ function StepReview({
           </p>
         )}
 
-        {/* WhatsApp handoff — see lib/submitListing.js. type="button" so it
-            cannot half-submit a form POST that does not exist. */}
+        {/* Posts to /api/listings as the signed-in seller — see
+            lib/submitListing.js. type="button" so it cannot half-submit a form
+            POST that does not exist. */}
         <div className="group-button-submit left">
           <button
             type="button"
             className="pre-btn"
             onClick={onPublish}
-            disabled={!canPublish || !submitAvailable}
+            // Also disabled while in flight: this is a network round trip now,
+            // not a window.open, and a double tap on a slow phone connection
+            // would otherwise file the same car twice.
+            disabled={!canPublish || !submitAvailable || submitting}
             title={submitAvailable ? tc("publishHint") : tc("notConfigured")}
           >
-            {tc("publish")}
+            {submitting ? tc("submitting") : tc("publish")}
           </button>
         </div>
 
@@ -1505,9 +1543,17 @@ function StepReview({
               {tc("submittedBody")}
             </div>
           )}
+          {submitState === "signed-out" && (
+            <p className="tfcl-amber" role="alert">
+              {tc("submitSignedOut")}
+            </p>
+          )}
           {submitState === "failed" && (
             <p className="tfcl-amber" role="alert">
-              {tc("submitFailed")}
+              {/* The CMS's own words when it gave any — the price-band
+                  rejection names the limit, which is the one message a seller
+                  can actually act on. Generic text only as a fallback. */}
+              {submitError || tc("submitFailed")}
             </p>
           )}
         </div>

@@ -31,8 +31,15 @@ import { buildWhatsAppUrl, normalizeOmaniMsisdn, toTelHref } from "./whatsapp";
 
 const OPS_WHATSAPP = process.env.NEXT_PUBLIC_AUTOSOUQ_WHATSAPP;
 
-/** "whatsapp" today. Flip to "api" once listings can be created server-side. */
-const SUBMIT_MODE = "whatsapp";
+/**
+ * "api" since sellers have accounts.
+ *
+ * The WhatsApp path below is kept, unused, for one reason: it is the fallback
+ * if the API route has to be switched off in a hurry. Flipping this constant is
+ * a one-line change that needs no other edit, because both paths return the
+ * same shape and no step component knows which one ran.
+ */
+const SUBMIT_MODE = "api";
 
 const LABELS = {
   en: {
@@ -137,15 +144,48 @@ function submitViaWhatsApp(form, { locale, title }) {
 }
 
 /**
- * Tomorrow's path. Left unimplemented on purpose rather than written blind:
- * it needs an auth token to attribute the listing, a media upload for the
- * photos, and `publishedAt: null` so a submission lands as a draft for review
- * instead of going straight live.
+ * The real path: post the listing as the signed-in seller.
+ *
+ * Goes to our own route handler, never to the CMS. `connect-src 'self'` blocks
+ * the direct call, and the token lives in an httpOnly cookie this code cannot
+ * read — which is the point. /api/listings reads the session, attributes the
+ * listing and forwards it.
+ *
+ * Nothing here says anything about ownership or publish state. Both are decided
+ * in the CMS controller, which stamps the seller from the token and forces the
+ * draft. A submission therefore lands in the review queue by construction
+ * rather than by this function remembering to ask for it.
+ *
+ * Photos are still missing. The form collects them and this sends none: media
+ * needs a multipart upload to /api/upload and then a relation on the listing,
+ * which is its own commit. A draft with no gallery is one a human is going to
+ * open anyway — every draft is — so this loses nothing that was not already
+ * going to be a conversation.
  */
-async function submitViaApi() {
-  throw new Error(
-    "submitViaApi() is not implemented — listings cannot be created without auth. See lib/submitListing.js.",
-  );
+async function submitViaApi(form, { locale, title } = {}) {
+  try {
+    const res = await fetch("/api/listings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, title }),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (res.status === 401) {
+      // The session went away mid-form. Say so specifically: "something went
+      // wrong" would have them retyping a listing that was never the problem.
+      return { ok: false, reason: "signed-out", error: data?.error };
+    }
+
+    if (!res.ok || !data?.ok) {
+      return { ok: false, reason: "rejected", error: data?.error };
+    }
+
+    return { ok: true, mode: "api", status: data.status ?? "pending-review" };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
 }
 
 /** True when a submission can actually be delivered right now. */

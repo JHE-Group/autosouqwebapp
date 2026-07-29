@@ -1,8 +1,9 @@
 import AddListing from "@/components/dashboard/AddListing";
 import SiteFooter from "@/components/footers/SiteFooter";
 import Header2 from "@/components/headers/Header2";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
+import { getSession } from "@/lib/auth";
 
 /**
  * The sell form, with the site's own chrome rather than the dashboard's.
@@ -24,6 +25,24 @@ export async function generateMetadata({ params }) {
 
 export default async function Page({ params }) {
   const { locale } = await params;
+
+  /**
+   * An account is required to list a car.
+   *
+   * Checked on the server, before the form renders. Hiding the form in the
+   * client would be decoration — /api/listings answers 401 without a session
+   * regardless, and the CMS refuses an unauthenticated create beneath that —
+   * but a seller should find that out before filling in six steps, not after.
+   *
+   * `next` carries them back here once they are signed in, so the account is a
+   * detour rather than a dead end. lib/safeNext.js is what stops that parameter
+   * being turned into an off-site redirect.
+   */
+  const session = await getSession();
+  if (!session) {
+    redirect({ href: "/sign-in?next=/add-listing", locale });
+  }
+
   const crumb = await getTranslations({ locale, namespace: "breadcrumb" });
 
   return (

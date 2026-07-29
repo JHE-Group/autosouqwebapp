@@ -560,7 +560,9 @@
     "documentsHint": "Service records or a recent inspection report. Buyers at this price trust paperwork more than adjectives. Do not upload your mulkiya or ID here — those carry your personal details and are for the Autosouq check only, never for publication.",
     "readyNotice": "Everything required is here. Publishing sends the listing to Autosouq for checking — a person reads it, calls you, and it goes live after that. It does not appear on the site the moment you press the button.",
     "metaTitle": "Add a listing — Autosouq.om",
-    "metaDescription": "Tell us about your car. We check every listing before it goes live."
+    "metaDescription": "Tell us about your car. We check every listing before it goes live.",
+    "submitSignedOut": "You have been signed out. Please sign in again — your listing has not been lost.",
+    "submitting": "Submitting…"
   },
   "blog": {
     "brand": "Autosouq.om",
