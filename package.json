@@ -12,6 +12,9 @@
     "check:band": "node scripts/check-price-band.mjs",
     "check": "pnpm check:band && pnpm lint",
     "test:carousels": "node scripts/test-carousels.mjs",
+    "test:sell": "node scripts/test-sell-flow.mjs",
+    "test:buy": "node scripts/test-buy-flow.mjs",
+    "test:flows": "pnpm test:sell && pnpm test:buy",
     "check:photos": "node scripts/check-listing-photos.mjs"
   },
   "engines": {

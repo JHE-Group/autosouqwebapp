@@ -1,14 +1,65 @@
 /**
- * Smoke-test the Sell your car → Add listing workflow against a running
- * Next.js server (default http://127.0.0.1:3001).
+ * Smoke-test the Sell your car -> Add listing workflow.
  *
- * Usage: node scripts/test-sell-flow.mjs
+ * Usage: pnpm test:sell          (or node scripts/test-sell-flow.mjs)
+ *
+ * ## Run it against a PRODUCTION build, not `next dev`
+ *
+ *   pnpm db:dev && pnpm dev:cms                      (Strapi on :1337)
+ *   cd apps/web && pnpm build && npx next start -p 3001
+ *   pnpm test:sell
+ *
+ * `next dev` does not work for this, and the reason is unresolved: React never
+ * finishes hydrating there. Confirmed directly rather than inferred — the
+ * Publish button has no React props attached, so no click handler exists.
+ * Symptoms are misleading: pages render (the server rendered them) and inputs
+ * accept typing (that is the browser, not React), so only a click reveals it.
+ * The console shows the HMR websocket failing with ERR_INVALID_HTTP_RESPONSE on
+ * a loop.
+ *
+ * Ruled out while chasing it: the security headers are NOT applied to the
+ * upgrade (the 101 response carries none — checked with curl), and the endpoint
+ * upgrades correctly when called directly. Adding `'unsafe-eval'` to the dev CSP
+ * did not fix it either. Left alone rather than patched on a guess.
+ *
+ * It needs a reachable CMS as well as the web app. It used to need only the web
+ * app, because submitting was a WhatsApp handoff — a link, no server involved.
+ * Since 4be81c8 an account is required and the submission is a real POST.
+ *
+ * ## What changed in this test, and why it was failing
+ *
+ * Three assertions went stale the moment the account gate landed, and because
+ * this script is not wired into CI nothing said so:
+ *
+ *   1. Steps 1-2 waited for `/en/add-listing`. An anonymous visitor now gets a
+ *      307 to `/en/sign-in?next=/add-listing`, so both timed out.
+ *   2. Everything from the form onwards assumed it could reach the form at all.
+ *   3. The last step waited for a WhatsApp popup and a "sent — check whatsapp"
+ *      notice. SUBMIT_MODE is "api"; no popup is ever opened.
+ *
+ * The redirect is now asserted rather than worked around — it is the feature —
+ * and the run then signs in so the rest of the flow has a session.
  */
 import { chromium } from "playwright-core";
 
 // Default to 127.0.0.1 so Playwright matches a hostname-bound next dev
 // (`next dev --hostname 127.0.0.1`). Override with SELL_FLOW_BASE if needed.
 const BASE = process.env.SELL_FLOW_BASE || "http://127.0.0.1:3001";
+
+/**
+ * One fixed account, reused across runs.
+ *
+ * A fresh address per run was the first design and it is wrong: registration is
+ * rate-limited to 10 attempts per 15 minutes per IP, so running this test more
+ * than ten times in a quarter of an hour — which is exactly what happens while
+ * working on it — starts failing with "Too many attempts". The limiter is
+ * correct; burning a rate-limited resource on every run was not.
+ *
+ * So sign in first and register only if that fails. Steady state is one login
+ * and zero registrations, and a first run on a fresh database registers once.
+ */
+const TEST_EMAIL = "smoke-seller@test.local";
+const TEST_PASSWORD = "Passw0rd!23";
 const CHROME =
   process.env.CHROME_PATH ||
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -22,12 +73,63 @@ async function main() {
   const errors = [];
   page.on("pageerror", (err) => errors.push(`pageerror: ${err.message}`));
   page.on("console", (msg) => {
-    if (msg.type() === "error") errors.push(`console: ${msg.text()}`);
+    if (msg.type() !== "error") return;
+    /*
+     * Record the URL, not only the text.
+     *
+     * Chrome logs a failed subresource as the bare string "Failed to load
+     * resource: the server responded with a status of 404", with the offending
+     * URL only in the message *location*. Filtering on text alone therefore
+     * cannot tell one of our 404s from one of Vercel's — and Vercel's were
+     * failing this test after the flow itself had entirely passed.
+     */
+    const where = msg.location?.().url ?? "";
+    errors.push(`console: ${msg.text()}${where ? ` [${where}]` : ""}`);
   });
 
   const fail = (msg) => {
     throw new Error(msg);
   };
+
+  // 0. The account gate itself. An anonymous visitor must NOT reach the form.
+  console.log("0. Account gate");
+  await page.goto(`${BASE}/en/add-listing`, {
+    waitUntil: "domcontentloaded",
+    timeout: 60000,
+  });
+  if (!/\/en\/sign-in/.test(page.url())) {
+    fail(`Anonymous /add-listing should redirect to sign-in, landed on ${page.url()}`);
+  }
+  if (!/next=%2Fadd-listing|next=\/add-listing/.test(page.url())) {
+    fail(`Sign-in redirect lost the ?next= target: ${page.url()}`);
+  }
+  console.log("   anonymous redirect:", page.url().replace(BASE, ""));
+
+  // 0b. Get a session for the rest of the run.
+  //     Through the page's own request context, so the httpOnly cookie the route
+  //     handler sets lands in this browser context — the form cannot be reached
+  //     any other way, and no token is readable from JS by design.
+  console.log("0b. Sign in (registering once if the account is new)");
+  let auth = await page.request.post(`${BASE}/api/auth/login`, {
+    data: { email: TEST_EMAIL, password: TEST_PASSWORD },
+  });
+
+  if (!auth.ok()) {
+    const reg = await page.request.post(`${BASE}/api/auth/register`, {
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD, fullName: "Smoke Tester" },
+    });
+    if (!reg.ok()) {
+      const body = await reg.text();
+      fail(
+        `Could not sign in or register (${reg.status()}): ${body}\n` +
+          `      Is the CMS running? This test needs Strapi as well as the web app.`,
+      );
+    }
+    console.log("   registered", TEST_EMAIL, "(first run against this database)");
+    auth = reg;
+  } else {
+    console.log("   signed in as", TEST_EMAIL);
+  }
 
   // 1. Header CTA (`.flat-bt-top .sc-button`) → add-listing
   //    Nav also has a "Sell your car" link to /sell-your-car (rules). Same
@@ -155,39 +257,63 @@ async function main() {
   const publish = page.getByRole("button", { name: /publish listing/i }).first();
   if (!(await publish.count())) fail("Publish button missing on review");
   const disabled = await publish.isDisabled();
-  const notConfigured = await page
-    .getByText(/not switched on yet|no WhatsApp number configured/i)
-    .count();
   console.log("   publish disabled:", disabled);
-  console.log("   not-configured notice:", notConfigured > 0);
 
   const reviewTitle = await page.getByText("2015 Toyota Corolla").count();
   console.log("   derived title visible:", reviewTitle > 0);
 
   if (!disabled) {
-    // Capture the WhatsApp handoff URL instead of letting a real window open.
-    const popupPromise = page.waitForEvent("popup", { timeout: 5000 }).catch(() => null);
+    /**
+     * Assert the API submission, not a WhatsApp popup.
+     *
+     * This block used to wait for `page.waitForEvent("popup")` and a URL like
+     * `wa.me/968...`. SUBMIT_MODE is "api" now, so no window is ever opened and
+     * that wait could only ever time out.
+     *
+     * What replaces it is stronger: watch the actual POST to /api/listings and
+     * check what the server said. A green tick in the UI is worth much less than
+     * a 200 carrying `status: "pending-review"`, which is the whole contract —
+     * the listing was accepted, and it is a draft awaiting a human.
+     */
+    const postPromise = page.waitForResponse(
+      (r) => r.url().includes("/api/listings") && r.request().method() === "POST",
+      { timeout: 30000 },
+    );
     await page.getByTestId("listing-publish").click({ force: true });
-    const popup = await popupPromise;
-    if (!popup) fail("Publish did not open a WhatsApp window");
-    const popupUrl = popup.url();
-    const waOk =
-      /wa\.me\/968\d+/i.test(popupUrl) ||
-      (/api\.whatsapp\.com/i.test(popupUrl) && /phone=968\d+/i.test(popupUrl));
-    console.log("   whatsapp href ok:", waOk);
-    if (!waOk) fail(`Unexpected WhatsApp URL: ${popupUrl}`);
-    if (!/Toyota|Corolla|3500|3%2C500|OMR/i.test(popupUrl)) {
-      fail(`WhatsApp message missing listing details: ${popupUrl}`);
+
+    const res = await postPromise;
+    const body = await res.json().catch(() => null);
+    console.log("   POST /api/listings ->", res.status(), JSON.stringify(body));
+
+    if (res.status() !== 200 || body?.ok !== true) {
+      fail(`Submission rejected (${res.status()}): ${JSON.stringify(body)}`);
     }
-    await popup.close();
-    const sent = await page.getByText(/sent — check whatsapp/i).count();
-    console.log("   success notice:", sent > 0);
+    if (body?.status !== "pending-review") {
+      // Not cosmetic. Anything else means the draft/review contract changed, and
+      // the review queue is the only thing keeping unverified cars off the site.
+      fail(`Expected status "pending-review", got ${JSON.stringify(body?.status)}`);
+    }
+
+    // The UI has to agree with the server — a silent success is a bug of its own.
+    const sent = await page
+      .getByText(/thank you|received|pending|review/i)
+      .count();
+    console.log("   success notice shown:", sent > 0);
+    if (sent === 0) fail("Server accepted the listing but the form said nothing");
   }
 
-  // Soft-filter noisy console noise (HMR / tooling), keep real app errors.
+  /*
+   * Soft-filter tooling noise, keep real app errors.
+   *
+   * `_vercel` covers the analytics and speed-insights scripts. @vercel/analytics
+   * injects those tags unconditionally and the files only exist when served by
+   * Vercel, so locally they 404 and Chrome then refuses the HTML error page as a
+   * script. Two errors per page load, on every page, none of them ours — and
+   * they were failing this test after the flow itself had entirely passed.
+   */
   const realErrors = errors.filter(
     (e) =>
-      !/favicon|hydration|Download the React DevTools|WebSocket|webpack-hmr|MISSING_MESSAGE/i.test(
+      !/favicon|hydration|Download the React DevTools|WebSocket|webpack-hmr|MISSING_MESSAGE|_vercel/i.test(
         e,
       ),
   );
@@ -200,13 +326,15 @@ async function main() {
   await browser.close();
 
   console.log("\nOK — sell workflow smoke test finished");
-  if (disabled && notConfigured > 0) {
-    console.log(
-      "NOTE: Publish is disabled because NEXT_PUBLIC_AUTOSOUQ_WHATSAPP is unset.",
-    );
-    console.log(
-      "      Set it in apps/web/.env.local (e.g. 9689XXXXXXX) and restart the web app to complete the handoff.",
-    );
+  if (disabled) {
+    /*
+     * Under SUBMIT_MODE "api" this should be unreachable: canSubmitListing()
+     * returns true unconditionally, so a disabled Publish button means the form
+     * thought the listing was incomplete. Say so rather than exit 0 quietly —
+     * the previous version printed a note about an unset WhatsApp number, which
+     * has not been the reason since the API path landed.
+     */
+    fail("Publish was disabled — the form considered the listing incomplete");
   }
 }
 
