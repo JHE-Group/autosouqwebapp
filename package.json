@@ -5,6 +5,8 @@
     "dev": "pnpm --parallel --filter @autosouq/web --filter @autosouq/cms dev",
     "dev:web": "pnpm --filter @autosouq/web dev",
     "dev:cms": "pnpm --filter @autosouq/cms develop",
+    "db:dev": "node scripts/dev-db.mjs",
+    "db:dev:reset": "node scripts/dev-db.mjs --reset",
     "build": "pnpm --filter @autosouq/web --filter @autosouq/cms build",
     "lint": "pnpm --filter @autosouq/web lint",
     "check:band": "node scripts/check-price-band.mjs",

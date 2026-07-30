@@ -1,0 +1,53 @@
+# PostgreSQL for local development, for anyone without it installed natively.
+#
+# Not the primary path — `pnpm db:dev` against a local Postgres is fewer moving
+# parts and is what the scripts assume. This exists so a contributor with Docker
+# and no Postgres can still develop against the engine production runs on,
+# rather than falling back to SQLite and drawing conclusions about the wrong
+# database. See scripts/dev-db.mjs for why that distinction earns a file.
+#
+#   docker compose up -d db
+#   docker compose down          # stop, keep data
+#   docker compose down -v       # stop and wipe — the clean slate
+#
+# Then put the matching block in apps/cms/.env:
+#
+#   DATABASE_CLIENT=postgres
+#   DATABASE_HOST=localhost
+#   DATABASE_PORT=5433
+#   DATABASE_NAME=autosouq_dev
+#   DATABASE_USERNAME=autosouq
+#   DATABASE_PASSWORD=autosouq
+#   DATABASE_SSL=false
+
+services:
+  db:
+    # Pinned to the major version OVH Managed PostgreSQL runs. A local 17 against
+    # a production 16 reintroduces exactly the parity gap this file closes.
+    image: postgres:16-alpine
+    container_name: autosouq-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: autosouq
+      # Development only, and deliberately not a secret: it is in a committed
+      # file, reachable on localhost, and holds nothing but seed data. Anything
+      # resembling a real credential here would be a credential in git.
+      POSTGRES_PASSWORD: autosouq
+      POSTGRES_DB: autosouq_dev
+    ports:
+      # 5433, not 5432, so this cannot collide with a natively installed
+      # Postgres — the confusing failure is not "port in use", it is connecting
+      # to the wrong database and wondering why the data is missing.
+      - "5433:5432"
+    volumes:
+      - autosouq-dev-db:/var/lib/postgresql/data
+    healthcheck:
+      # So `docker compose up -d --wait` blocks until it can actually take a
+      # connection, rather than returning while Postgres is still starting.
+      test: ["CMD-SHELL", "pg_isready -U autosouq -d autosouq_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  autosouq-dev-db:
