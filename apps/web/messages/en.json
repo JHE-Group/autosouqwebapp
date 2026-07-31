@@ -796,6 +796,19 @@
     "haveAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
     "genericError": "Something went wrong. Please try again.",
-    "networkError": "We could not reach the server. Please check your connection and try again."
+    "networkError": "We could not reach the server. Please check your connection and try again.",
+    "errors": {
+      "bad_credentials": "Email or password is incorrect.",
+      "email_unavailable": "That email cannot be used. If the account is yours, sign in instead.",
+      "weak_password": "Your password needs at least 8 characters.",
+      "missing_fields": "Please fill in every field.",
+      "bad_msisdn": "Enter a valid Omani mobile number, for example 9123 4567.",
+      "invalid_request": "Something went wrong with that request. Please try again.",
+      "unreachable": "We could not reach the server. Check your connection and try again.",
+      "registration_unavailable": "New accounts are temporarily unavailable. Please try again later.",
+      "registration_failed": "We could not create your account. Please try again.",
+      "account_created_login_failed": "Your account was created. Please sign in to continue."
+    },
+    "accountCreatedSignIn": "Your account is ready — sign in to continue."
   }
 }

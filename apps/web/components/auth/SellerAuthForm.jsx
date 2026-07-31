@@ -18,7 +18,12 @@ import { Link, useRouter } from "@/i18n/navigation";
  * the CSP forbids the browser talking to the CMS and the session lives in an
  * httpOnly cookie the route handler sets.
  */
-export default function SellerAuthForm({ mode = "signin", next }) {
+export default function SellerAuthForm({
+  mode = "signin",
+  next,
+  notice = null,
+  defaultEmail = "",
+}) {
   const t = useTranslations("auth");
   const router = useRouter();
   const isSignUp = mode === "signup";
@@ -56,7 +61,47 @@ export default function SellerAuthForm({ mode = "signin", next }) {
       const data = await res.json().catch(() => null);
 
       if (!res.ok || !data?.ok) {
-        setError(data?.error ?? t("genericError"));
+        /*
+         * The account exists; only the follow-up sign-in failed.
+         *
+         * Showing this in the error banner tells the seller registration
+         * failed. If they then do the obvious thing and submit again, they meet
+         * "That email cannot be used" with a real account already in the CMS —
+         * a dead end built out of two correct-looking messages. Send them to
+         * sign-in with the address prefilled instead.
+         */
+        if (data?.code === "account_created_login_failed") {
+          router.push({
+            pathname: "/sign-in",
+            query: {
+              ...(next ? { next } : {}),
+              email: payload.email,
+              notice: "account_created",
+            },
+          });
+          return;
+        }
+
+        /*
+         * Translate the code; fall back to the server's English.
+         *
+         * Arabic is the default locale, and every error reachable here used to
+         * be an English sentence assembled in the CMS. The server still decides
+         * WHICH thing went wrong — it keeps the prose as its log line — and the
+         * client decides how that is said, in the reader's language.
+         *
+         * `t.has()` rather than trusting a fallback string: next-intl returns
+         * the key path for a miss, so without the check an unmapped code would
+         * render "auth.errors.something" to a seller. Falling back to the
+         * server's English is the wrong language; falling back to a key path is
+         * no message at all.
+         */
+        const code = data?.code;
+        setError(
+          code && t.has(`errors.${code}`)
+            ? t(`errors.${code}`)
+            : (data?.error ?? t("genericError")),
+        );
         setPending(false);
         // On sign-up at 360px the button sits below four fields and the banner
         // mounts above the fold, so the only visible result of a failed submit
@@ -102,12 +147,24 @@ export default function SellerAuthForm({ mode = "signin", next }) {
         node INSERTED into the DOM, versus text placed into a region already
         there. AddListing and Contact both use this persistent-wrapper shape.
 
-        `lang="en"`/`dir="ltr"`: every message reaching here is English, because
-        the route handlers and the CMS hardcode them — without this an Arabic
-        screen reader voices English with Arabic phonemes (WCAG 3.1.2).
         `--error` distinguishes a failure from the informational notices that
         share `.tfcl-notice`.
+
+        The `lang="en" dir="ltr"` stopgap is gone: messages are now selected by
+        machine code from the locale catalogue, so what renders here is in the
+        reader's language and marking it English would be a lie.
       */}
+      {/*
+        A success, so `role="status"` and the plain notice — not `--error`.
+        This is the "your account was created, now sign in" handoff, and putting
+        it in the failure banner is what made that path read as a failure.
+      */}
+      {notice ? (
+        <div className="tfcl-notice" role="status">
+          {t(notice)}
+        </div>
+      ) : null}
+
       <div
         className="tfcl-auth__feedback"
         aria-live="assertive"
@@ -119,8 +176,6 @@ export default function SellerAuthForm({ mode = "signin", next }) {
             tabIndex={-1}
             className="tfcl-notice tfcl-notice--error"
             role="alert"
-            lang="en"
-            dir="ltr"
           >
             {error}
           </div>
@@ -153,6 +208,9 @@ export default function SellerAuthForm({ mode = "signin", next }) {
           id="auth-email"
           name="email"
           type="email"
+          // Prefilled when arriving from the sign-up handoff, so the seller
+          // does not retype the address they chose thirty seconds ago.
+          defaultValue={defaultEmail}
           // Always Latin, so it stays LTR even on the Arabic page. `fullName`
           // deliberately does not get this — it takes Arabic names.
           dir="ltr"

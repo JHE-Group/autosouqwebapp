@@ -109,11 +109,22 @@ async function cmsPost(path, body, { cookie } = {}) {
     const payload = await res.json().catch(() => null);
 
     if (!res.ok) {
-      // Strapi nests the readable part; everything else is shape we do not want
-      // to leak to a form. Falls back to a sentence rather than a status code.
+      /*
+       * Carry the machine code as well as the sentence.
+       *
+       * The CMS puts a stable code on `error.details.code` and the English
+       * prose on `error.message`. The web app translates the former and keeps
+       * the latter as the log line and the fallback for an unmapped code — a
+       * missing translation should degrade to the wrong language, not to no
+       * message at all.
+       */
       const message =
         payload?.error?.message ?? "Something went wrong. Please try again.";
-      return { ok: false, error: message };
+      return {
+        ok: false,
+        code: payload?.error?.details?.code ?? "unknown",
+        error: message,
+      };
     }
 
     return { ok: true, data: payload, refreshCookie: extractRefreshCookie(res) };
@@ -122,6 +133,7 @@ async function cmsPost(path, body, { cookie } = {}) {
     // app.autosouq.om going down is our problem, and the message should say so.
     return {
       ok: false,
+      code: "unreachable",
       error: "We could not reach the server. Please try again in a moment.",
     };
   }
@@ -163,6 +175,17 @@ export async function registerSeller({ email, password, fullName, whatsapp }) {
     // find the email taken when they retried.
     return {
       ok: false,
+      /*
+       * A success wearing the failure channel's clothes.
+       *
+       * The account exists; only the follow-up login failed. Rendering this in
+       * the error banner tells the seller their registration failed, and if
+       * they do the obvious thing and press the button again they meet "That
+       * email cannot be used." with a real account already sitting in the CMS.
+       * The component special-cases this code and routes them to sign-in with
+       * the address prefilled.
+       */
+      code: "account_created_login_failed",
       error: "Your account was created. Please sign in to continue.",
     };
   }
@@ -190,7 +213,11 @@ export async function loginSeller({ email, password }) {
   if (!result.ok) {
     // Strapi says "Invalid identifier or password", which is the right amount
     // of information but not the right voice for a form.
-    return { ok: false, error: "Email or password is incorrect." };
+    return {
+      ok: false,
+      code: "bad_credentials",
+      error: "Email or password is incorrect.",
+    };
   }
 
   /**

@@ -19,7 +19,7 @@ export async function POST(request) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, error: "Invalid request." },
+      { ok: false, code: "invalid_request", error: "Invalid request." },
       { status: 400 },
     );
   }
@@ -33,7 +33,11 @@ export async function POST(request) {
     // taken or the number malformed. Passing them through keeps one source of
     // truth for validation rather than restating the rules in two places.
     return NextResponse.json(
-      { ok: false, error: result.error ?? "Could not create your account." },
+      {
+        ok: false,
+        code: result.code ?? "registration_failed",
+        error: result.error ?? "Could not create your account.",
+      },
       { status: 400 },
     );
   }

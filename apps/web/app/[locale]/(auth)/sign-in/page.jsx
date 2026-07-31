@@ -29,7 +29,7 @@ export async function generateMetadata({ params }) {
 
 export default async function SignInPage({ params, searchParams }) {
   const { locale } = await params;
-  const { next } = (await searchParams) ?? {};
+  const { next, notice, email } = (await searchParams) ?? {};
 
   // Already signed in — send them on rather than showing a form that would
   // sign them in as the person they already are.
@@ -75,7 +75,18 @@ export default async function SignInPage({ params, searchParams }) {
             />
             <h1 className="tfcl-auth__title">{t("signInHeading")}</h1>
             <p className="tfcl-auth__lead">{t("signInLead")}</p>
-            <SellerAuthForm mode="signin" next={safeNext(next)} />
+            {/*
+              `notice` and `defaultEmail` arrive from the sign-up form when the
+              account was created but the automatic sign-in failed. That is a
+              success, so it must not appear in the error channel — and the seller
+              should not retype the address they just chose.
+            */}
+            <SellerAuthForm
+              mode="signin"
+              next={safeNext(next)}
+              notice={notice === "account_created" ? "accountCreatedSignIn" : null}
+              defaultEmail={typeof email === "string" ? email : ""}
+            />
           </main>
         </div>
       </section>

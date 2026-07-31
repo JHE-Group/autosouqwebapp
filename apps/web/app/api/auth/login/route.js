@@ -13,7 +13,7 @@ export async function POST(request) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, error: "Invalid request." },
+      { ok: false, code: "invalid_request", error: "Invalid request." },
       { status: 400 },
     );
   }
@@ -22,7 +22,7 @@ export async function POST(request) {
 
   if (!email || !password) {
     return NextResponse.json(
-      { ok: false, error: "Enter your email and password." },
+      { ok: false, code: "missing_fields", error: "Enter your email and password." },
       { status: 400 },
     );
   }
@@ -39,7 +39,11 @@ export async function POST(request) {
      * cannot be played off against each other.
      */
     return NextResponse.json(
-      { ok: false, error: result.error ?? "Email or password is incorrect." },
+      {
+        ok: false,
+        code: result.code ?? "bad_credentials",
+        error: result.error ?? "Email or password is incorrect.",
+      },
       { status: 401 },
     );
   }
