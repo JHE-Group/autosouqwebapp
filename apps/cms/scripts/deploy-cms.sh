@@ -2,8 +2,21 @@
 #
 # Deploy the CMS on the OVH box. Run it THERE, not on your laptop.
 #
-#   ./deploy-cms.sh              check everything, change nothing
-#   ./deploy-cms.sh --run        actually deploy
+#   cd /path/to/autosouq-cms
+#   export NODE_ENV=production
+#   ./scripts/deploy-cms.sh              check everything, change nothing
+#   ./scripts/deploy-cms.sh --run        actually deploy
+#
+# Run it with bash, or via ./ so the shebang applies. `sh scripts/deploy-cms.sh`
+# ignores the shebang and uses POSIX sh, which does not support the `[[` tests
+# below, and fails with a syntax error that says nothing useful.
+#
+# ## Why this lives under apps/cms and not in the repo's scripts/
+#
+# The CMS branch is `git subtree split --prefix=apps/cms`, so only what is
+# inside apps/cms reaches the server. A deploy script at the repo root is a
+# deploy script the deploy target never sees — which is exactly where this was
+# first written.
 #
 # ## Why this exists
 #
