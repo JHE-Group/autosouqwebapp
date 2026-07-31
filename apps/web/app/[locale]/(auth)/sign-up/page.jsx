@@ -38,9 +38,12 @@ export default async function SignUpPage({ params, searchParams }) {
       <section className="flat-title mb-40">
         <div className="container2">
           <div className="row">
-            <div className="col-lg-6 offset-lg-3">
+            {/* mx-auto, not offset-lg-3: Bootstrap's offset is margin-left,
+                which the four-entry RTL shim in style.scss does not cover, so the
+                Arabic page — the default locale — sat off-centre. */}
+            <div className="col-lg-6 mx-auto">
               <div className="tfcl-card">
-                <h1 className="fs-24 fw-6">{t("signUpHeading")}</h1>
+                <h1 className="fs-26 fw-6">{t("signUpHeading")}</h1>
                 <p className="tfcl-hint" style={{ marginBottom: 24 }}>
                   {t("signUpLead")}
                 </p>
@@ -50,7 +53,7 @@ export default async function SignUpPage({ params, searchParams }) {
           </div>
         </div>
       </section>
-      <SiteFooter />
+      <SiteFooter locale={locale} />
     </>
   );
 }

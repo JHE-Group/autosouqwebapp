@@ -788,9 +788,6 @@
     "fullNamePlaceholder": "e.g. Ahmed Al-Rashdi",
     "email": "Email",
     "emailPlaceholder": "you@example.com",
-    "whatsapp": "WhatsApp number",
-    "whatsappPlaceholder": "9123 4567",
-    "optional": "(optional)",
     "password": "Password",
     "passwordPlaceholder": "At least 8 characters",
     "passwordHint": "At least 8 characters.",
@@ -800,7 +797,6 @@
     "haveAccount": "Already have an account?",
     "noAccount": "Don't have an account?",
     "genericError": "Something went wrong. Please try again.",
-    "networkError": "We could not reach the server. Please check your connection and try again.",
-    "signInToContinue": "Sign in to list your car"
+    "networkError": "We could not reach the server. Please check your connection and try again."
   }
 }

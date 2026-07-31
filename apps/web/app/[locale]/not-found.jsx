@@ -42,11 +42,11 @@ export default async function NotFound() {
             <h1 className="fs-32 fw-6 mb-3">{t("title")}</h1>
             <p className="font-2 fs-16 lh-26 mb-4">{t("body")}</p>
             <div className="d-flex justify-content-center gap-3 flex-wrap">
-              <Link href="/used-cars" className="tf-btn bg-color-primary">
-                {tCommon("browseAll")}
+              <Link href="/used-cars" className="sc-button">
+                <span>{tCommon("browseAll")}</span>
               </Link>
-              <Link href="/" className="tf-btn style-border">
-                {t("home")}
+              <Link href="/" className="sc-button btn-1">
+                <span>{t("home")}</span>
               </Link>
             </div>
           </div>

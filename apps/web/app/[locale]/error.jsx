@@ -37,8 +37,8 @@ export default function Error({ error, reset }) {
         <div className="text-center" style={{ padding: "4rem 0" }}>
           <h1 className="fs-32 fw-6 mb-3">{t("title")}</h1>
           <p className="font-2 fs-16 lh-26 mb-4">{t("body")}</p>
-          <button type="button" onClick={reset} className="tf-btn bg-color-primary">
-            {t("retry")}
+          <button type="button" onClick={reset} className="sc-button">
+            <span>{t("retry")}</span>
           </button>
           {error?.digest ? (
             <p className="font-2 fs-14 mt-3 op-06">
