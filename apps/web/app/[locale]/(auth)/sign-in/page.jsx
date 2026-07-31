@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import SiteFooter from "@/components/footers/SiteFooter";
@@ -42,22 +43,40 @@ export default async function SignInPage({ params, searchParams }) {
       <div className="header-fixed">
         <Header2 />
       </div>
-      <section className="flat-title mb-40">
-        <div className="container2">
-          <div className="row">
-            {/* mx-auto, not offset-lg-3: Bootstrap's offset is margin-left,
-                which the four-entry RTL shim in style.scss does not cover, so the
-                Arabic page — the default locale — sat off-centre. */}
-            <div className="col-lg-6 mx-auto">
-              <div className="tfcl-card">
-                <h1 className="fs-26 fw-6">{t("signInHeading")}</h1>
-                <p className="tfcl-hint" style={{ marginBottom: 24 }}>
-                  {t("signInLead")}
-                </p>
-                <SellerAuthForm mode="signin" next={safeNext(next)} />
-              </div>
-            </div>
-          </div>
+      {/*
+        `tfcl-auth`, not `flat-title`. That class is the breadcrumb bar
+        (_section.scss: a bottom border plus 64px of margin), and both pages
+        instantiated it EMPTY — drawing a stray full-bleed rule above the card
+        and stacking `mb-40 !important` on top of its own spacing. `container2`
+        is a 1750px content column, which is not what a 440px login box wants.
+
+        `<main>` because these two pages were the only ones on the site without
+        the landmark, and there is no skip link to compensate.
+      */}
+      <section className="tfcl-auth">
+        <div className="container">
+          <main className="tfcl-auth__card">
+            {/*
+              Decorative: the <h1> below names the page and the site header
+              already names the site, so announcing the logo would be the third
+              time. 164x57 preserves the 566.9x196.1 viewBox — the brand README
+              warns that reusing another lockup's dimensions squashes the mark.
+              `unoptimized` because /_next/image does not process SVG, by
+              deliberate policy in next.config.mjs.
+            */}
+            <Image
+              src="/assets/images/brand/logo-horizontal-om-primary.svg"
+              alt=""
+              aria-hidden
+              width={164}
+              height={57}
+              unoptimized
+              className="tfcl-auth__logo"
+            />
+            <h1 className="tfcl-auth__title">{t("signInHeading")}</h1>
+            <p className="tfcl-auth__lead">{t("signInLead")}</p>
+            <SellerAuthForm mode="signin" next={safeNext(next)} />
+          </main>
         </div>
       </section>
       <SiteFooter locale={locale} />

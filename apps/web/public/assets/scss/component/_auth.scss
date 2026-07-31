@@ -1,0 +1,176 @@
+@use '../abstracts/' as *;
+
+/*
+ * Sign in and sign up.
+ *
+ * ## Why this file exists at all
+ *
+ * The auth screens shipped naming five classes that do not exist anywhere in
+ * scss/ or css/ — `tf-btn`, `tfcl-card`, `tb-my-input`, `form-submit`, `font-1`
+ * — copied from AddListing without checking. `.tfcl-card` in particular is only
+ * ever defined as `.tfcl-dashboard-overview .tfcl-card`, scoped to a page this
+ * form is not on. The button rendered as Bootstrap Reboot's default.
+ *
+ * The fix is not to borrow another component's scoped rules, which reproduces
+ * the same fragility one layer along. This surface owns its own namespace, so
+ * nothing here can reach the dashboard, and nothing there can silently restyle
+ * a login box.
+ *
+ * ## Why not a global `.tfcl-card`
+ *
+ * That was the competing proposal and it is the more dangerous one on a live
+ * site: `.tfcl-card` is already consumed by Messages, the DashBoard stat tiles
+ * and tfcl-dashboard-reviews, so giving it a base rule changes three pages
+ * nobody asked about. `tfcl-auth-*` has no blast radius by construction.
+ */
+
+.tfcl-auth {
+    padding-block: $section-py-tight;
+
+    @media (max-width: 767.98px) {
+        padding-block: $section-py-mobile;
+    }
+}
+
+.tfcl-auth__card {
+    // A login box does not want the 1750px content column the rest of the site
+    // uses. 440px is roughly 60 characters of the lead at 16px, which is the
+    // measure the type scale is built around.
+    max-inline-size: 440px;
+    margin-inline: auto;
+    background: $color-1;
+    border: 1px solid $color-6;
+    border-radius: $radius-card;
+    padding: $space-8;
+    box-shadow: $shadow-sm;
+
+    // On a phone the card border draws a box around a box — the viewport is
+    // already the container. Drop the chrome and keep the rhythm.
+    @media (max-width: 575.98px) {
+        border: 0;
+        box-shadow: none;
+        padding: $space-6 0;
+    }
+}
+
+.tfcl-auth__logo {
+    display: block;
+    margin: 0 auto $space-6;
+}
+
+.tfcl-auth__title {
+    @include type-display('xl', $fw-semibold);
+    margin-block-end: $space-2;
+}
+
+.tfcl-auth__lead {
+    @include type('base', $fw-regular, $font-2);
+    color: $color-4;
+    max-inline-size: 40ch;
+    margin-block-end: $space-8;
+}
+
+/*
+ * Grid, not margins.
+ *
+ * The gap owns the spacing, so there is no `margin-bottom` to get the wrong way
+ * round under RTL and no last-child exception to remember. It also replaces
+ * `fieldset { margin-bottom: 10px }`, an off-scale value already on the
+ * migration list in design/tokens.md.
+ */
+.tfcl-auth__form {
+    display: grid;
+    gap: $space-5;
+}
+
+.tfcl-auth__field {
+    display: grid;
+    gap: $space-2;
+}
+
+.tfcl-auth__field label {
+    @include type-label('sm', $fw-medium);
+    color: $color-2;
+}
+
+.tfcl-auth__field input {
+    /*
+     * `$color-7` (#5C6368, 6.11:1), not `$color-6` (1.17:1).
+     *
+     * A form control's boundary is information, not decoration: WCAG 1.4.11
+     * wants 3:1 for it, and at 1.17:1 the field edge was effectively invisible
+     * against the card.
+     */
+    border: 1px solid $color-7;
+    border-radius: $radius-control;
+    // The theme's input padding reserves a 44px trailing gutter for an icon
+    // none of these fields has, which pushed the caret away from the edge.
+    padding-inline: $space-4;
+    // Darker than the placeholder, so a typed value reads as answered.
+    color: $color-2;
+    background: $color-1;
+    min-block-size: 52px;
+    // 26px. `$lh-sm` (22px) clips Cairo's descenders on the Arabic page.
+    line-height: $lh-base;
+    inline-size: 100%;
+    @include transition3;
+
+    /*
+     * The focus fix.
+     *
+     * `style.scss` has `fieldset input:focus { border-color: $color-3 }` at
+     * specificity (0,1,2), which outranks the global `input:focus` rule at
+     * (0,1,1). Every field on this form used to sit in a `<fieldset>`, so focus
+     * rendered #E97451 at 2.97:1 — below the 3:1 that focus indication needs,
+     * and the audit initially recorded it as passing.
+     *
+     * The markup change to `<div class="tfcl-auth__field">` removes the
+     * fieldset ancestor, so that rule stops matching. This declaration then
+     * states the intent explicitly rather than relying on a cascade accident.
+     */
+    &:focus {
+        border-color: $color-3-text;
+        outline: 2px solid $color-3-text;
+        outline-offset: 1px;
+    }
+
+    &::placeholder {
+        color: $color-4;
+    }
+}
+
+/*
+ * Latin fields on the Arabic page.
+ *
+ * Email and password carry `dir="ltr"` so the text itself runs left to right,
+ * but the field should still sit against the reading edge of an RTL layout.
+ */
+[dir="rtl"] .tfcl-auth__field input[dir="ltr"] {
+    text-align: right;
+}
+
+// The grid gap already provides the 8px; the hint's own margin would double it.
+.tfcl-auth__field .tfcl-hint {
+    margin-block-start: 0;
+}
+
+/*
+ * The live region is always present, even when empty.
+ *
+ * iOS VoiceOver and TalkBack are unreliable at announcing a `role="alert"` node
+ * that is *inserted* into the DOM, versus text placed into a region that was
+ * already there. AddListing and Contact both use the persistent-wrapper pattern
+ * for the same reason.
+ */
+.tfcl-auth__feedback:empty {
+    display: none;
+}
+
+.tfcl-auth__alt {
+    margin-block-start: $space-6;
+    padding-block-start: $space-6;
+    border-block-start: 1px solid $color-6;
+    @include type('sm', $fw-regular, $font-2);
+    color: $color-4;
+    text-align: center;
+}

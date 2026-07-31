@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 
@@ -25,6 +25,7 @@ export default function SellerAuthForm({ mode = "signin", next }) {
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  const errorRef = useRef(null);
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -57,6 +58,12 @@ export default function SellerAuthForm({ mode = "signin", next }) {
       if (!res.ok || !data?.ok) {
         setError(data?.error ?? t("genericError"));
         setPending(false);
+        // On sign-up at 360px the button sits below four fields and the banner
+        // mounts above the fold, so the only visible result of a failed submit
+        // was the label reverting. Focusing scrolls it into view and moves the
+        // caret in one step — the pattern AddListing already uses for its step
+        // headings. It also compensates for `disabled` blurring the button.
+        requestAnimationFrame(() => errorRef.current?.focus());
         return;
       }
 
@@ -73,6 +80,7 @@ export default function SellerAuthForm({ mode = "signin", next }) {
     } catch {
       setError(t("networkError"));
       setPending(false);
+      requestAnimationFrame(() => errorRef.current?.focus());
     }
   }
 
@@ -86,47 +94,59 @@ export default function SellerAuthForm({ mode = "signin", next }) {
    * this audience. It also survives the phone-OTP swap untouched.
    */
   return (
-    <form className="comment-form form-submit" onSubmit={onSubmit}>
-      {error ? (
-        // `alert` so a screen reader announces it: a sighted user sees the
-        // message appear, and without this nobody else is told anything.
-        // `lang`/`dir`: every message reaching here is English — the route
-        // handlers and the CMS both hardcode them — so an Arabic-configured
-        // screen reader would otherwise voice it with Arabic phonemes (WCAG
-        // 3.1.2), and _arabic.scss would set it in Cairo's Latin stub rather
-        // than Inter. A stopgap until the errors themselves are translated.
-        <div
-          className="tfcl-notice"
-          role="alert"
-          lang="en"
-          dir="ltr"
-          style={{ marginBottom: 16 }}
-        >
-          {error}
-        </div>
-      ) : null}
+    <form className="tfcl-auth__form" onSubmit={onSubmit}>
+      {/*
+        The region is present at page load even when empty.
+
+        iOS VoiceOver and TalkBack are unreliable announcing a `role="alert"`
+        node INSERTED into the DOM, versus text placed into a region already
+        there. AddListing and Contact both use this persistent-wrapper shape.
+
+        `lang="en"`/`dir="ltr"`: every message reaching here is English, because
+        the route handlers and the CMS hardcode them — without this an Arabic
+        screen reader voices English with Arabic phonemes (WCAG 3.1.2).
+        `--error` distinguishes a failure from the informational notices that
+        share `.tfcl-notice`.
+      */}
+      <div
+        className="tfcl-auth__feedback"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        {error ? (
+          <div
+            ref={errorRef}
+            tabIndex={-1}
+            className="tfcl-notice tfcl-notice--error"
+            role="alert"
+            lang="en"
+            dir="ltr"
+          >
+            {error}
+          </div>
+        ) : null}
+      </div>
 
       {isSignUp ? (
-        <fieldset className="email-wrap style-text">
-          <label className="font-1 fs-14 fw-5" htmlFor="auth-fullname">
+        <div className="tfcl-auth__field">
+          <label htmlFor="auth-fullname">
             {t("fullName")}
           </label>
           <input
             id="auth-fullname"
             name="fullName"
             type="text"
-            className="tb-my-input"
             autoComplete="name"
             required
             minLength={2}
             maxLength={80}
             placeholder={t("fullNamePlaceholder")}
           />
-        </fieldset>
+        </div>
       ) : null}
 
-      <fieldset className="email-wrap style-text">
-        <label className="font-1 fs-14 fw-5" htmlFor="auth-email">
+      <div className="tfcl-auth__field">
+        <label htmlFor="auth-email">
           {t("email")}
         </label>
         <input
@@ -136,12 +156,11 @@ export default function SellerAuthForm({ mode = "signin", next }) {
           // Always Latin, so it stays LTR even on the Arabic page. `fullName`
           // deliberately does not get this — it takes Arabic names.
           dir="ltr"
-          className="tb-my-input"
           autoComplete="email"
           required
           placeholder={t("emailPlaceholder")}
         />
-      </fieldset>
+      </div>
 
       {/*
         The WhatsApp field is gone, deliberately.
@@ -164,8 +183,8 @@ export default function SellerAuthForm({ mode = "signin", next }) {
         replace anyway.
       */}
 
-      <fieldset className="phone-wrap style-text">
-        <label className="font-1 fs-14 fw-5" htmlFor="auth-password">
+      <div className="tfcl-auth__field">
+        <label htmlFor="auth-password">
           {t("password")}
         </label>
         <input
@@ -173,18 +192,22 @@ export default function SellerAuthForm({ mode = "signin", next }) {
           name="password"
           type="password"
           dir="ltr"
-          className="tb-my-input"
           // `new-password` on signup stops a manager offering the password the
           // seller uses elsewhere, and prompts it to store the new one.
           autoComplete={isSignUp ? "new-password" : "current-password"}
           required
           minLength={isSignUp ? 8 : undefined}
-          placeholder={t("passwordPlaceholder")}
+          // No placeholder: it was `passwordHint` minus a full stop, rendered
+          // 8px below the hint itself — and a placeholder disappears exactly
+          // when the rule starts mattering, as you type.
+          aria-describedby={isSignUp ? "auth-password-hint" : undefined}
         />
         {isSignUp ? (
-          <p className="tfcl-hint">{t("passwordHint")}</p>
+          <p className="tfcl-hint" id="auth-password-hint">
+            {t("passwordHint")}
+          </p>
         ) : null}
-      </fieldset>
+      </div>
 
       {/*
         `sc-button`, not `tf-btn` — the latter is not defined anywhere in
@@ -209,7 +232,7 @@ export default function SellerAuthForm({ mode = "signin", next }) {
         </span>
       </button>
 
-      <p style={{ marginTop: 16 }}>
+      <p className="tfcl-auth__alt">
         {isSignUp ? t("haveAccount") : t("noAccount")}{" "}
         {/* Carry `next` across: without it, a seller who clicks "sign in
             instead" is sent to /add-listing afterwards rather than back to

@@ -3948,6 +3948,27 @@
   gap: 16px;
 }
 
+/*
+ * A notice that is reporting a failure, not offering information.
+ *
+ * `.tfcl-notice` is terracotta-tinted and used for all of: AddListing's "we
+ * found a saved draft", Contact's "mail is not configured", and — until this —
+ * a failed login. Three different meanings, pixel-identical, and only the login
+ * one carries `role="alert"`. A seller who mistyped their password saw the same
+ * box that tells them their draft was recovered.
+ *
+ * `$color-10` (#B45309) rather than a red: it is the amber already used for
+ * sold-as-is and reaches 5.02:1, where the palette's reds do not. The 6% tint
+ * keeps it a notice rather than an alarm.
+ *
+ * `border-inline-start` is logical, so it moves to the right edge under RTL
+ * with no shim.
+ */
+.tfcl-notice--error {
+  border-inline-start-color: $color-10;
+  background: rgba(180, 83, 9, 0.06);
+}
+
 .tfcl-notice__buttons {
   display: inline-flex;
   align-items: center;

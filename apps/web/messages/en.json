@@ -789,7 +789,6 @@
     "email": "Email",
     "emailPlaceholder": "you@example.com",
     "password": "Password",
-    "passwordPlaceholder": "At least 8 characters",
     "passwordHint": "At least 8 characters.",
     "createAccount": "Create account",
     "signIn": "Sign in",
