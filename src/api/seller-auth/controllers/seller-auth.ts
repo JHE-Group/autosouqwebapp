@@ -29,7 +29,27 @@ import type { Core } from '@strapi/strapi';
  * A class declared here has one identity by construction, and `ctx.badRequest`
  * sets the status directly rather than relying on the middleware to infer it.
  */
-class RegisterError extends Error {}
+class RegisterError extends Error {
+  /**
+   * A stable machine code alongside the message.
+   *
+   * The English sentence stays: it is the log line, and the fallback if the web
+   * app ever meets a code it has no translation for — a missing translation
+   * should degrade to the wrong language, not to no message.
+   *
+   * But the sentence cannot be the contract. Arabic is the default locale, so
+   * every error an Arabic seller could actually reach was English prose. The
+   * CMS still owns *which* thing went wrong; the web app owns how it is said,
+   * and in whose language. Codes are transport-agnostic, so they survive the
+   * phone-OTP swap — only the set changes.
+   */
+  code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
 
 /** Omani mobile numbers, with or without the 968 country code. */
 const OMANI_MSISDN = /^(?:968)?[79]\d{7}$/;
@@ -38,7 +58,10 @@ function normalizeMsisdn(raw: unknown): string | undefined {
   if (typeof raw !== 'string' || !raw.trim()) return undefined;
   const digits = raw.replace(/\D/g, '');
   if (!OMANI_MSISDN.test(digits)) {
-    throw new RegisterError('Enter a valid Omani mobile number, e.g. 9123 4567.');
+    throw new RegisterError(
+      'bad_msisdn',
+      'Enter a valid Omani mobile number, e.g. 9123 4567.',
+    );
   }
   return digits.startsWith('968') ? digits : `968${digits}`;
 }
@@ -46,7 +69,10 @@ function normalizeMsisdn(raw: unknown): string | undefined {
 function requireString(value: unknown, field: string, min: number, max: number) {
   const trimmed = typeof value === 'string' ? value.trim() : '';
   if (trimmed.length < min || trimmed.length > max) {
-    throw new RegisterError(`${field} must be between ${min} and ${max} characters.`);
+    throw new RegisterError(
+      field === 'Password' ? 'weak_password' : 'missing_fields',
+      `${field} must be between ${min} and ${max} characters.`,
+    );
   }
   return trimmed;
 }
@@ -54,7 +80,9 @@ function requireString(value: unknown, field: string, min: number, max: number) 
 type RegisterCtx = {
   request: { body?: Record<string, unknown> };
   body?: unknown;
-  badRequest: (message: string) => unknown;
+  // Strapi's second argument lands on `error.details`, which is where the web
+  // app reads the machine code from.
+  badRequest: (message: string, details?: Record<string, unknown>) => unknown;
 };
 
 type ListingsCtx = {
@@ -121,7 +149,7 @@ export default {
         // Deliberately vague. Confirming which addresses hold accounts turns
         // this into a membership oracle, on a site whose sellers are
         // identifiable individuals.
-        throw new RegisterError('That email cannot be used.');
+        throw new RegisterError('email_unavailable', 'That email cannot be used.');
       }
 
       const settings = (await strapi
@@ -134,7 +162,10 @@ export default {
 
       if (!role) {
         strapi.log.error('Autosouq: no default role — cannot register sellers.');
-        throw new RegisterError('Registration is unavailable.');
+        throw new RegisterError(
+          'registration_unavailable',
+          'Registration is unavailable.',
+        );
       }
 
       const user = await users.service('user').add({
@@ -179,11 +210,17 @@ export default {
         },
       };
     } catch (err) {
-      if (err instanceof RegisterError) return ctx.badRequest(err.message);
+      if (err instanceof RegisterError) {
+        // `badRequest(message, details)` puts `details` on error.details, which
+        // is where the web app reads the code from.
+        return ctx.badRequest(err.message, { code: err.code });
+      }
       // Anything else is ours, not the caller's: log it in full and say
       // nothing useful to a stranger probing the endpoint.
       strapi.log.error(`Autosouq: seller registration failed — ${err}`);
-      return ctx.badRequest('Could not create your account. Please try again.');
+      return ctx.badRequest('Could not create your account. Please try again.', {
+        code: 'registration_failed',
+      });
     }
   },
 
