@@ -415,7 +415,41 @@ export async function POST(request) {
      * reviewer can shorten it in the admin before publishing — they are opening
      * every draft anyway.
      */
-    const res = await post(`${slugify(title)}-${slugSuffix()}`);
+    const slug = `${slugify(title)}-${slugSuffix()}`;
+    let res = await post(slug);
+
+    /**
+     * Retry without relations if the CMS will not accept them.
+     *
+     * The relation lookup uses the PUBLIC taxonomy API, so it succeeds against
+     * any CMS. Writing the relation needs the Authenticated role to hold
+     * `find` on those content types — Strapi's input sanitiser strips relations
+     * pointing at a type the caller cannot read, and answers `400 Invalid key
+     * make`. That grant ships in the same commit as this file but lands in a
+     * different deploy, on a different machine, at a different time.
+     *
+     * Without this retry, a web deploy that arrives before the CMS deploy
+     * breaks submission outright: every seller sees "Invalid key make" and
+     * nobody can file a car. Verified by revoking the grant locally and
+     * submitting — that is exactly what happens.
+     *
+     * So: try with relations, fall back to without. The fallback produces the
+     * listing this code produced before today — unrelated, and needing a human
+     * to attach the taxonomy in review — which is worse than the happy path and
+     * far better than a dead form. Logged, because a run of these means the CMS
+     * deploy has not landed yet.
+     */
+    if (res.status === 400 && Object.keys(relations).length) {
+      const peek = await res.clone().json().catch(() => null);
+      if (/invalid key (make|model|city)/i.test(peek?.error?.message ?? "")) {
+        console.warn(
+          "listing submit: CMS rejected taxonomy relations — retrying without them. " +
+            "The CMS is likely running a build older than the permission grant.",
+        );
+        for (const key of Object.keys(relations)) delete payload[key];
+        res = await post(slug);
+      }
+    }
 
     const body = await res.json().catch(() => null);
 
