@@ -26,6 +26,103 @@ const UPLOAD_TIMEOUT_MS = 60000;
 /** The enum the CMS accepts. Anything else is dropped rather than guessed at. */
 const IMPORT_ORIGINS = new Set(["gcc", "us-import", "japan-import", "other"]);
 
+/**
+ * Attach make, model and city as real taxonomy relations.
+ *
+ * ## Why this is not optional
+ *
+ * A listing's public URL is built from its RELATIONS, not from its `slug`
+ * column: lib/seo.js `listingSlug` composes `{id}-{make}-{model}-{year}-{city}`,
+ * and lib/resolveListing.js only ever matches on that or on a bare id — it never
+ * looks at the CMS `slug` field.
+ *
+ * So a submission without relations produced a listing that browse linked to and
+ * that 404'd on arrival. Every one of them. A seller filed a car, a moderator
+ * published it, it appeared in the listings, and the link was dead. Verified
+ * across six seller-created listings before this existed.
+ *
+ * Relations also decide facet membership, so an unrelated listing never counts
+ * towards /used-cars/muscat and never appears in a filtered view. It is present
+ * in the catalogue and absent from every route into it.
+ *
+ * ## Matching, and what happens when it fails
+ *
+ * By slug first, then case-insensitively by name, against the seeded
+ * vocabulary. A miss leaves the field unset rather than failing the submission:
+ * a seller whose make is not yet in our list should still be able to file the
+ * car, and the moderator who reviews every draft can attach it. Blocking them
+ * would trade a broken URL for a lost listing.
+ */
+function pickTaxonomy(rows, value) {
+  const wanted = String(value ?? "").trim().toLowerCase();
+  if (!wanted) return null;
+  const hit =
+    rows.find((r) => String(r.slug ?? "").toLowerCase() === wanted) ??
+    rows.find((r) => String(r.name ?? "").toLowerCase() === wanted);
+  return hit?.documentId ?? null;
+}
+
+async function resolveRelations(form) {
+  const wanted = [
+    ["make", "makes", form.make],
+    ["model", "models", form.model],
+    ["city", "cities", form.city],
+  ].filter(([, , value]) => String(value ?? "").trim());
+
+  if (!wanted.length) return {};
+
+  const relations = {};
+
+  for (const [field, collection, value] of wanted) {
+    try {
+      const res = await fetch(
+        `${STRAPI_URL}/api/${collection}?pagination%5BpageSize%5D=100`,
+        {
+          /*
+           * `no-store`, not a revalidate window.
+           *
+           * The first version cached these for 300s and folded every failure
+           * into an empty array, so one flaky lookup silently dropped one
+           * relation while its siblings succeeded — observed exactly once, and
+           * it produced a listing with a make and a model and no city, which is
+           * a URL missing a segment and a facet the car never joins.
+           *
+           * Three small reads on the rare occasion someone files a car is not a
+           * cost worth trading correctness for.
+           */
+          cache: "no-store",
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+        },
+      );
+
+      if (!res.ok) {
+        console.warn(`listing submit: ${collection} lookup failed (${res.status})`);
+        continue;
+      }
+
+      const rows = (await res.json())?.data ?? [];
+      const hit = pickTaxonomy(rows, value);
+
+      if (hit) {
+        relations[field] = hit;
+      } else {
+        // Not an error: a seller may name a make we do not carry yet. Worth a
+        // line, because a run of these is the signal to widen the vocabulary.
+        console.warn(
+          `listing submit: no ${field} matching ${JSON.stringify(String(value))}`,
+        );
+      }
+    } catch (err) {
+      // A lookup failing must never cost the seller their submission — the
+      // listing lands unrelated and a human attaches it in review. But it is
+      // logged, because silently is how the original bug survived.
+      console.warn(`listing submit: ${collection} lookup threw — ${err}`);
+    }
+  }
+
+  return relations;
+}
+
 function toInt(value) {
   const n = Number(value);
   return Number.isFinite(n) ? Math.trunc(n) : null;
@@ -219,7 +316,10 @@ export async function POST(request) {
 
   const title =
     (form.title ?? "").toString().trim() ||
-    [form.year, form.make, form.model].filter(Boolean).join(" ").trim();
+    // Make, model, year — matching the catalogue and, more importantly, keeping
+    // the derived slug from starting with digits, which resolveListing reads as
+    // a numeric id. See the note in AddListing.jsx.
+    [form.make, form.model, form.year].filter(Boolean).join(" ").trim();
 
   const price = toInt(form.price);
   const year = toInt(form.year);
@@ -243,6 +343,10 @@ export async function POST(request) {
     );
   }
 
+  // Resolved before the create, because the relations decide both the public
+  // URL and facet membership — see resolveRelations.
+  const relations = await resolveRelations(form);
+
   const payload = {
     title,
     price,
@@ -252,6 +356,7 @@ export async function POST(request) {
     currency: "OMR",
     listingStatus: "available",
     description: buildDescription(form),
+    ...relations,
     ...(IMPORT_ORIGINS.has(form.importSpec) ? { importOrigin: form.importSpec } : {}),
   };
 

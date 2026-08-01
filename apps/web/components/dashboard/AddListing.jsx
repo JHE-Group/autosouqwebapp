@@ -410,7 +410,17 @@ export default function AddListing() {
    * more field to type on a phone for information already collected three
    * fields earlier.
    */
-  const derivedTitle = [form.year, form.make.trim(), form.model.trim()]
+  /*
+   * Make, model, year — not year first.
+   *
+   * The catalogue's own convention is "Toyota Corolla 2015 XLI", and it is not
+   * only cosmetic. The CMS slug is derived from the title, and a title starting
+   * with a year produces a slug starting with digits — which lib/resolveListing
+   * matches as a numeric id via `/^(\d+)(?:-|$)/`, looks up listing #2015, finds
+   * nothing, and 404s. Every seller-created listing was unreachable because of
+   * the word order in this line.
+   */
+  const derivedTitle = [form.make.trim(), form.model.trim(), form.year]
     .filter(Boolean)
     .join(" ");
 

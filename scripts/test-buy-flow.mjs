@@ -137,12 +137,40 @@ async function main() {
     });
     log(`[${name}] mulkiya guide`, r?.ok(), `status=${r?.status()}`);
 
+    /*
+     * The footer must AGREE with the facet, not merely contain a link.
+     *
+     * This asserted that the footer links Muscat, full stop — written when
+     * Muscat had inventory, and never reconciled with the gating added later.
+     * It contradicted this test's own facet check thirty lines above, which
+     * treats "404 and absent from the footer" as the correct thin-content
+     * behaviour. Both could not pass at once, and the one that failed was the
+     * one that had stopped describing the site.
+     *
+     * The invariant worth protecting is the pair: the footer must never
+     * advertise a page that 404s, and must link one that works. That holds
+     * whether or not there is inventory, so it does not rot the next time the
+     * catalogue changes.
+     */
+    const facetRes = await page.goto(`${BASE}/en/used-cars/muscat`, {
+      waitUntil: "domcontentloaded",
+    });
+    const facetBody = await page.locator("body").innerText().catch(() => "");
+    const facetLive =
+      facetRes?.status() === 200 &&
+      !/This page could not be found/i.test(facetBody);
+
     await page.goto(`${BASE}/en`, { waitUntil: "domcontentloaded" });
-    const footerMuscat = page.locator('footer a[href*="used-cars/muscat"]');
+    const footerMuscat = await page
+      .locator('footer a[href*="used-cars/muscat"]')
+      .count();
+
     log(
-      `[${name}] footer Muscat link`,
-      (await footerMuscat.count()) > 0,
-      `count=${await footerMuscat.count()}`,
+      `[${name}] footer matches facet state`,
+      facetLive ? footerMuscat > 0 : footerMuscat === 0,
+      facetLive
+        ? `facet live, footer links=${footerMuscat} (want >0)`
+        : `facet gated, footer links=${footerMuscat} (want 0)`,
     );
 
     await context.close();
