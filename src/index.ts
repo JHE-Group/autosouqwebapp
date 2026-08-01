@@ -90,6 +90,34 @@ const AUTHENTICATED_ACTIONS = [
   "api::listing.listing.update",
   "api::listing.listing.delete",
   /**
+   * Read access to the taxonomies, so a seller can be RELATED to one.
+   *
+   * These are already public, and an authenticated role does not inherit the
+   * public role's permissions — so without these a signed-in seller could not
+   * set `make`, `model` or `city` on their own listing. Strapi's content-API
+   * input sanitiser runs `removeRestrictedRelations`, which strips relations
+   * pointing at a content type the caller cannot read, and the request fails
+   * with `400 Invalid key make` — an error about the *key*, which reads like a
+   * schema problem and is actually a permissions one.
+   *
+   * That cost a listing its URL. `/car/{slug}` is resolved from
+   * `{id}-{make}-{model}-{year}-{city}` (lib/seo.js), so a listing with no
+   * relations gets a link on the browse page that 404s on arrival. Every
+   * seller-created listing was in that state.
+   *
+   * Read-only, and only the vocabularies a submission needs: this lets a seller
+   * point at a make, never edit one.
+   */
+  "api::make.make.find",
+  "api::model.model.find",
+  "api::city.city.find",
+  "api::body-type.body-type.find",
+  "api::condition.condition.find",
+  "api::transmission.transmission.find",
+  "api::fuel-type.fuel-type.find",
+  "api::car-color.car-color.find",
+  "api::feature.feature.find",
+  /**
    * The seller's own listings, drafts included.
    *
    * A custom route still needs a permission row: without this the handler is
