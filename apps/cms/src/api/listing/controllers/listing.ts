@@ -75,9 +75,42 @@ const VERSION_QUERY_KEYS = ['status', 'publicationFilter', 'hasPublishedVersion'
  * file has an obvious thing to call rather than a comment to notice.
  */
 function forceVersion(ctx: { query?: Record<string, unknown> }, status: 'draft' | 'published') {
+  stripVersion(ctx);
+  ctx.query = { ...ctx.query, status };
+}
+
+/**
+ * Strip the version keys without naming a version.
+ *
+ * For `delete`, which must not state one. The document service throws outright
+ * on `status: 'draft'`:
+ *
+ *   if (hasDraftAndPublish && params.status === 'draft') {
+ *     throw new Error('Cannot delete a draft document');
+ *   }
+ *
+ * — @strapi/core 5.51.0, services/document-service/repository.js. So the
+ * `forceVersion(ctx, 'draft')` that used to sit in `delete` made every delete a
+ * 500, and no seller could remove their own listing. Reproduced against
+ * production on 2026-08-02: three DELETEs, three 500s, while an UPDATE of the
+ * same row returned 200 and a DELETE of somebody else's row correctly 404'd.
+ *
+ * The clamp was there against a risk that does not exist. `deleteDocument`
+ * builds both its lookup and its selection query through `omit('status')`, so
+ * the parameter cannot narrow what is removed: a delete always takes every
+ * entry carrying that documentId, draft and published alike. There is no
+ * version for the caller to steer, which is why stripping is the whole job —
+ * `publicationFilter` and `hasPublishedVersion` still go, so nothing the client
+ * sends reaches the cohort logic.
+ *
+ * Deleting a listing therefore removes it outright, live version included. That
+ * is the intended behaviour for a seller retiring a car, and it is gated by the
+ * ownership check above rather than by this helper.
+ */
+function stripVersion(ctx: { query?: Record<string, unknown> }) {
   const query = { ...(ctx.query ?? {}) };
   for (const key of VERSION_QUERY_KEYS) delete query[key];
-  ctx.query = { ...query, status };
+  ctx.query = query;
 }
 
 export default factories.createCoreController('api::listing.listing', ({ strapi }) => ({
@@ -219,9 +252,8 @@ export default factories.createCoreController('api::listing.listing', ({ strapi 
       return ctx.notFound('Listing not found.');
     }
 
-    // Same cohort clamp: a `?status=published` delete would drop the published
-    // version of a document out of band.
-    forceVersion(ctx, 'draft');
+    // Strip, do not clamp — naming a version here is what threw. See stripVersion.
+    stripVersion(ctx);
 
     return await super.delete(ctx);
   },
