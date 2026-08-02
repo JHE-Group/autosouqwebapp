@@ -101,6 +101,19 @@ fi
 
 command -v pnpm >/dev/null && ok "pnpm on PATH" || bad "pnpm not found on PATH"
 
+# Checked here, not at the restart step, because the restart step runs *after*
+# the pull, the install and the build. Discovering there is nothing to restart
+# at that point leaves the checkout on the new revision with the old code still
+# serving — the worst of both, and precisely what the systemd-only version of
+# this script did on a PM2 host.
+if command -v pm2 >/dev/null && pm2 describe "$SERVICE" >/dev/null 2>&1; then
+  ok "pm2 is managing $SERVICE"
+elif command -v systemctl >/dev/null && systemctl list-units --all 2>/dev/null | grep -q "$SERVICE"; then
+  ok "systemd unit $SERVICE present"
+else
+  bad "nothing manages $SERVICE — expected a pm2 process or a systemd unit by that name"
+fi
+
 if [[ $FAILED == 1 ]]; then
   echo
   echo "Preflight failed. Nothing has changed."
@@ -140,13 +153,72 @@ ok "dependencies installed"
 pnpm build
 ok "built"
 
-if command -v systemctl >/dev/null && systemctl list-units --all 2>/dev/null | grep -q "$SERVICE"; then
+# PM2 first, because PM2 is what the production box actually runs. This block
+# used to be systemd-only, which meant the script aborted here — after pulling
+# and building — on the one host it exists to serve.
+if command -v pm2 >/dev/null && pm2 describe "$SERVICE" >/dev/null 2>&1; then
+  # `--update-env` is not a tidiness flag, it is the point.
+  #
+  # A bare `pm2 restart` re-execs the process with the environment PM2 recorded
+  # when it was FIRST started, not the environment of this shell. So the
+  # NODE_ENV=production checked in preflight above can be entirely correct here
+  # and entirely absent in the process that comes back up — and
+  # `demoSeedingEnabled()` keys off exactly that, which is how ten fabricated
+  # cars reached the live site on 2026-07-31. Preflight checks this shell;
+  # `--update-env` is what makes the two the same thing.
+  pm2 restart "$SERVICE" --update-env
+  ok "restarted $SERVICE under pm2, env refreshed from this shell"
+
+  # Survives a reboot. Without it the dump still holds the pre-deploy process
+  # list, and the box comes back on whatever was saved last.
+  pm2 save --force >/dev/null 2>&1 && ok "pm2 process list saved" || bad "pm2 save failed"
+
+  # Ask the RUNNING process what it thinks NODE_ENV is, rather than trusting
+  # that --update-env did what it says. This is the assertion the outage wanted.
+  running_env=$(pm2 jlist 2>/dev/null | node -e "
+    let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
+      try{
+        const p=(JSON.parse(d)||[]).find(x=>x.name===process.argv[1]);
+        process.stdout.write(p?.pm2_env?.NODE_ENV ?? '');
+      }catch{process.stdout.write('')}
+    })" "$SERVICE" 2>/dev/null || echo '')
+  if [[ "$running_env" == "production" ]]; then
+    ok "live process has NODE_ENV=production"
+  else
+    bad "live process has NODE_ENV='${running_env:-unset}' — the seeder will publish demo cars"
+  fi
+
+  # A process that boots, throws and is restarted by PM2 looks 'online' if you
+  # glance at the wrong moment. Compare the restart count either side of a pause.
+  r1=$(pm2 jlist 2>/dev/null | node -e "
+    let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
+      try{
+        const p=(JSON.parse(d)||[]).find(x=>x.name===process.argv[1]);
+        process.stdout.write(String(p?.pm2_env?.restart_time ?? -1));
+      }catch{process.stdout.write('-1')}
+    })" "$SERVICE" 2>/dev/null || echo -1)
+  sleep 8
+  r2=$(pm2 jlist 2>/dev/null | node -e "
+    let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
+      try{
+        const p=(JSON.parse(d)||[]).find(x=>x.name===process.argv[1]);
+        process.stdout.write(String(p?.pm2_env?.restart_time ?? -1));
+      }catch{process.stdout.write('-1')}
+    })" "$SERVICE" 2>/dev/null || echo -1)
+  if [[ "$r1" != "-1" && "$r1" == "$r2" ]]; then
+    ok "process stable (no restarts in 8s)"
+  else
+    bad "restart count moved $r1 -> $r2 — the process is crash-looping; check 'pm2 logs $SERVICE'"
+  fi
+
+elif command -v systemctl >/dev/null && systemctl list-units --all 2>/dev/null | grep -q "$SERVICE"; then
   sudo systemctl restart "$SERVICE"
-  ok "restarted $SERVICE"
+  ok "restarted $SERVICE under systemd"
 else
-  bad "no systemd unit named $SERVICE — start it yourself, and NOT with a bare 'pnpm start'"
+  bad "no pm2 process or systemd unit named $SERVICE — start it yourself, and NOT with a bare 'pnpm start'"
   echo "        A foreground start dies with your SSH session. That is what took"
-  echo "        the CMS down for a day. See the unit file in the project notes."
+  echo "        the CMS down for a day. Under pm2 the first start is:"
+  echo "          NODE_ENV=production pm2 start 'pnpm start' --name $SERVICE && pm2 save"
   exit 1
 fi
 
