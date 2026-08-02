@@ -27,6 +27,10 @@ import { pickMessages } from "@/i18n/clientMessages";
  * real authenticated shell, not to restore this one.
  */
 export const metadata = {
+  // Kept `noindex` as it was under (dashboard). /sell-your-car is the
+  // indexable page that explains selling; this is the form behind it. It stays
+  // crawlable so search engines can read the noindex directive instead of
+  // treating a robots-blocked URL as indexable-by-reference.
   /**
    * `noindex, follow` — and this tag is now the *only* thing keeping the form
    * out of the index.

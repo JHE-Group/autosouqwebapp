@@ -21,6 +21,9 @@ import { getListings } from "@/lib/strapi";
  * What is deliberately NOT in here:
  *
  * - **Dashboard routes** (`/dashboard`, `/my-*`, `/change-password`,
+ *   `/message`). Private; robots.js disallows + layout noindex.
+ * - **The public add-listing form** (`/add-listing`). It is noindex/follow and
+ *   crawlable so search engines can read that directive.
  *   `/message`). Private; robots.js disallows *and* the layout sets noindex.
  * - **`/add-listing`** — the public sell form. Excluded for a different reason
  *   and by a different mechanism, and the distinction matters:

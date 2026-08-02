@@ -10,6 +10,11 @@ import { absoluteUrl, SITE_URL } from "@/lib/seo";
  * and a canonical only works if the crawler is allowed to fetch the page and
  * read it. Blocking them here would strand the duplicates as unresolved URLs.
  *
+ * Disallowed instead: everything behind the account area. The public
+ * `/add-listing` form is intentionally not listed here: it serves `noindex,
+ * follow`, and crawlers must be allowed to fetch the page to see that directive.
+ * Paths are listed per locale because `localePrefix: "always"` means bare
+ * `/dashboard` is not the live URL.
  * Disallowed instead: everything behind the account area. Nothing there is
  * public, and several of those routes are one click from a form. Paths are
  * listed per locale because `localePrefix: "always"` means bare `/dashboard`
