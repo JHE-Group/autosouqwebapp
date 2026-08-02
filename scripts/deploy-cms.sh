@@ -161,12 +161,36 @@ done
 code=$(curl -sS -o /dev/null -w "%{http_code}" "$PUBLIC_URL/api/listings" --max-time 15 2>/dev/null || echo 000)
 [[ "$code" == "200" ]] && ok "API responding" || bad "API returned $code"
 
-# The security fix from 1e331d6. If this returns rows, an older build is running.
-leak=$(curl -sS "$PUBLIC_URL/api/listings?status=draft" --max-time 15 2>/dev/null \
-       | grep -o '"documentId"' | wc -l | tr -d ' ')
-[[ "$leak" == "0" ]] \
-  && ok "drafts are not publicly readable" \
-  || bad "$leak draft(s) readable anonymously — an older build is running"
+# The security fix from 1e331d6.
+#
+# This check used to count `"documentId"` here and demand zero, on the reading
+# that a patched build returns nothing for `?status=draft`. It does not. The fix
+# is `forceVersion` (src/api/listing/controllers/listing.ts), which STRIPS the
+# status parameter and forces `published` — so a patched build answers this URL
+# with the published set, exactly as if the parameter were absent. The old check
+# therefore counted healthy published rows as leaked drafts and failed every
+# deploy that had any inventory at all, which is every real deploy.
+#
+# A guard that fails when nothing is wrong is worse than no guard: it is the
+# line people learn to scroll past, on a script whose whole purpose is that
+# somebody checks. Observed on 2026-08-02, reporting "10 draft(s) readable
+# anonymously" against a correctly patched production.
+#
+# What actually distinguishes a leak is an UNPUBLISHED row coming back. Every
+# document Strapi returns carries `publishedAt`; on a patched build each one is
+# a timestamp, and on an unpatched build the drafts arrive with it set to null.
+# So count the nulls, not the rows.
+draft_body=$(curl -sS "$PUBLIC_URL/api/listings?status=draft" --max-time 15 2>/dev/null || echo '')
+leak=$(printf '%s' "$draft_body" | grep -o '"publishedAt":null' | wc -l | tr -d ' ')
+rows=$(printf '%s' "$draft_body" | grep -o '"documentId"' | wc -l | tr -d ' ')
+if ! printf '%s' "$draft_body" | grep -q '"data"'; then
+  # An error payload or an empty body would otherwise score zero nulls and pass.
+  bad "could not read /api/listings?status=draft — got: $(printf '%s' "${draft_body:-<empty>}" | head -c 120)"
+elif [[ "$leak" == "0" ]]; then
+  ok "drafts are not publicly readable ($rows published row(s) checked)"
+else
+  bad "$leak unpublished listing(s) readable anonymously — an older build is running"
+fi
 
 makes=$(curl -sS "$PUBLIC_URL/api/makes" --max-time 15 2>/dev/null | grep -o '"id"' | wc -l | tr -d ' ')
 [[ "$makes" -gt 0 ]] && ok "taxonomies present ($makes makes)" || bad "no makes — the seed did not run"
