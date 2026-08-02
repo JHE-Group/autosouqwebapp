@@ -109,6 +109,23 @@ if [[ -f .env ]]; then
   else
     ok "SEED_DEMO_DATA is not true"
   fi
+
+  # A boot-blocker, and one that only bites in production — which is the mode
+  # this script exists to enforce, so it has to be checked before the restart
+  # rather than discovered from a dead API afterwards.
+  #
+  # config/middlewares.ts throws "Refusing to start: FRONTEND_URL must be set in
+  # production so CORS permits the deployed web app" when NODE_ENV=production and
+  # FRONTEND_URL is empty. In development it instead falls back to the localhost
+  # pair and boots fine — so a process that has been running happily WITHOUT
+  # NODE_ENV=production can refuse to come back up the first time it is set
+  # correctly. That is the sharp edge here: fixing the env can look like it broke
+  # the site.
+  if grep -qE '^[[:space:]]*FRONTEND_URL[[:space:]]*=[[:space:]]*"?'"'"'?https?://' .env; then
+    ok "FRONTEND_URL set — production CORS will have an origin"
+  else
+    bad "FRONTEND_URL is not set to a URL — a production boot will REFUSE to start"
+  fi
 else
   bad ".env is missing — copy it from the previous checkout before deploying"
 fi
@@ -135,14 +152,37 @@ if [[ $FAILED == 1 ]]; then
 fi
 
 # ── What is about to be deployed ─────────────────────────────────────────────
+#
+# The production directory is NOT a git checkout. Confirmed 2026-08-02:
+# `git rev-parse --show-toplevel` there answers "not a git repository", there is
+# no .git anywhere under the home directory, and files are updated out of band —
+# ~/deploy.sh only runs install, build and restart against whatever is on disk.
+#
+# So this section cannot assume git, and the earlier version's bare `git fetch`
+# aborted the whole script under `set -e` the moment it ran there. Where git is
+# absent the honest thing is to say what cannot be checked rather than imply it
+# was: without a revision on disk, nothing here can tell you what is deployed.
+# That is exactly why an evening was spent unable to answer "did the fix ship".
 echo
 echo "Revision"
-git fetch origin --quiet
-LOCAL=$(git rev-parse --short HEAD)
-REMOTE=$(git rev-parse --short origin/CMS)
-info "checked out: $LOCAL  $(git log -1 --pretty=%s | cut -c1-56)"
-info "origin/CMS:  $REMOTE  $(git log -1 --pretty=%s origin/CMS | cut -c1-56)"
-[[ "$LOCAL" == "$REMOTE" ]] && ok "already current" || info "will fast-forward to $REMOTE"
+if [[ -d .git ]] && git rev-parse --git-dir >/dev/null 2>&1; then
+  IS_GIT=1
+  git fetch origin --quiet
+  LOCAL=$(git rev-parse --short HEAD)
+  REMOTE=$(git rev-parse --short origin/CMS)
+  info "checked out: $LOCAL  $(git log -1 --pretty=%s | cut -c1-56)"
+  info "origin/CMS:  $REMOTE  $(git log -1 --pretty=%s origin/CMS | cut -c1-56)"
+  [[ "$LOCAL" == "$REMOTE" ]] && ok "already current" || info "will fast-forward to $REMOTE"
+else
+  IS_GIT=0
+  info "not a git checkout — code is uploaded here out of band"
+  if [[ -f .deployed-revision ]]; then
+    info "last recorded revision: $(cut -c1-72 < .deployed-revision)"
+  else
+    info "no .deployed-revision stamp — this script cannot tell you what is running"
+  fi
+  info "upload the files you want live BEFORE running this; it will not fetch them"
+fi
 
 if [[ $RUN == 0 ]]; then
   echo
@@ -156,15 +196,24 @@ fi
 # ── Deploy ───────────────────────────────────────────────────────────────────
 echo
 echo "Deploying"
-git pull --ff-only origin CMS
-ok "pulled $(git rev-parse --short HEAD)"
+if [[ $IS_GIT == 1 ]]; then
+  git pull --ff-only origin CMS
+  ok "pulled $(git rev-parse --short HEAD)"
+  git rev-parse HEAD > .deployed-revision
+else
+  info "skipping pull — not a git checkout, deploying what is on disk"
+fi
 
 pnpm install --frozen-lockfile
 ok "dependencies installed"
 
-# `strapi start` runs dist/, never src/. Skipping this is why a pull can appear
-# to do nothing at all.
-pnpm build
+# `strapi build` needs NODE_ENV=production explicitly. It is set for this whole
+# script, but stating it here keeps the build honest if the block is ever lifted
+# out — and it is the one place ~/deploy.sh got right.
+#
+# `strapi start` runs dist/, never src/. Skipping this is why an upload can
+# appear to do nothing at all.
+NODE_ENV=production pnpm build
 ok "built"
 
 # PM2 first, because PM2 is what the production box actually runs. This block
