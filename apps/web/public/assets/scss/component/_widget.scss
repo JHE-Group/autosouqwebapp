@@ -1151,27 +1151,31 @@
   // background-attachment: fixed;
   position: relative;
 
-  &::before {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: 0;
-    content: "";
-    background-color: rgba(0, 0, 0, 0.2);
-    z-index: 1;
-  }
+  /**
+   * A brand surface, not a photograph.
+   *
+   * `.style-1` and `.style-2` used to pull `bg-12.jpg` / `bg-13.jpg`. Both
+   * files are the theme's *unfilled* placeholders — measured, every pixel is
+   * exactly #D2D6E2, standard deviation 0. So 22 KB shipped over the wire, per
+   * page, outside the image optimiser (a CSS `url()` bypasses it entirely), to
+   * paint a colour.
+   *
+   * And it painted the wrong one. With the 20% black scrim below, the surface
+   * resolved to #A8ABB5, and everything in this band is `.text-color-1`, which
+   * compiles to `color: #fff !important`. That is **2.27:1** — failing AA for
+   * the `<h1>` (needs 3:1) and badly for the lede (needs 4.5:1) — on
+   * `/used-cars`, every facet lander and `/about-us`. The site's highest-intent
+   * commercial pages, unreadable in the Omani daylight the design tokens are
+   * explicitly written for.
+   *
+   * Indigo is the brand's established dark surface and the only one that clears
+   * every ratio: white on #262262 is **14.12:1**. The scrim goes with the
+   * photograph it existed to tame.
+   */
+  background-color: $brand-indigo;
 
-  &.style-1 {
-    background-image: url(/assets/images/section/bg-12.jpg);
-  }
-
-  &.style-2 {
-    background-image: url(/assets/images/section/bg-13.jpg);
-
-    .content {
-      padding: 116px 0px 242px 0px;
-    }
+  &.style-2 .content {
+    padding: 116px 0px 242px 0px;
   }
 
   .content {

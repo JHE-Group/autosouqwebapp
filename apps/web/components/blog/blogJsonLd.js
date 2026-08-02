@@ -44,7 +44,14 @@ export function blogArticleJsonLd(post, locale = DEFAULT_LOCALE) {
 export function blogItemListJsonLd(
   locale = DEFAULT_LOCALE,
   list = postsInOrder,
-  { path = "/blog", name = `Blog — ${SITE_NAME}` } = {},
+  {
+    path = "/blog",
+    // Locale-aware, mirroring guidesItemListJsonLd. This defaulted to the
+    // English `Blog — Autosouq.om` on every tree, so /ar/blog emitted an
+    // English list name on a page whose visible H1 is Arabic — the only
+    // English strings left in the Arabic graph.
+    name = locale === "ar" ? `المدونة — ${SITE_NAME}` : `Blog — ${SITE_NAME}`,
+  } = {},
 ) {
   const url = absoluteUrl(localizedPath(path, locale));
   return {

@@ -24,6 +24,20 @@ import { getListings } from "@/lib/strapi";
  *   `/message`). Private; robots.js disallows + layout noindex.
  * - **The public add-listing form** (`/add-listing`). It is noindex/follow and
  *   crawlable so search engines can read that directive.
+ *   `/message`). Private; robots.js disallows *and* the layout sets noindex.
+ * - **`/add-listing`** — the public sell form. Excluded for a different reason
+ *   and by a different mechanism, and the distinction matters:
+ *     · Excluded here because it has nothing to rank for. `/sell-your-car`
+ *       is the page that explains selling and *is* in the sitemap.
+ *     · Kept out of the index by `noindex, follow` on
+ *       app/[locale]/(sell)/layout.jsx — **not** by robots.js, which
+ *       deliberately no longer disallows it. It is linked from the homepage
+ *       hero, the homepage empty state and four blog posts, and blocking a
+ *       URL you link to sitewide produces "Indexed, though blocked by
+ *       robots.txt" rather than exclusion: the crawler cannot fetch the page,
+ *       so it never reads the noindex.
+ *   Absence from a sitemap is not an exclusion signal on its own; the meta
+ *   directive is what does the work, and it needs the page to be fetchable.
  * - **Theme browse duplicates** (`/listing-grid*`, `/listing-list*`) — they
  *   canonicalise to `/used-cars` and are not nominated.
  * - **Demo catalogue URLs.** Sitemap uses CMS listings only. Empty Strapi ⇒

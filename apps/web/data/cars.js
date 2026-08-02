@@ -24,7 +24,10 @@
 
 // Every image in this file is a stand-in, not a photograph of a car that is
 // actually for sale: /assets/images/listings/ holds AI-generated placeholders
-// (see that folder's README) and /assets/images/car-list/ holds theme stock.
+// (see that folder's README). The 19 cars that pointed at
+// /assets/images/car-list/ now carry `imgSrc: null`: every file in that
+// directory is a single flat #D2D6E2 rectangle, so each was a ~9 KB request
+// to render nothing. ListingCard's no-photo branch is both cheaper and truer.
 // `hasPlaceholderImage` is what the UI reads to disclose that to a buyer — the
 // same flag lib/strapi.js sets for CMS listings with an empty gallery. Without
 // it the cards had to sniff the folder path to work out whether they were
@@ -330,7 +333,7 @@ export const carData = [
     importOrigin: "gcc",
     soldAsIs: false,
     authorName: null,
-    imgSrc: "/assets/images/car-list/car17.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     features: [
       "Air conditioning",
@@ -361,7 +364,7 @@ export const carData = [
     importOrigin: "us-import",
     soldAsIs: false,
     authorName: null,
-    imgSrc: "/assets/images/car-list/car14.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     features: [
       "Air conditioning",
@@ -394,7 +397,7 @@ export const carData = [
     importOrigin: "gcc",
     soldAsIs: false,
     authorName: null,
-    imgSrc: "/assets/images/car-list/car15.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     features: [
       "Air conditioning",
@@ -410,7 +413,7 @@ export const carData = [
 export const carData2 = [
   {
     id: 12,
-    imgSrc: "/assets/images/car-list/car18.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     year: 2012,
     type: "Sedan",
@@ -458,7 +461,7 @@ export const carData2 = [
   },
   {
     id: 14,
-    imgSrc: "/assets/images/car-list/car20.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     year: 2015,
     type: "Sedan",
@@ -487,7 +490,7 @@ export const carData2 = [
   },
   {
     id: 15,
-    imgSrc: "/assets/images/car-list/car21.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     year: 2014,
     type: "Pickup",
@@ -516,7 +519,7 @@ export const carData2 = [
   },
   {
     id: 16,
-    imgSrc: "/assets/images/car-list/car22.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     year: 2016,
     type: "Sedan",
@@ -546,7 +549,7 @@ export const carData2 = [
   },
   {
     id: 17,
-    imgSrc: "/assets/images/car-list/car23.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     year: 2013,
     type: "Hatchback",
@@ -570,7 +573,7 @@ export const carData2 = [
   },
   {
     id: 18,
-    imgSrc: "/assets/images/car-list/car24.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     year: 2016,
     type: "SUV",
@@ -602,7 +605,7 @@ export const carData2 = [
   },
   {
     id: 19,
-    imgSrc: "/assets/images/car-list/car25.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     year: 2012,
     type: "Sedan",
@@ -635,7 +638,7 @@ export const carData2 = [
 export const cars = [
   {
     id: 20,
-    imgSrc: "/assets/images/car-list/car4.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     type: "Sedan",
     year: 2018,
@@ -882,7 +885,7 @@ export const cars = [
   },
   {
     id: 28,
-    imgSrc: "/assets/images/car-list/car6.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     type: "Hatchback",
     year: 2017,
@@ -939,7 +942,7 @@ export const cars = [
   },
   {
     id: 30,
-    imgSrc: "/assets/images/car-list/car12.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     type: "Sedan",
     year: 2013,
@@ -969,7 +972,7 @@ export const cars = [
   },
   {
     id: 31,
-    imgSrc: "/assets/images/car-list/car10.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     type: "Pickup",
     year: 2012,
@@ -1060,7 +1063,7 @@ export const carListings2 = [
   },
   {
     id: 34,
-    imgSrc: "/assets/images/car-list/car25.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     imageAlt: "2014 Hyundai Accent",
     year: 2014,
@@ -1086,7 +1089,7 @@ export const carListings2 = [
   },
   {
     id: 35,
-    imgSrc: "/assets/images/car-list/car27.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     imageAlt: "2017 Mitsubishi Attrage",
     year: 2017,
@@ -1117,7 +1120,7 @@ export const carListings2 = [
   },
   {
     id: 36,
-    imgSrc: "/assets/images/car-list/car28.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     imageAlt: "2013 Nissan Sunny",
     year: 2013,
@@ -1180,7 +1183,7 @@ export const carListings2 = [
   },
   {
     id: 38,
-    imgSrc: "/assets/images/car-list/car29.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     imageAlt: "2018 Suzuki Baleno",
     year: 2018,
@@ -1244,7 +1247,7 @@ export const carListings2 = [
   },
   {
     id: 40,
-    imgSrc: "/assets/images/car-list/car25.jpg",
+    imgSrc: null,
     hasPlaceholderImage: true,
     imageAlt: "2015 Honda City",
     year: 2015,

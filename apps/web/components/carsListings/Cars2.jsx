@@ -7,8 +7,6 @@ import FilterSidebar from "./FilterSidebar";
 import ListingCard from "./ListingCard";
 import ListingPagination from "./ListingPagination";
 import ResultsToolbar from "./ResultsToolbar";
-import { useSearchParams } from "next/navigation";
-import { parsePriceParam } from "@/data/budgetBands";
 import useCarFilters from "./useCarFilters";
 
 /**
@@ -20,15 +18,6 @@ import useCarFilters from "./useCarFilters";
  * the toolbar trigger with its applied count.
  */
 export default function Cars2({ listings, resultsHeading = "Browse cars" }) {
-  /*
-   * The homepage budget links land here as `?price=1500-2500`.
-   * Read in this component rather than inside useCarFilters: the hook is
-   * shared with four legacy layouts, and `useSearchParams()` there would opt
-   * every one of them into client rendering. Parsing is strict — a mangled
-   * value yields null and the grid renders unfiltered rather than empty.
-   */
-  const initialPrice = parsePriceParam(useSearchParams().get("price"));
-
   const {
     source,
     filterOptions,
@@ -40,7 +29,7 @@ export default function Cars2({ listings, resultsHeading = "Browse cars" }) {
     currentPage,
     itemPerPage,
     sortingOption,
-  } = useCarFilters(listings, { pageSize: 12, initialPrice });
+  } = useCarFilters(listings, { pageSize: 12, readPriceFromUrl: true });
 
   // Facet landers put the SEO H1 in the hero; the results block then uses a
   // plain heading so the page does not ship two competing H1s.

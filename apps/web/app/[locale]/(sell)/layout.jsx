@@ -31,6 +31,23 @@ export const metadata = {
   // indexable page that explains selling; this is the form behind it. It stays
   // crawlable so search engines can read the noindex directive instead of
   // treating a robots-blocked URL as indexable-by-reference.
+  /**
+   * `noindex, follow` — and this tag is now the *only* thing keeping the form
+   * out of the index.
+   *
+   * `/sell-your-car` is the page that explains selling and is the one we want
+   * ranked; this is the form behind it, and it has nothing to rank for. But it
+   * is genuinely public and linked sitewide — the homepage hero CTA, the
+   * homepage empty state, four blog posts across both locales — so it must
+   * stay crawlable. app/robots.js used to Disallow it, which meant a crawler
+   * was told to follow those links and then forbidden from fetching what they
+   * point at, so it could never read this directive. That is the recipe for
+   * "Indexed, though blocked by robots.txt": listed as a bare URL with no
+   * snippet, which is worse than either indexing it properly or excluding it.
+   *
+   * `follow` is deliberate too: the links out of this page (back to
+   * /sell-your-car, the guides) should still pass.
+   */
   robots: { index: false, follow: true },
 };
 

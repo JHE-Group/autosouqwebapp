@@ -276,8 +276,24 @@ export function organizationJsonLd() {
     name: SITE_NAME,
     url: absoluteUrl("/"),
     logo: absoluteUrl("/assets/images/brand/pwa-icon-512.png"),
+    /**
+     * Both halves of this sentence used to be false, on every page of the site.
+     *
+     * It read "between OMR 1,500 and 6,000, with real prices and verified
+     * listings". Measured against live inventory: two of ten listings sit below
+     * 1,500 (OMR 1,175 and 1,250), so on those pages this claimed a floor that
+     * the `Offer` in the *same HTML document* contradicted. And three of ten
+     * render "not checked yet", so "verified listings" asserted as an
+     * organisation-level fact was contradicted by the badge on the card.
+     *
+     * The band is 1,000–6,000 (NICHE.md), and the honest verification claim is
+     * about the *process*, not a completed state of the catalogue: every
+     * listing says whether it has been checked, including when it has not.
+     * That is the stronger claim anyway — it is the one competitors cannot
+     * make — and unlike the old wording it stays true as inventory grows.
+     */
     description:
-      "Oman's marketplace for affordable used cars between OMR 1,500 and 6,000, with real prices and verified listings.",
+      "Oman's marketplace for affordable used cars from OMR 1,000 to 6,000. Real asking prices, and every listing states whether it has been checked.",
     areaServed: { "@type": "Country", name: "Oman" },
   });
 }
@@ -382,8 +398,15 @@ export function vehicleJsonLd(car, { path, locale = "en" } = {}) {
     description: car.description || undefined,
     url,
     // Absolute URLs only — a relative "/assets/…" is unusable to a consumer.
+    // `.filter(Boolean)` on the src first: `absoluteUrl(undefined)` defaults to
+    // "/" and would resolve to the site root, so a single gallery entry with a
+    // missing url would have claimed the homepage as a photograph of this car.
+    // Not reachable today — Strapi always returns a url — but it is a
+    // false-image claim waiting on one malformed media record.
     image: (car.images ?? [])
-      .map((img) => (img?.src?.startsWith("http") ? img.src : absoluteUrl(img?.src)))
+      .map((img) => img?.src)
+      .filter(Boolean)
+      .map((src) => (src.startsWith("http") ? src : absoluteUrl(src)))
       .slice(0, 6),
     // Every car on this site is used, by definition of the price band.
     itemCondition: "https://schema.org/UsedCondition",
@@ -424,7 +447,12 @@ export function vehicleJsonLd(car, { path, locale = "en" } = {}) {
           price,
           priceCurrency: car.currency || DEFAULT_CURRENCY,
           itemCondition: "https://schema.org/UsedCondition",
-          availability: AVAILABILITY[car.listingStatus] || AVAILABILITY.available,
+          // Fails closed. This used to default to `available`, so a status the map
+      // does not know — a `pending` or `draft` added in Strapi later — would
+      // have silently asserted InStock on a car nobody can buy. An unknown
+      // status means we do not know it is purchasable, and `compact()` drops
+      // the key rather than guessing.
+      availability: AVAILABILITY[car.listingStatus],
           areaServed: { "@type": "Country", name: "Oman" },
           // No seller entity: the content model has no seller records and
           // inventing one on a marketplace that sells verification is off-limits.

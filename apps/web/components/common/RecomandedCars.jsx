@@ -160,14 +160,21 @@ export default function RecomandedCars() {
                         </li>
                       </ul>
                       <div className="img-style">
-                        <Image
-                          className="lazyload"
-                          alt={car.imageAlt || car.title || ""}
-                          src={car.imgSrc}
-                          width={450}
-                          height={338}
-                          sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 33vw"
-                        />
+                        {/* Same guard as Cars.jsx and Recommended.jsx — a
+                            photo-less listing must render a box, not an
+                            <Image> with no src. */}
+                        {car.imgSrc ? (
+                          <Image
+                            className="lazyload"
+                            alt={car.imageAlt || car.title || ""}
+                            src={car.imgSrc}
+                            width={450}
+                            height={338}
+                            sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 33vw"
+                          />
+                        ) : (
+                          <div className="asq-card__img asq-card__img--none" aria-hidden="true" />
+                        )}
                       </div>
                     </div>
                     {/* Order: identity -> price -> disclosures -> wear -> place ->

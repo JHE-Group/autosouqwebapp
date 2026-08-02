@@ -32,16 +32,20 @@ import { listingPath } from "@/lib/seo";
  */
 
 /**
- * Folders that hold stand-in artwork rather than photographs of the car being
- * sold: `/listings` is AI-generated (see that folder's README) and `/car-list`
- * is the purchased theme's stock photography. Neither shows a real car that is
- * really for sale.
+ * Folders holding stand-in artwork rather than photographs of the car for sale.
+ * `/listings` is AI-generated — see that folder's README.
  *
- * Strapi-backed listings always carry an explicit `hasPlaceholderImage`
- * boolean from `toCar()`, so this path fallback only ever classifies the
- * pre-launch demo catalogue — a real listing is never mislabelled by it.
+ * `/car-list` used to be listed here too, as "the purchased theme's stock
+ * photography". It is not photography: every file in it is a single flat
+ * #D2D6E2 rectangle, the theme's unfilled placeholder. data/cars.js now emits
+ * `imgSrc: null` for the 19 demo cars that pointed at it, so the directory is
+ * unreferenced and the entry is gone.
+ *
+ * Strapi-backed listings always carry an explicit `hasPlaceholderImage` from
+ * `toCar()`, so this path fallback only ever classifies the pre-launch demo
+ * catalogue — a real listing is never mislabelled by it.
  */
-const STAND_IN_DIRS = ["/assets/images/listings/", "/assets/images/car-list/"];
+const STAND_IN_DIRS = ["/assets/images/listings/"];
 
 /** Is this picture a stand-in rather than a photograph of this car? */
 export function isPlaceholderPhoto(car) {

@@ -106,13 +106,22 @@ export default async function Cars({
                     <div className="year flag-tag">{car.year}</div>
                   </div>
                   <div className="img-style">
-                    <Image
-                      alt={car.images?.[0]?.alt || car.title || ""}
-                      src={car.imgSrc}
-                      width={450}
-                      height={338}
-                      sizes="(max-width: 639px) 100vw, (max-width: 991px) 50vw, 33vw"
-                    />
+                    {/* Guard on `imgSrc`: a listing with no photographs now
+                        carries null rather than a stand-in, and an <Image> with
+                        no src renders a zero-width box that paints the alt text
+                        where the photo should be. ListingCard had this branch
+                        already; this one did not. */}
+                    {car.imgSrc ? (
+                      <Image
+                        alt={car.images?.[0]?.alt || car.title || ""}
+                        src={car.imgSrc}
+                        width={450}
+                        height={338}
+                        sizes="(max-width: 639px) 100vw, (max-width: 991px) 50vw, 33vw"
+                      />
+                    ) : (
+                      <div className="asq-card__img asq-card__img--none" aria-hidden="true" />
+                    )}
                   </div>
                   <PlaceholderPhotoTag car={car} locale={locale} />
                 </div>
