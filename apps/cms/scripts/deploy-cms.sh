@@ -87,10 +87,24 @@ fi
 # sqlite; the production guard then refuses to boot. Better to say so here.
 if [[ -f .env ]]; then
   ok ".env present"
-  grep -q '^DATABASE_CLIENT=postgres' .env \
-    && ok "DATABASE_CLIENT=postgres" \
-    || bad "DATABASE_CLIENT is not postgres — check .env"
-  if grep -qE '^SEED_DEMO_DATA=true' .env; then
+  # Anchored to the start of the line, this read `^DATABASE_CLIENT=postgres` and
+  # failed the production .env, which indents the line by three spaces:
+  #
+  #     60:   DATABASE_CLIENT=postgres$      (grep -n | cat -A, 2026-08-02)
+  #
+  # dotenv trims that, so Strapi was on Postgres the whole time and the check was
+  # simply wrong — it blocked a real deploy on a healthy host. Same mistake as the
+  # draft-leak check below had: asserting on the shape of a file rather than on
+  # what the file means. Leading and trailing space and optional quotes are all
+  # legal dotenv and all have to pass.
+  if grep -qE '^[[:space:]]*DATABASE_CLIENT[[:space:]]*=[[:space:]]*"?'"'"'?postgres'"'"'?"?[[:space:]]*$' .env; then
+    ok "DATABASE_CLIENT=postgres"
+  else
+    bad "DATABASE_CLIENT is not postgres — check .env"
+  fi
+  # Same tolerance here. A commented `#SEED_DEMO_DATA=true` must NOT trip it,
+  # which is why the anchor allows whitespace but not a '#'.
+  if grep -qE '^[[:space:]]*SEED_DEMO_DATA[[:space:]]*=[[:space:]]*"?'"'"'?true' .env; then
     bad "SEED_DEMO_DATA=true in .env — this will publish demo cars"
   else
     ok "SEED_DEMO_DATA is not true"
