@@ -71,9 +71,33 @@ echo "Preflight"
 
 # The CMS branch is a subtree artifact: its contents sit at the repo root, so a
 # monorepo checkout here means someone deployed the wrong branch.
-[[ -f package.json && -d src && -d config ]] \
-  && ok "looks like the CMS branch (src/ and config/ at the root)" \
-  || bad "this does not look like the CMS branch — expected src/ and config/ at the root"
+#
+# `package.json + src/ + config/` alone does NOT establish that. The monorepo's
+# apps/cms has all three, so this check passed cleanly when run there on
+# 2026-08-02 — the exact "wrong branch" case it exists to catch. It only stopped
+# because that laptop had no pm2. On a host with pm2 and a monorepo checkout it
+# would have sailed through to `git pull --ff-only origin CMS`, run against the
+# wrong branch.
+#
+# The discriminator is the workspace root two levels up: pnpm-workspace.yaml
+# exists in the monorepo and not on the CMS branch. Note `apps/` cannot be used
+# — the CMS branch carries apps/web/README.md as a Vercel placeholder, so the
+# obvious "no apps/ directory here" test would fail on the real branch.
+if [[ -f package.json && -d src && -d config ]]; then
+  if [[ -f ../../pnpm-workspace.yaml ]]; then
+    bad "this is apps/cms inside the monorepo, not a CMS-branch checkout"
+    echo "        Deploying from here would pull origin/CMS over your monorepo."
+  elif [[ -d .git ]] && git rev-parse --git-dir >/dev/null 2>&1 \
+       && git rev-parse --verify --quiet origin/CMS >/dev/null 2>&1 \
+       && ! git merge-base --is-ancestor HEAD origin/CMS 2>/dev/null \
+       && ! git merge-base --is-ancestor origin/CMS HEAD 2>/dev/null; then
+    bad "HEAD is unrelated to origin/CMS — wrong branch or wrong repository"
+  else
+    ok "looks like the CMS branch (src/ and config/ at the root)"
+  fi
+else
+  bad "this does not look like the CMS branch — expected src/ and config/ at the root"
+fi
 
 # The single cause of the 2026-07-31 incident. `demoSeedingEnabled()` returns
 # true whenever NODE_ENV is not exactly "production", and seeds demo listings.
