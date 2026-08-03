@@ -166,12 +166,27 @@ const nextConfig = {
     ];
   },
   /*
-   * Legacy theme browse URLs → canonical `/used-cars`.
-   * Page-level `redirect()` alone is not enough: these routes were being
-   * statically prerendered as 200s, so crawlers and clients stayed on the
-   * old path. Config redirects run before that.
+   * Canonical redirects.
+   *
+   * `NEXT_PUBLIC_SITE_URL` is `https://www.autosouq.om`, and every canonical,
+   * hreflang URL, sitemap entry and Open Graph URL is derived from that host.
+   * Production also aliases the apex domain, so enforce the same host at the
+   * application edge instead of relying on an external proxy rule that the
+   * repository cannot prove exists.
+   *
+   * Legacy theme browse URLs → canonical `/used-cars`. Page-level `redirect()`
+   * alone is not enough: these routes were being statically prerendered as 200s,
+   * so crawlers and clients stayed on the old path. Config redirects run before
+   * that.
    */
   async redirects() {
+    const apexToWww = {
+      source: "/:path*",
+      has: [{ type: "host", value: "autosouq.om" }],
+      destination: "https://www.autosouq.om/:path*",
+      permanent: true,
+    };
+
     const legacyBrowse = [
       "listing-grid",
       "listing-grid2",
@@ -179,18 +194,21 @@ const nextConfig = {
       "listing-list-map",
       "listing-grid-map",
     ];
-    return legacyBrowse.flatMap((path) => [
-      {
-        source: `/${path}`,
-        destination: "/used-cars",
-        permanent: true,
-      },
-      {
-        source: `/:locale(ar|en)/${path}`,
-        destination: "/:locale/used-cars",
-        permanent: true,
-      },
-    ]);
+    return [
+      apexToWww,
+      ...legacyBrowse.flatMap((path) => [
+        {
+          source: `/${path}`,
+          destination: "/used-cars",
+          permanent: true,
+        },
+        {
+          source: `/:locale(ar|en)/${path}`,
+          destination: "/:locale/used-cars",
+          permanent: true,
+        },
+      ]),
+    ];
   },
   images: {
     /*
