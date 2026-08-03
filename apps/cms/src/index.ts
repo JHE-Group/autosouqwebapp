@@ -333,6 +333,161 @@ type TaxonomyDocs = {
  * id, so this adds missing rows and touches nothing already there. It does not
  * update or delete — renaming a make in the admin will not be undone here.
  */
+/**
+ * Facet slugs owned by the web app's `/used-cars/{facet}` routes.
+ *
+ * Duplicated from apps/web/data/usedCarsFacets.js because these two things
+ * deploy separately and cannot import from each other — the CMS branch is a
+ * subtree of apps/cms and never contains apps/web. A stale copy here is a
+ * false alarm, which is survivable; the alternative is no check at all.
+ */
+const WEB_FACET_SLUGS = new Set([
+  "muscat",
+  "under-2000-omr",
+  "under-3000-omr",
+  "gcc-spec",
+]);
+
+/**
+ * Pairs that must never both exist, because each is a spelling of the other.
+ *
+ * Not a style preference. Inventory splits across the two rows, so seven in-band
+ * Mercedes listings become four and three, neither clears the web app's
+ * MIN_LISTINGS_FOR_FACET of 5, and the brand page that both spellings were
+ * supposed to earn never renders. The failure is silent: two correct-looking
+ * rows and a page that simply does not appear.
+ */
+const EQUIVALENT_SLUGS: Array<[string, string]> = [
+  ["mercedes", "mercedes-benz"],
+  ["vw", "volkswagen"],
+  ["land-rover", "landrover"],
+  ["range-rover", "land-rover"],
+];
+
+/**
+ * Assert the taxonomy cannot break a URL before any of it is written.
+ *
+ * Every rule here is a bug this repo has actually shipped or come within one
+ * edit of shipping, and each was found by hand. Hand-checking does not survive
+ * the next person adding a row.
+ *
+ * Throws rather than warning. bootstrap() already wraps seeding in a try/catch
+ * that logs and lets Strapi start, so a bad row costs the taxonomy and a loud
+ * log line, not the site — and in development it surfaces the moment you save.
+ */
+export function assertTaxonomyIsUrlSafe(
+  makes: Array<{ name: string; nameAr: string; slug: string }>,
+  models: Array<{ name: string; nameAr: string; slug: string; make: string }>,
+  cities: Array<{ name: string; nameAr: string; slug: string }>,
+) {
+  const problems: string[] = [];
+
+  const check = (
+    rows: Array<{ name?: string; nameAr?: string; slug?: string }>,
+    kind: string,
+  ) => {
+    for (const row of rows) {
+      const where = `${kind} "${row.name ?? row.slug ?? "?"}"`;
+      if (!row.name) problems.push(`${where}: missing name`);
+      // Arabic is the default locale. A row without nameAr renders its English
+      // name on the Arabic page, which is the bug the seed language rule at the
+      // top of this file exists to prevent.
+      if (!row.nameAr) problems.push(`${where}: missing nameAr`);
+      if (!row.slug) {
+        problems.push(`${where}: missing slug`);
+        continue;
+      }
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.slug)) {
+        problems.push(`${where}: slug "${row.slug}" is not lowercase kebab-case ASCII`);
+      }
+      /*
+       * The one that has already cost this site every seller listing.
+       *
+       * apps/web/lib/resolveListing matches a leading `/^(\d+)(?:-|$)/` as a
+       * numeric listing id. A slug starting with a digit — "3-series", "6",
+       * "500" — makes the composed URL resolve to a listing that does not
+       * exist, and the page 404s. Fixed once in 985cc28; this stops it coming
+       * back through a taxonomy row instead of a title.
+       */
+      if (/^\d/.test(row.slug)) {
+        problems.push(
+          `${where}: slug "${row.slug}" starts with a digit — resolveListing ` +
+            `will read it as a listing id and the page will 404. Prefix it ` +
+            `(e.g. "bmw-3-series", "mazda-6").`,
+        );
+      }
+    }
+  };
+
+  check(makes, "make");
+  check(models, "model");
+  check(cities, "city");
+
+  // Unique across makes AND models: both appear in the same composed listing
+  // slug, {id}-{make}-{model}-{year}-{city}, so a shared slug makes two
+  // different cars produce the same URL.
+  const seen = new Map<string, string>();
+  for (const [rows, kind] of [
+    [makes, "make"],
+    [models, "model"],
+  ] as const) {
+    for (const row of rows) {
+      const prior = seen.get(row.slug);
+      if (prior) {
+        problems.push(`slug "${row.slug}" used by both ${prior} and ${kind}`);
+      } else {
+        seen.set(row.slug, kind);
+      }
+    }
+  }
+
+  /*
+   * Cities are deliberately exempt from the facet check.
+   *
+   * "muscat" is legitimately both a city row and a `/used-cars/muscat` facet —
+   * the facet is ABOUT that city. Makes and models are different: brand pages
+   * are planned at `/used-cars/{make}`, so a make slug that collides with a
+   * facet slug is a future route collision, not a coincidence.
+   */
+  for (const [rows, kind] of [
+    [makes, "make"],
+    [models, "model"],
+  ] as const) {
+    for (const row of rows) {
+      if (WEB_FACET_SLUGS.has(row.slug)) {
+        problems.push(
+          `${kind} slug "${row.slug}" collides with a /used-cars/ facet route`,
+        );
+      }
+    }
+  }
+
+  const makeSlugs = new Set(makes.map((m) => m.slug));
+  for (const model of models) {
+    if (!makeSlugs.has(model.make)) {
+      problems.push(
+        `model "${model.name}" points at make "${model.make}", which is not seeded ` +
+          `— makeDocs[...] would be undefined and the relation would be dropped`,
+      );
+    }
+  }
+
+  for (const [a, b] of EQUIVALENT_SLUGS) {
+    if (makeSlugs.has(a) && makeSlugs.has(b)) {
+      problems.push(
+        `makes "${a}" and "${b}" are the same brand spelled two ways — inventory ` +
+          `splits between them and neither clears MIN_LISTINGS_FOR_FACET`,
+      );
+    }
+  }
+
+  if (problems.length) {
+    throw new Error(
+      `Taxonomy is not URL-safe, refusing to seed:\n  - ${problems.join("\n  - ")}`,
+    );
+  }
+}
+
 async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
   const cities = [
     { name: "Muscat", nameAr: "مسقط", slug: "muscat" },
@@ -342,11 +497,6 @@ async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
     { name: "Sur", nameAr: "صور", slug: "sur" },
     { name: "Barka", nameAr: "بركاء", slug: "barka" },
   ];
-
-  const cityDocs: Record<string, string> = {};
-  for (const city of cities) {
-    cityDocs[city.slug] = await findOrCreate(strapi, "api::city.city", city);
-  }
 
   /**
    * The makes that actually populate OMR 1,000-6,000 in Oman.
@@ -392,10 +542,6 @@ async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
     { name: "Geely", nameAr: "جيلي", slug: "geely" },
   ];
 
-  const makeDocs: Record<string, string> = {};
-  for (const make of makes) {
-    makeDocs[make.slug] = await findOrCreate(strapi, "api::make.make", make);
-  }
 
   /**
    * Models, keyed to their make by slug.
@@ -461,6 +607,27 @@ async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
     { name: "Tucson", nameAr: "توسان", slug: "tucson", make: "hyundai" },
     { name: "Swift Dzire", nameAr: "سويفت ديزاير", slug: "swift-dzire", make: "suzuki" },
   ];
+
+  /*
+   * Validate before writing anything.
+   *
+   * Placed here, after all three arrays are declared and before the first
+   * findOrCreate, because these rules are cross-cutting: a duplicate slug spans
+   * makes and models, and a model's `make` reference can only be checked once
+   * both lists exist. Creating cities first and validating afterwards would mean
+   * a half-seeded database whenever a rule fires.
+   */
+  assertTaxonomyIsUrlSafe(makes, models, cities);
+
+  const cityDocs: Record<string, string> = {};
+  for (const city of cities) {
+    cityDocs[city.slug] = await findOrCreate(strapi, "api::city.city", city);
+  }
+
+  const makeDocs: Record<string, string> = {};
+  for (const make of makes) {
+    makeDocs[make.slug] = await findOrCreate(strapi, "api::make.make", make);
+  }
 
   const modelDocs: Record<string, string> = {};
   for (const model of models) {
