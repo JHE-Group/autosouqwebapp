@@ -59,11 +59,16 @@
 
   &.style-3 {
     inset-inline-end: 20px;
+
+    &:after {
+      @include swiper-chevron(true);
+    }
   }
 }
 
 [dir="rtl"] .swiper-button-next.style-1:after,
-[dir="rtl"] .swiper-button-next.style-2:after {
+[dir="rtl"] .swiper-button-next.style-2:after,
+[dir="rtl"] .swiper-button-next.style-3:after {
   transform: rotate(-135deg);
 }
 
@@ -86,11 +91,16 @@
 
   &.style-3 {
     inset-inline-start: 20px;
+
+    &:after {
+      @include swiper-chevron(false);
+    }
   }
 }
 
 [dir="rtl"] .swiper-button-prev.style-1:after,
-[dir="rtl"] .swiper-button-prev.style-2:after {
+[dir="rtl"] .swiper-button-prev.style-2:after,
+[dir="rtl"] .swiper-button-prev.style-3:after {
   transform: rotate(45deg);
 }
 
@@ -170,9 +180,15 @@
   }
 }
 
+// Logical, because every .style-* variant below positions logically. While
+// these were `right`/`left` the two sets addressed different properties under
+// dir="rtl": the variant's inset-inline-end resolved to `left`, this `right`
+// was never overridden, and an over-constrained absolutely positioned box in
+// an RTL containing block resolves in favour of `right`. Both arrows landed at
+// the LTR end on every Arabic carousel.
 .swiper-button-next {
-  right: 50px;
-  left: auto;
+  inset-inline-end: 50px;
+  inset-inline-start: auto;
 
   &.style5-next {
     left: auto;
@@ -188,8 +204,8 @@
 }
 
 .swiper-button-prev {
-  right: auto;
-  left: 50px;
+  inset-inline-end: auto;
+  inset-inline-start: 50px;
 
   &.style5-prev {
     left: auto;
