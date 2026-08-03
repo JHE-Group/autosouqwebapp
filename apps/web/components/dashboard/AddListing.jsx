@@ -216,14 +216,30 @@ export default function AddListing() {
   const locale = useLocale();
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing");
-  const [step, setStep] = useState(0);
+  /**
+   * Which section is expanded — not which step the seller is "on".
+   *
+   * The six steps are now six disclosure panels on one page. The seller sees the
+   * whole shape of the job before starting, can open any part in any order, and
+   * never loses the page they were on. One open at a time, because six expanded
+   * panels on a 360px phone is a scroll bar, not a form.
+   *
+   * `null` is a legal value: every panel closed, which is what the seller gets
+   * after finishing the last one. The order is unchanged and still matters —
+   * see the STEPS comment. Photos is fourth and CLOSED until reached, so the
+   * camera is still not the first thing a seller meets.
+   */
+  const [openSection, setOpenSection] = useState(0);
   const [form, setForm] = useState(EMPTY_FORM);
   const [images, setImages] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [draftHandled, setDraftHandled] = useState(false);
   const [showExtras, setShowExtras] = useState(false);
-  const headingRef = useRef(null);
+  // One ref per section heading, so opening a panel can move focus to it. A
+  // single `headingRef` worked when only one step was ever mounted; six panels
+  // need six targets.
+  const headingRefs = useRef({});
 
   const set = useCallback((name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -280,7 +296,7 @@ export default function AddListing() {
     setImages([]);
     setAttachments([]);
     setDraftHandled(true);
-    setStep(0);
+    setOpenSection(0);
   };
 
   /* ------------------------------------------------------------ photos -- */
@@ -394,13 +410,42 @@ export default function AddListing() {
 
   /* ----------------------------------------------------------- stepping -- */
 
+  /**
+   * Open a section, closing whatever was open.
+   *
+   * Still called `goTo` and still takes an index, because `missing` carries one
+   * and StepReview sends the seller back with it. What changed is that nothing
+   * unmounts: the other five panels are still on the page, collapsed.
+   *
+   * Focus moves to the opened panel's heading for the same reason it used to
+   * move to the step heading — a screen-reader user and a keyboard user both
+   * need to land at the top of what just changed, and a phone needs to scroll
+   * there rather than leaving the seller looking at a panel that just closed.
+   */
   const goTo = useCallback((index) => {
-    setStep(() => Math.min(Math.max(index, 0), STEPS.length - 1));
-    // Move focus to the new step's heading so a screen-reader user and a
-    // keyboard user both land at the top of what just changed, and a phone
-    // scrolls back up instead of stranding them mid-form.
-    window.requestAnimationFrame(() => headingRef.current?.focus());
+    const next = Math.min(Math.max(index, 0), STEPS.length - 1);
+    setOpenSection(next);
+    window.requestAnimationFrame(() => {
+      const node = headingRefs.current[next];
+      node?.focus();
+      // `block: "start"` rather than the default centring: a panel that opens
+      // half off the top of a 360px screen reads as nothing having happened.
+      node?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
   }, []);
+
+  /** Toggle a panel. Closing the open one leaves every panel closed, which is
+   *  a legal state and the one the seller lands in after the last section. */
+  const toggleSection = useCallback(
+    (index) => {
+      if (openSection === index) {
+        setOpenSection(null);
+        return;
+      }
+      goTo(index);
+    },
+    [openSection, goTo],
+  );
 
   /**
    * The listing title is derived, not typed.
@@ -424,7 +469,27 @@ export default function AddListing() {
     .filter(Boolean)
     .join(" ");
 
-  const current = STEPS[step];
+  /**
+   * What each section still needs, keyed by section index.
+   *
+   * Derived from the same `missing` list the review section and the publish
+   * button already use, so a section header can never disagree with the button
+   * about whether the form is done. One source, three readers.
+   */
+  const missingBySection = useMemo(() => {
+    const map = {};
+    for (const item of missing) (map[item.step] ??= []).push(item.key);
+    return map;
+  }, [missing]);
+
+  /**
+   * Sections that can be complete, and sections that are simply optional.
+   *
+   * Photos and review have no required field, so scoring them "done" the moment
+   * the page loads would be a tick against work nobody has done. They get a
+   * count or nothing instead — an honest status beats a reassuring one.
+   */
+  const REQUIRED_SECTIONS = new Set([0, 1, 2, 4]);
 
   return (
     <div className="container">
@@ -434,7 +499,7 @@ export default function AddListing() {
             <main id="main" className="main-content">
               <div
                 className="tfcl-dashboard tfcl-add-listing-flow"
-                data-step={step}
+                data-open-section={openSection ?? "none"}
               >
                 <h1 className="admin-title mb-3">{t("title")}</h1>
 
@@ -480,113 +545,153 @@ export default function AddListing() {
                   </div>
                 ) : null}
 
-                <StepNav step={step} onGoTo={goTo} />
+                {/*
+                  Counted over the sections that can actually be incomplete.
+                  Measuring against all six scored photos and review as "done"
+                  the moment the page loaded — because neither requires anything
+                  — so an untouched form opened on "2 / 6". A progress meter that
+                  starts two-sixths full is worse than none: it is the form
+                  telling the seller they have already done something.
+                */}
+                <SectionProgress
+                  done={
+                    [...REQUIRED_SECTIONS].filter((i) => !missingBySection[i])
+                      .length
+                  }
+                  total={REQUIRED_SECTIONS.size}
+                  missingCount={missing.length}
+                />
 
-                <h2
-                  className="tfcl-step-heading"
-                  tabIndex={-1}
-                  ref={headingRef}
-                >
-                  {t(`step.${current.id}`)}
-                </h2>
+                <ol className="tfcl-sections">
+                  {STEPS.map((item, index) => {
+                    const isOpen = openSection === index;
+                    const gaps = missingBySection[index] ?? [];
+                    return (
+                      <li key={item.id} className="tfcl-sections__item">
+                        <SectionHeader
+                          index={index}
+                          id={item.id}
+                          isOpen={isOpen}
+                          gaps={gaps}
+                          required={REQUIRED_SECTIONS.has(index)}
+                          photoCount={index === 3 ? images.length : null}
+                          onToggle={() => toggleSection(index)}
+                          headingRef={(node) => {
+                            headingRefs.current[index] = node;
+                          }}
+                        />
+                        {/*
+                          `hidden` rather than unmounting.
+                          Every panel stays mounted so a half-typed answer
+                          survives collapsing the section — the wizard could
+                          unmount freely because state lived in the parent, but
+                          uncontrolled bits (the file input, scroll position,
+                          an open native select) did not survive it. It also
+                          means the browser can find and autofill a field the
+                          seller cannot currently see.
+                        */}
+                        <div
+                          id={`listing-panel-${item.id}`}
+                          role="region"
+                          aria-labelledby={`listing-section-${item.id}`}
+                          className="tfcl-sections__panel"
+                          hidden={!isOpen}
+                        >
+                          {index === 0 ? (
+                            <StepCar form={form} set={set} derivedTitle={derivedTitle} />
+                          ) : null}
+                          {index === 1 ? <StepSpec form={form} set={set} /> : null}
+                          {index === 2 ? (
+                            <StepPrice form={form} set={set} priceCheck={priceCheck} />
+                          ) : null}
+                          {index === 3 ? (
+                            <StepPhotos
+                              images={images}
+                              setImages={setImages}
+                              addFiles={addFiles}
+                              isDragging={isDragging}
+                              setIsDragging={setIsDragging}
+                              onDrop={handleDrop}
+                            />
+                          ) : null}
+                          {index === 4 ? (
+                            <StepContact form={form} set={set} msisdn={msisdn} />
+                          ) : null}
+                          {index === 5 ? (
+                            <StepReview
+                              form={form}
+                              set={set}
+                              images={images}
+                              attachments={attachments}
+                              setAttachments={setAttachments}
+                              onAttachmentChange={handleAttachmentChange}
+                              derivedTitle={derivedTitle}
+                              priceCheck={priceCheck}
+                              missing={missing}
+                              canPublish={canPublish}
+                              showExtras={showExtras}
+                              setShowExtras={setShowExtras}
+                              onGoTo={goTo}
+                              onPublish={handlePublish}
+                              submitState={submitState}
+                              submitting={submitting}
+                              submitError={submitError}
+                              submitAvailable={submitAvailable}
+                            />
+                          ) : null}
 
-                {step === 0 ? (
-                  <StepCar form={form} set={set} derivedTitle={derivedTitle} />
-                ) : null}
-                {step === 1 ? <StepSpec form={form} set={set} /> : null}
-                {step === 2 ? (
-                  <StepPrice form={form} set={set} priceCheck={priceCheck} />
-                ) : null}
-                {step === 3 ? (
-                  <StepPhotos
-                    images={images}
-                    setImages={setImages}
-                    addFiles={addFiles}
-                    isDragging={isDragging}
-                    setIsDragging={setIsDragging}
-                    onDrop={handleDrop}
-                  />
-                ) : null}
-                {step === 4 ? (
-                  <StepContact form={form} set={set} msisdn={msisdn} />
-                ) : null}
-                {step === 5 ? (
-                  <StepReview
-                    form={form}
-                    set={set}
-                    images={images}
-                    attachments={attachments}
-                    setAttachments={setAttachments}
-                    onAttachmentChange={handleAttachmentChange}
-                    derivedTitle={derivedTitle}
-                    priceCheck={priceCheck}
-                    missing={missing}
-                    canPublish={canPublish}
-                    showExtras={showExtras}
-                    setShowExtras={setShowExtras}
-                    onGoTo={goTo}
-                    onPublish={handlePublish}
-                    submitState={submitState}
-                    submitting={submitting}
-                    submitError={submitError}
-                    submitAvailable={submitAvailable}
-                  />
-                ) : null}
+                          {/*
+                            Kept, and kept as `listing-next`.
+                            The wizard's Next button was the only way forward;
+                            here it is a shortcut — the seller can also just open
+                            the next header. It stays because closing the section
+                            you finished and opening the next one is still the
+                            common path, and because it gives a thumb one large
+                            target at the bottom of a long panel rather than a
+                            scroll back up to the headers.
+                          */}
+                          {/*
+                            Rendered only while this panel is open, not merely
+                            hidden with it. Six mounted-but-hidden copies would
+                            all carry `data-testid="listing-next"`, and a
+                            Playwright locator matching six elements is a strict
+                            -mode failure, not a first-match. Keeping exactly one
+                            in the DOM also means assistive tech is never offered
+                            five "Next" buttons it cannot reach.
+                          */}
+                          {isOpen && index < STEPS.length - 1 ? (
+                            <div className="tfcl-sections__advance">
+                              <button
+                                type="button"
+                                className="pre-btn"
+                                onClick={() => goTo(index + 1)}
+                                data-testid="listing-next"
+                              >
+                                {t("nav.next")}
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
 
-                <div className="tfcl-step-nav-bar">
-                  <button
-                    type="button"
-                    className="second-btn"
-                    // Functional updates — do not close over `step`. A stale
-                    // `goTo(step + 1)` handler was leaving sellers stuck on the
-                    // price step after the first couple of advances.
-                    onClick={() =>
-                      // `goTo`, not `setStep`: it also moves focus to the new
-                      // step's heading. Going through setStep replaced the
-                      // heading, the intro and every field while focus stayed
-                      // on the button, so a screen-reader user heard nothing.
-                      goTo(step - 1)
-                    }
-                    disabled={step === 0}
-                  >
-                    {t("nav.back")}
-                  </button>
-                  <div className="tfcl-step-nav-bar__count" aria-hidden="true">
-                    {/* Isolated for the same reason as the gallery counter:
-                        the neutral separator otherwise reverses under RTL and
-                        step 2 of 6 reads as "6 / 2". */}
-                    <bdi>
-                      {step + 1} / {STEPS.length}
-                    </bdi>
-                  </div>
-                  {step < STEPS.length - 1 ? (
-                    <button
-                      type="button"
-                      className="pre-btn"
-                      onClick={() => goTo(step + 1)}
-                      data-testid="listing-next"
-                    >
-                      {t("nav.next")}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="pre-btn"
-                      onClick={handlePublish}
-                      disabled={!canPublish || !submitAvailable}
-                      data-testid="listing-publish"
-                      title={
-                        canPublish
-                          ? submitAvailable
-                            ? t("publishHint")
-                            : t("notConfigured")
-                          : t("stillNeeded")
-                      }
-                    >
-                      {t("publish")}
-                    </button>
-                  )}
-                </div>
+                {/*
+                  Publish lives outside the sections now.
+                  In the wizard it was reachable only from step 6, so a seller
+                  who had answered everything by step 3 still had to walk the
+                  remaining panels to find it. Here it is always on screen and
+                  states, in the same breath, what is still stopping it.
+                */}
+                <PublishBar
+                  missing={missing}
+                  canPublish={canPublish}
+                  submitAvailable={submitAvailable}
+                  submitting={submitting}
+                  onPublish={handlePublish}
+                  onGoTo={goTo}
+                />
 
                 <DraftStatus dirty={dirty} onDiscard={discardDraft} />
               </div>
@@ -598,39 +703,173 @@ export default function AddListing() {
   );
 }
 
-/* ------------------------------------------------------------- step nav -- */
+/* --------------------------------------------------------- section chrome -- */
 
-function StepNav({ step, onGoTo }) {
+/**
+ * Progress, stated as work remaining rather than distance travelled.
+ *
+ * The wizard's bar measured which step you were standing on, which is a fact
+ * about the UI and not about the seller's car — you could be on step 6 of 6 with
+ * four fields empty and watch a full bar tell you so. This counts sections that
+ * have nothing outstanding, so it only fills as the listing actually becomes
+ * publishable.
+ */
+function SectionProgress({ done, total, missingCount }) {
   const t = useTranslations("addListing");
+  const pct = Math.round((done / total) * 100);
   return (
-    <nav className="tfcl-stepper" aria-label={t("steps")}>
+    <div className="tfcl-sections__progress">
       <p className="tfcl-stepper__progress" aria-hidden="true">
-        {t("stepOf", { n: step + 1, total: STEPS.length })}
+        {/* <bdi> for the same reason the old step counter needed it: a neutral
+            separator between two Latin numerals reverses under RTL, so "2 / 6"
+            renders as "6 / 2" on the Arabic page. */}
+        <bdi>
+          {done} / {total}
+        </bdi>
       </p>
       <div className="tfcl-stepper__bar" aria-hidden="true">
-        <span style={{ inlineSize: `${((step + 1) / STEPS.length) * 100}%` }} />
+        <span style={{ inlineSize: `${pct}%` }} />
       </div>
-      <ol className="tfcl-stepper__list">
-        {STEPS.map((item, index) => (
-          <li key={item.id}>
-            {/* Every step is reachable at any time. Locking a seller out of
-                step 4 until step 2 is "complete" punishes the person who wants
-                to check what is coming before committing to typing. */}
-            <button
-              type="button"
-              onClick={() => onGoTo(index)}
-              className={`tfcl-stepper__step ${
-                index === step ? "is-current" : ""
-              } ${index < step ? "is-done" : ""}`}
-              aria-current={index === step ? "step" : undefined}
-            >
-              <span className="tfcl-stepper__num">{index + 1}</span>
-              <span className="tfcl-stepper__label">{t(`step.${item.id}`)}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
-    </nav>
+      {/* The only announced copy here. The bar and the fraction are decorative
+          duplicates of it, so they stay aria-hidden and this carries the meaning.
+          Short keys of its own: `readyNotice` is the review step's paragraph
+          explaining that publishing queues the car for a human, which is the
+          right words in the wrong place for a progress line. */}
+      <p className="tfcl-sections__progress-text" role="status">
+        {missingCount === 0
+          ? t("progressReady")
+          : t("progressRemaining", { count: missingCount })}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * One accordion header.
+ *
+ * A real `<button aria-expanded aria-controls>` rather than `<details>/<summary>`:
+ * summary elements cannot hold the status chip's markup reliably across
+ * browsers, and the open state has to be controlled anyway so that opening one
+ * panel closes the rest.
+ */
+function SectionHeader({
+  index,
+  id,
+  isOpen,
+  gaps,
+  required,
+  photoCount,
+  onToggle,
+  headingRef,
+}) {
+  const t = useTranslations("addListing");
+
+  // Status is deliberately three-valued, not two. "Nothing outstanding" is not
+  // the same claim as "you have done this", and photos/review can never be the
+  // former because they require nothing.
+  let status = null;
+  if (gaps.length) {
+    status = { tone: "needs", text: t("sectionNeeds", { count: gaps.length }) };
+  } else if (required) {
+    status = { tone: "done", text: t("sectionDone") };
+  } else if (photoCount !== null && photoCount > 0) {
+    status = { tone: "done", text: t("sectionPhotos", { count: photoCount }) };
+  } else if (photoCount !== null) {
+    status = { tone: "optional", text: t("sectionOptional") };
+  }
+
+  return (
+    <h2 className="tfcl-sections__heading">
+      <button
+        type="button"
+        id={`listing-section-${id}`}
+        className={`tfcl-sections__toggle ${isOpen ? "is-open" : ""}`}
+        aria-expanded={isOpen}
+        aria-controls={`listing-panel-${id}`}
+        onClick={onToggle}
+        // Focus target for goTo(). On the heading's button rather than the
+        // heading itself so that a keyboard user lands somewhere they can act,
+        // and Enter re-collapses what they just opened.
+        ref={headingRef}
+        data-testid={`listing-section-${id}`}
+      >
+        <span className="tfcl-stepper__num" aria-hidden="true">
+          {index + 1}
+        </span>
+        {/* Class retained from the wizard: the sell-flow smoke test locates
+            steps by `.tfcl-step-heading`, and the copy is unchanged. */}
+        <span className="tfcl-step-heading tfcl-sections__title">
+          {t(`step.${id}`)}
+        </span>
+        {status ? (
+          <span className={`tfcl-sections__status is-${status.tone}`}>
+            {status.text}
+          </span>
+        ) : null}
+        <span className="tfcl-sections__chevron" aria-hidden="true" />
+      </button>
+    </h2>
+  );
+}
+
+/**
+ * The publish control, lifted out of the last section.
+ *
+ * In the wizard this lived on step 6, so a seller who had answered everything
+ * by step 3 still had to page through photos and contact to reach it. Here it
+ * sits below the sections and names what is outstanding, each item a link
+ * straight to the panel that holds it.
+ */
+function PublishBar({
+  missing,
+  canPublish,
+  submitAvailable,
+  submitting,
+  onPublish,
+  onGoTo,
+}) {
+  const t = useTranslations("addListing");
+  return (
+    <div className="tfcl-publish-bar">
+      <div className="tfcl-publish-bar__status" role="status">
+        {missing.length ? (
+          <>
+            <p className="tfcl-amber">{t("stillNeeded")}</p>
+            <ul className="tfcl-missing">
+              {missing.map((item) => (
+                <li key={item.key}>
+                  <button
+                    type="button"
+                    className="tfcl-linkish"
+                    onClick={() => onGoTo(item.step)}
+                  >
+                    {t(`missing.${item.key}`)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="tfcl-hint">{t("readyNotice")}</p>
+        )}
+      </div>
+      <button
+        type="button"
+        className="pre-btn"
+        onClick={onPublish}
+        disabled={!canPublish || !submitAvailable || submitting}
+        data-testid="listing-publish"
+        title={
+          canPublish
+            ? submitAvailable
+              ? t("publishHint")
+              : t("notConfigured")
+            : t("stillNeeded")
+        }
+      >
+        {submitting ? t("submitting") : t("publish")}
+      </button>
+    </div>
   );
 }
 

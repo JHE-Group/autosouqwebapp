@@ -179,14 +179,61 @@ async function main() {
     addLinks.first().click(),
   ]);
 
-  // 3. Form loads with a real step heading (not undefined)
+  /*
+   * 3. Form loads as six sections, with the first open and the rest collapsed.
+   *
+   * The wizard mounted one step at a time, so `.tfcl-step-heading` was unique
+   * and its mere presence proved which step you were on. The accordion mounts
+   * all six, so that selector now matches six elements — `innerText()` on it is
+   * a Playwright strict-mode failure, and `waitForSelector` on a step's title
+   * would resolve instantly without proving anything had opened.
+   *
+   * Openness is therefore asserted through `aria-expanded` on the section
+   * toggle, which is the same fact a screen reader is told.
+   */
   console.log("3. Form shell");
   await page.waitForSelector(".tfcl-add-listing-flow", { timeout: 20000 });
-  const heading = (await page.locator(".tfcl-step-heading").innerText()).trim();
-  if (!heading || /undefined/.test(heading)) {
-    fail(`Step heading broken: "${heading}"`);
+
+  const sectionCount = await page.locator(".tfcl-sections__item").count();
+  if (sectionCount !== 6) {
+    fail(`Expected 6 sections on the page, found ${sectionCount}`);
   }
-  console.log("   step 1 heading:", heading);
+
+  const expectOpen = async (id) => {
+    await page.waitForSelector(
+      `[data-testid="listing-section-${id}"][aria-expanded="true"]`,
+      { timeout: 10000 },
+    );
+  };
+  const isOpen = (id) =>
+    page
+      .locator(`[data-testid="listing-section-${id}"]`)
+      .getAttribute("aria-expanded");
+
+  await expectOpen("car");
+  const heading = (
+    await page
+      .locator('.tfcl-sections__toggle[aria-expanded="true"] .tfcl-step-heading')
+      .innerText()
+  ).trim();
+  if (!heading || /undefined/.test(heading)) {
+    fail(`Section heading broken: "${heading}"`);
+  }
+  console.log("   open section heading:", heading);
+
+  /*
+   * The anti-abandonment property, now asserted rather than assumed.
+   *
+   * AddListing's step order puts photos fourth deliberately: it is the highest
+   * friction step on a phone (camera, upload, metered data) and therefore the
+   * highest abandonment one. A single-page redesign is exactly the change that
+   * could put the camera in front of a seller on arrival, so the test states
+   * that it must not.
+   */
+  if ((await isOpen("photos")) !== "false") {
+    fail("Photos section is open on arrival — it must start collapsed");
+  }
+  console.log("   photos collapsed on arrival: true");
 
   // 4. Fill car step
   console.log("4. Car step");
@@ -197,17 +244,13 @@ async function main() {
   await page.locator("#listing_year").fill("2015");
   await page.locator("#listing_km").fill("185000");
   await next();
-  await page.waitForSelector(".tfcl-step-heading:text-is('Spec & condition')", {
-    timeout: 10000,
-  });
+  await expectOpen("spec");
 
   // 5. Spec
   console.log("5. Spec step");
   await page.locator("#listing_spec").selectOption({ index: 1 });
   await next();
-  await page.waitForSelector(".tfcl-step-heading:text-is('Price')", {
-    timeout: 10000,
-  });
+  await expectOpen("price");
 
   // 6. Price — reject over-band, accept in-band
   console.log("6. Price step");
@@ -222,16 +265,12 @@ async function main() {
   console.log("   as-is notice for 1200:", asIs > 0);
   await priceInput.fill("3500");
   await next();
-  await page.waitForSelector(".tfcl-step-heading:text-is('Photos')", {
-    timeout: 10000,
-  });
+  await expectOpen("photos");
 
   // 7. Photos skip
   console.log("7. Photos step (skip)");
   await next();
-  await page.waitForSelector(".tfcl-step-heading:text-is('Where & contact')", {
-    timeout: 10000,
-  });
+  await expectOpen("contact");
 
   // 8. Contact
   console.log("8. Contact step");
@@ -248,9 +287,7 @@ async function main() {
   const validHint = await page.getByText(/buyers will message \+96891234567/i).count();
   console.log("   valid WhatsApp hint:", validHint > 0);
   await next();
-  await page.waitForSelector(".tfcl-step-heading:text-is('Review')", {
-    timeout: 10000,
-  });
+  await expectOpen("review");
 
   // 9. Review
   console.log("9. Review step");
