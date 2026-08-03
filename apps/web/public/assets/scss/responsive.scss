@@ -907,7 +907,16 @@
 
   .list-car-grid-4 {
     gap: 15px;
-    // grid-template-columns: repeat(1, 1fr);
+    /*
+     * One card per row below 601px.
+     *
+     * This rule was written and then commented out, so a 360px phone — the
+     * device NICHE.md names as primary — kept the two-column grid and rendered
+     * every listing photo at roughly 160px wide. At that size the thing a buyer
+     * is actually judging, the condition of the car, is not visible, and the
+     * price and mileage sit on two cramped lines.
+     */
+    grid-template-columns: repeat(1, 1fr);
   }
 
 

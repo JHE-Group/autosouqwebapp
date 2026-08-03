@@ -1752,7 +1752,9 @@
 .tfcl-add-listing .form-group .nice-select {
   padding: 15.6px 24px;
   border-radius: 14px;
-  border: 1px solid #ededed;
+  // Matches the inputs beside it — a select with an invisible edge next to a
+  // visible text field reads as a different kind of control.
+  border: 1px solid $color-7;
 }
 
 .tfcl-add-listing .form-group .nice-select .current {
@@ -4006,7 +4008,18 @@
   width: 100%;
   min-height: 52px;
   padding: 14px 16px;
-  border: 1px solid $color-6;
+  /*
+   * $color-7, matching the base control rule in style.scss.
+   *
+   * $color-6 (#EDEDED) is 1.17:1 against white. WCAG 1.4.11 asks 3:1 on the
+   * boundary of a control, and below that the edge of a field is simply not
+   * visible on a phone in daylight — which is the device and the lighting this
+   * form is filled in on. $color-7 (#5C6368) is 6.11:1.
+   *
+   * This rule beats the element selector on specificity, so changing only the
+   * base rule left every field on the sell form exactly as it was.
+   */
+  border: 1px solid $color-7;
   border-radius: $radius-control;
   background: $color-1;
   font-family: $font-2;
@@ -4018,7 +4031,17 @@
 .tfcl-add-listing .form-group input,
 .tfcl-add-listing .form-group textarea {
   min-height: 52px;
-  border: 1px solid $color-6;
+  /*
+   * The third place this border is set, and the one that actually wins.
+   *
+   * $color-6 (#EDEDED) is 1.17:1 against white; WCAG 1.4.11 asks 3:1 on the
+   * boundary of a control. Two other rules set the same border — the element
+   * selector in style.scss and the .form-control rule above — and fixing either
+   * changed nothing here, because this one is more specific. Worth stating,
+   * because the next person to find an invisible field edge will fix the first
+   * one they grep for and watch it not work.
+   */
+  border: 1px solid $color-7;
   /* 16px so iOS Safari does not zoom the page on focus, which on a long form
      leaves the seller scrolled sideways with no way back. */
   font-size: 16px;

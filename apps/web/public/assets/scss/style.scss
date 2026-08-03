@@ -273,7 +273,16 @@ input[type="url"],
 input[type="search"],
 input[type="tel"],
 input[type="color"] {
-  border: 1px solid $color-6;
+  /*
+   * $color-7, not $color-6.
+   *
+   * $color-6 is #EDEDED, which is 1.17:1 against white — WCAG 1.4.11 asks for
+   * 3:1 on the boundary of a control, and at that ratio the edge of a field is
+   * not visible at all on a phone screen in daylight. $color-7 (#5C6368) is
+   * 6.11:1. The seller filling in six sections on a budget Android can see
+   * where the boxes are.
+   */
+  border: 1px solid $color-7;
   font-family: $font-2;
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
@@ -947,19 +956,83 @@ a {
   }
 }
 
-@keyframes rainbow {
-  0% {
-    background-position: left;
-  }
+/*
+ * Links inside prose, which the reset above erases.
+ *
+ * The global `a` rule sets `color: unset; text-decoration: none` and its hover
+ * re-declares exactly the same two values — so hovering a link changed nothing,
+ * and a link in a guide was indistinguishable from the sentence around it. That
+ * reset is right for navigation and for the button-shaped links that depend on
+ * it; it is wrong for a paragraph.
+ *
+ * Scoped to `p` and `li` because there is no prose container class to hang this
+ * on — four hundred paragraphs carry utility classes instead. Button-like
+ * classes are excluded by name so a CTA that happens to sit in a list item does
+ * not sprout an underline.
+ *
+ * $color-3-text is the accent's accessible step for text on light (4.99:1);
+ * plain $color-3 is the fill and fails as body-sized text.
+ */
+/*
+ * Links inside prose, which the global reset above erases.
+ *
+ * That reset sets `color: unset; text-decoration: none`, and its hover
+ * re-declares the same two values — so hovering a link changed nothing, and a
+ * link in a guide was indistinguishable from the sentence around it. The reset
+ * is right for navigation and for button-shaped links that depend on it; it is
+ * wrong for a paragraph.
+ *
+ * Scoped to `p` and `li` because there is no prose container class to hang this
+ * on: four hundred paragraphs carry utility classes instead, and the guide
+ * pages have no <main> either.
+ *
+ * The exclusions sit inside `:where()` so they add NO specificity. Without it
+ * the four `:not()` pseudo-classes make this (0,4,2), which beats the
+ * navigation reset below at (0,0,3) — so the nav reset would lose no matter
+ * where it was placed, and every header and footer link would be underlined.
+ * That is what the first version of this did.
+ *
+ * $color-3-text is the accent's accessible step for text on light (4.99:1);
+ * plain $color-3 is a fill and fails at body size.
+ */
+$prose-link-exclusions: ':where([class*="btn"], [class*="button"], .tfcl-linkish, .sc-button)';
 
-  50% {
-    background-position: right;
-  }
+p a:not(#{$prose-link-exclusions}),
+li a:not(#{$prose-link-exclusions}) {
+  color: $color-3-text;
+  // Underline as well as colour — WCAG 1.4.1: colour alone must not be what
+  // distinguishes a link from the text around it.
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: from-font;
 
-  100% {
-    background-position: left;
+  &:hover,
+  &:focus-visible {
+    color: $brand-terracotta-dark;
+    text-decoration-thickness: 2px;
   }
 }
+
+/*
+ * Navigation and chrome are not prose.
+ *
+ * The header nav, the footer columns and the breadcrumb are all lists of links,
+ * so `li a` above matches them. They carry no class that separates them from a
+ * link in a sentence, so the exclusion is by ancestor. Placed after, and it now
+ * wins because the rule above was reduced to (0,0,2).
+ */
+header p a,
+header li a,
+footer p a,
+footer li a,
+nav p a,
+nav li a,
+.breadcrumb a,
+.title-group a {
+  color: unset;
+  text-decoration: none;
+}
+
 
 .link-style-1 a {
   text-decoration: none;

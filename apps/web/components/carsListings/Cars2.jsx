@@ -34,7 +34,16 @@ export default function Cars2({ listings, resultsHeading = "Browse cars" }) {
   // Facet landers put the SEO H1 in the hero; the results block then uses a
   // plain heading so the page does not ship two competing H1s.
   const HeadingTag = resultsHeading ? "h2" : "h1";
-  const headingText = resultsHeading || "Browse cars";
+  /*
+   * No English fallback on a site whose default locale is Arabic.
+   *
+   * This read `resultsHeading || "Browse cars"`. It renders correctly today
+   * only because every caller passes the prop — so the literal is a trap rather
+   * than a live bug: the first caller to omit it puts an English H1 on
+   * /ar/used-cars, the default locale's highest-intent page. An empty heading is
+   * a visible mistake; an English one looks deliberate.
+   */
+  const headingText = resultsHeading || "";
 
   return (
     <>
