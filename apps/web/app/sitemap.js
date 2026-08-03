@@ -45,25 +45,30 @@ import { getListings } from "@/lib/strapi";
  * problem, not the fix.
  */
 /**
- * Regenerate on a clock, because this file makes claims about other URLs.
+ * Generated per request, because this file makes claims about other URLs.
  *
- * Without this the route is fully static: generated once at build and served
- * unchanged until the next deploy. Every other surface that depends on
- * inventory already self-heals — the facet pages revalidate in 30s and 404 when
- * they drop below MIN_LISTINGS_FOR_FACET, and the footer stops linking them —
- * so the sitemap was the one place that could keep nominating a URL after it
- * had started returning 404.
+ * Every other inventory-dependent surface self-heals: the browse pages and the
+ * facets revalidate within about a minute, and the facets 404 as soon as they
+ * drop below MIN_LISTINGS_FOR_FACET. The sitemap was the one place that could
+ * keep nominating a URL after the site had decided it should not exist, and the
+ * one place that would not nominate a car a moderator had just published.
  *
- * Observed on 2026-08-03, minutes after the ten demo listings were unpublished:
- * all four facet pages correctly 404'd, the footer correctly dropped them, and
- * /sitemap.xml still listed all eight of their locale variants — asking Google
- * to crawl pages the same deploy had just decided should not exist.
+ * `export const revalidate` does NOT fix that here, which is worth recording
+ * because it looks like it should. A metadata route is emitted as a fully
+ * static asset — `next build` still reports it as `○ /sitemap.xml` with the
+ * export present, not `●` like the pages beside it — and on Vercel it is served
+ * with `x-vercel-cache: HIT` and no `x-nextjs-stale-time` header at all. It was
+ * measured stale at age 399s against a 300s window, while /en/used-cars in the
+ * same minute carried `x-nextjs-stale-time: 300` and revalidated correctly.
+ * Both observations were made against production on 2026-08-04, after a
+ * published listing failed to appear here for six minutes.
  *
- * Five minutes, matching the order of the rest of the inventory surfaces. This
- * walks the listings once per window at a page size of 100, which at this
- * catalogue's size is a single request.
+ * So: dynamic. The cost is one Strapi call per request for a document only
+ * crawlers ask for, which at this catalogue's size is a single paginated fetch.
+ * The alternative is a sitemap that is only ever correct immediately after a
+ * deploy.
  */
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function sitemap() {
   // CMS only. Demo fallback is for the UI; nominating fake cars in the sitemap
