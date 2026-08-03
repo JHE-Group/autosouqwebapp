@@ -47,19 +47,73 @@ const IMPORT_ORIGINS = new Set(["gcc", "us-import", "japan-import", "other"]);
  *
  * ## Matching, and what happens when it fails
  *
- * By slug first, then case-insensitively by name, against the seeded
- * vocabulary. A miss leaves the field unset rather than failing the submission:
- * a seller whose make is not yet in our list should still be able to file the
- * car, and the moderator who reviews every draft can attach it. Blocking them
- * would trade a broken URL for a lost listing.
+ * By slug, then by English name, then by Arabic name — each after
+ * normalisation. A miss leaves the field unset rather than failing the
+ * submission: a seller whose make is not yet in our list should still be able to
+ * file the car, and the moderator who reviews every draft can attach it.
+ * Blocking them would trade a broken URL for a lost listing.
  */
+
+/**
+ * Fold the spellings of one word together so two people typing the same car
+ * match the same row.
+ *
+ * Arabic has several ways to write characters that a reader treats as
+ * identical, and a phone keyboard picks whichever the seller's habit produces:
+ *
+ *   أ إ آ ٱ   all alef, all typed for the same sound
+ *   ة / ه     ta marbuta, routinely written as plain ha
+ *   ى / ي     alef maqsura, routinely written as plain ya
+ *   ً ٌ ٍ َ ...  diacritics, usually absent but sometimes not
+ *   ـ         tatweel, a decorative stretch with no meaning
+ *   ٠-٩       Arabic-Indic digits, the same numbers as 0-9
+ *
+ * Without folding, تويوتا and طويوطا are different strings and one of them
+ * silently loses its make. `NFKC` first so a composed character and its
+ * decomposed twin agree before any of the rest applies.
+ */
+function normalizeForMatch(value) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[ً-ْٰـ]/g, "") // diacritics + tatweel
+    .replace(/[أإآٱ]/g, "ا") // alef forms -> ا
+    .replace(/ة/g, "ه") // ة -> ه
+    .replace(/ى/g, "ي") // ى -> ي
+    .replace(/[٠-٩]/g, (d) =>
+      String(d.charCodeAt(0) - 0x0660),
+    ) // ٠-٩ -> 0-9
+    .replace(/[۰-۹]/g, (d) =>
+      String(d.charCodeAt(0) - 0x06f0),
+    ) // Persian digits, which some keyboards emit
+    .replace(/[\s‏‎_-]+/g, " ") // collapse space, RTL/LTR marks, separators
+    .trim();
+}
+
 function pickTaxonomy(rows, value) {
-  const wanted = String(value ?? "").trim().toLowerCase();
+  const wanted = normalizeForMatch(value);
   if (!wanted) return null;
-  const hit =
-    rows.find((r) => String(r.slug ?? "").toLowerCase() === wanted) ??
-    rows.find((r) => String(r.name ?? "").toLowerCase() === wanted);
-  return hit?.documentId ?? null;
+  /*
+   * `nameAr` is matched too, and that is the point of this function.
+   *
+   * It used to compare against `slug` and `name` only — both Latin — on a site
+   * whose DEFAULT locale is Arabic and whose stated audience includes
+   * Arabic-speaking first-time buyers. A seller who typed تويوتا matched
+   * nothing, so `make` was dropped, so the listing composed no URL and 404'd on
+   * arrival: exactly the failure this whole file was written to fix, still open
+   * for the readers the site is mainly for. The Arabic names were already in
+   * the CMS and nothing had ever compared against them.
+   */
+  const candidates = [
+    (r) => r.slug,
+    (r) => r.name,
+    (r) => r.nameAr,
+  ];
+  for (const field of candidates) {
+    const hit = rows.find((r) => normalizeForMatch(field(r)) === wanted);
+    if (hit) return hit.documentId ?? null;
+  }
+  return null;
 }
 
 async function resolveRelations(form) {

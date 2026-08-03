@@ -606,6 +606,60 @@ async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
     { name: "Prado", nameAr: "برادو", slug: "prado", make: "toyota" },
     { name: "Tucson", nameAr: "توسان", slug: "tucson", make: "hyundai" },
     { name: "Swift Dzire", nameAr: "سويفت ديزاير", slug: "swift-dzire", make: "suzuki" },
+
+    /*
+     * The ten makes that shipped with no models, filled.
+     *
+     * Vocabulary, not landing pages. Their job is to let a seller pick their car
+     * once make and model become dropdowns — AddListing.jsx requires a model, so
+     * without these a 2005 Mercedes could not be filed at all.
+     *
+     * These are old cars by definition: an E-Class or an X5 reaches OMR 1,000-6,000
+     * through depreciation, which is the mechanism NICHE.md's band describes. A
+     * nameplate still in production straddles the ceiling — a new one is far above
+     * the band and an old one is inside it — so presence here is never a claim that
+     * every example qualifies.
+     *
+     * Slugs are prefixed where the natural name starts with a digit: `bmw-3-series`
+     * not `3-series`, `mg-5` not `5`. assertTaxonomyIsUrlSafe would refuse the
+     * bare forms, because lib/resolveListing reads a leading digit as a listing id.
+     *
+     * Lower confidence, flagged rather than hidden: the Arabic for `emgrand`,
+     * `discovery`, `qx60` and `mg-gt` was formed by analogy rather than taken from
+     * an observed Omani listing, and `gs4`, `srx`, `ats` and `emgrand` rest on one
+     * or two verified price points each. Cheap to correct — a wrong spelling on a
+     * rare model costs one unmatched submission, which the matcher logs.
+     */
+    { name: "E-Class", nameAr: "اي كلاس", slug: "e-class", make: "mercedes" },
+    { name: "C-Class", nameAr: "سي كلاس", slug: "c-class", make: "mercedes" },
+    { name: "ML-Class", nameAr: "ام ال كلاس", slug: "ml-class", make: "mercedes" },
+    { name: "S-Class", nameAr: "اس كلاس", slug: "s-class", make: "mercedes" },
+    { name: "MG 5", nameAr: "ام جي 5", slug: "mg-5", make: "mg" },
+    { name: "MG ZS", nameAr: "ام جي ZS", slug: "mg-zs", make: "mg" },
+    { name: "MG GT", nameAr: "ام جي GT", slug: "mg-gt", make: "mg" },
+    { name: "Passat", nameAr: "باسات", slug: "passat", make: "volkswagen" },
+    { name: "Jetta", nameAr: "جيتا", slug: "jetta", make: "volkswagen" },
+    { name: "Tiguan", nameAr: "تيجوان", slug: "tiguan", make: "volkswagen" },
+    { name: "Touareg", nameAr: "طوارق", slug: "touareg", make: "volkswagen" },
+    { name: "BMW 3 Series", nameAr: "الفئة الثالثة", slug: "bmw-3-series", make: "bmw" },
+    { name: "BMW 5 Series", nameAr: "الفئة الخامسة", slug: "bmw-5-series", make: "bmw" },
+    { name: "BMW 7 Series", nameAr: "الفئة السابعة", slug: "bmw-7-series", make: "bmw" },
+    { name: "BMW X5", nameAr: "بي ام دبليو X5", slug: "bmw-x5", make: "bmw" },
+    { name: "Yukon", nameAr: "يوكن", slug: "yukon", make: "gmc" },
+    { name: "Acadia", nameAr: "اكاديا", slug: "acadia", make: "gmc" },
+    { name: "Terrain", nameAr: "تيرين", slug: "terrain", make: "gmc" },
+    { name: "GS4", nameAr: "جي ايه سي GS4", slug: "gs4", make: "gac" },
+    { name: "Range Rover Sport", nameAr: "رنج روفر سبورت", slug: "range-rover-sport", make: "land-rover" },
+    { name: "Discovery", nameAr: "ديسكفري", slug: "discovery", make: "land-rover" },
+    { name: "Evoque", nameAr: "ايفوك", slug: "evoque", make: "land-rover" },
+    { name: "SRX", nameAr: "كاديلاك SRX", slug: "srx", make: "cadillac" },
+    { name: "ATS", nameAr: "كاديلاك ATS", slug: "ats", make: "cadillac" },
+    { name: "Escalade", nameAr: "اسكاليد", slug: "escalade", make: "cadillac" },
+    { name: "G37", nameAr: "انفينيتي G37", slug: "g37", make: "infiniti" },
+    { name: "FX35", nameAr: "انفينيتي FX35", slug: "fx35", make: "infiniti" },
+    { name: "QX56", nameAr: "انفينيتي QX56", slug: "qx56", make: "infiniti" },
+    { name: "QX60", nameAr: "انفينيتي QX60", slug: "qx60", make: "infiniti" },
+    { name: "Emgrand", nameAr: "امجراند", slug: "emgrand", make: "geely" },
   ];
 
   /*
