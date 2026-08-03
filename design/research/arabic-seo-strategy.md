@@ -16,6 +16,29 @@ Every factual claim is tagged:
 - **[INFERRED]** — Reasoned conclusion from verified inputs. My judgement, not a citable fact.
 - **[UNVERIFIED]** — I could not confirm this. Flagged so a later agent re-checks rather than trusting it.
 
+> ### Before running any keyword harvest, read this
+>
+> **[VERIFIED 2026-08-04] `suggestqueries.google.com/complete/search?client=firefox`
+> silently ignores `gl=`.** It answers from the egress IP instead, and returns a
+> byte-identical array whatever country you ask for. A later research pass
+> harvested the whole English keyword set through it, tagged 363 findings
+> `(gl=OM)`, and was in fact reading **Irish** autocomplete — every result led
+> with Dublin and Northern Ireland. The parameter was accepted and discarded.
+>
+> `client=chrome` honours it. Same seed, same second:
+>
+> | endpoint | `gl=om` | `gl=us` |
+> |---|---|---|
+> | `client=firefox` | used cars in **ireland** / **dublin** | used cars in **ireland** / **dublin** |
+> | `client=chrome` | used cars in **oman** / **muscat** | used cars **indianapolis** / **indiana** |
+>
+> Two consequences worth keeping in mind. A wrong-geography harvest is not
+> obviously wrong — the terms still look like plausible car queries, which is
+> why it survived a full pass. And `gl=om` is a *geotargeting parameter, not an
+> Omani IP*: even the correct endpoint is a proxy for Omani search, not the
+> thing itself. Treat absence of a completion as weak evidence and presence as
+> moderate evidence, never either as a volume.
+
 **What I could not verify, and why:**
 
 | Thing | Why not |
@@ -557,6 +580,27 @@ To get real numbers: Google Keyword Planner with location = Oman and language = 
 [OBSERVED] It is the **top-level Arabic category segment in OpenSooq's own URL tree**: `om.opensooq.com/ar/حراج-السيارات/سيارات-للبيع/…`, mirroring `…/en/cars/cars-for-sale/…`. Their English tree says `cars`; their Arabic tree says `حراج السيارات` — a *car souq*, not a *cars section*.
 
 [INFERRED] This is the single strongest keyword finding in this research. It is the native, non-translated, market-specific term, and it is also exactly the brand's positioning — NICHE.md asks for *"a knowledgeable, honest friend at the car souq."* The Arabic site's own name for its browse page should probably be **حراج السيارات في عُمان**, not the dictionary translation.
+
+> **[OBSERVED 2026-08-04 — do not act on the paragraph above.]** The inference
+> was tested against Google autocomplete on `client=chrome&hl=ar&gl=om` and does
+> not survive. حراج is a real, heavily-searched term; its demand is **Saudi and
+> Emirati**, not Omani:
+>
+> | Query | Completions | What they are |
+> |---|---|---|
+> | `حراج السيارات` | 15 | الشارقة, السعودية, الرياض, الدمام — every one Saudi or UAE |
+> | `حراج` | 15 | حراج السعودية, حراج الامارات, حراج عمان (and عمان here is ambiguous — see the Amman warning below) |
+> | `حراج السيارات عمان` | 3 | one of which is explicitly `حراج السيارات عمان الاردن` |
+>
+> Against `سيارات مستعملة` → 15 completions led by `…للبيع في عمان`,
+> `…للبيع في مسقط`, `…للبيع في صلالة`.
+>
+> What the [OBSERVED] paragraph above records is still true: حراج *is* the
+> segment in OpenSooq's Arabic URL tree. But that is OpenSooq's information
+> architecture, not Omani search demand, and the two were conflated here. This
+> is the same error NICHE.md logged on 28 Jul — reading a competitor's
+> navigation as evidence of what people type. **Do not rename the browse page.**
+> `سيارات مستعملة` / `سيارات للبيع` carry the Omani demand.
 
 ### Observed term inventory
 
