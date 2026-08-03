@@ -64,7 +64,19 @@ const outfit = Outfit({
  */
 const cairo = Cairo({
   subsets: ["arabic"],
-  weight: ["400", "700"],
+  /*
+   * No `weight` array — Cairo is a variable font, so this loads the wght axis.
+   *
+   * Pinning it to ["400", "700"] meant the 137 weight declarations in the
+   * stylesheets that ask for anything else had nothing to resolve to. CSS font
+   * matching sends 500 down to 400 and 600 up to 700, so on /ar — the DEFAULT
+   * locale — every `$fw-medium` heading, label and card title rendered at
+   * exactly body weight, and the typographic hierarchy the English pages get
+   * simply did not exist. 80 declarations use 500 and 52 use 600.
+   *
+   * Latin has never had this problem: Inter and Outfit are loaded with the
+   * weights the theme actually uses.
+   */
   display: "swap",
   variable: "--font-cairo",
   preload: false,

@@ -974,6 +974,43 @@ a {
  * plain $color-3 is the fill and fails as body-sized text.
  */
 /*
+ * Cap the reading measure on long-form text.
+ *
+ * Targeted by the utility combinations the prose templates actually use rather
+ * than by a container class, because there is not one: the guides, the blog and
+ * the info pages all write `className="font-2 fs-16 lh-26"` directly on four
+ * hundred paragraphs. Matching `p` plus the size and leading pair keeps this off
+ * card copy and table cells, which use `.font-2` too but never these triples.
+ *
+ * Measured on /about-us at 1440px before this: 144 characters per line. The
+ * readable range is 45-75, and the site already knew that — .hp-section-lede
+ * caps at 58ch, which is why the homepage was the one page that read properly.
+ */
+p.font-2.fs-16.lh-26,
+p.font-2.fs-18.lh-28,
+p.font-2.fs-14.lh-24,
+li.font-2.fs-16.lh-26,
+li.font-2.fs-18.lh-28,
+li.font-2.fs-14.lh-24,
+/*
+ * The FAQ answers, which come from data/faqs.js through the accordion and so
+ * carry `.texts` instead of the prose triples. Same job, different markup —
+ * they were the last page still setting 154 characters per line.
+ */
+.toggle-content .texts {
+  max-inline-size: $measure-prose;
+}
+
+/*
+ * Hero and section ledes. One size up from body, so a slightly tighter cap.
+ * `margin-inline` is left alone: these sit in centred and start-aligned
+ * containers both, and the container decides.
+ */
+p.text-color-1.fs-18.fw-4.lh-22 {
+  max-inline-size: $measure-lede;
+}
+
+/*
  * Links inside prose, which the global reset above erases.
  *
  * That reset sets `color: unset; text-decoration: none`, and its hover

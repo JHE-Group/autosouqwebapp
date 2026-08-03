@@ -179,6 +179,21 @@ $fw-medium  : 500;
 $fw-semibold: 600;
 $fw-bold    : 700;
 
+/*
+ * Reading measure.
+ *
+ * 58ch and 62ch were already in the codebase — .hp-section-lede uses 58ch and
+ * three dashboard rules use 62ch — but as loose numbers, so the marketing
+ * templates never got them. At 1440px an unconstrained paragraph on /about-us
+ * ran to 144 characters against a 45-75 readable maximum.
+ *
+ * Applied with `max-inline-size`, not `max-width`: identical here, but Arabic
+ * is the default locale and the logical property is the one that stays correct
+ * if the writing mode ever is not horizontal.
+ */
+$measure-prose: 62ch;   // body copy in guides, blog posts, info pages
+$measure-lede : 58ch;   // section and hero ledes, which run a size larger
+
 // Tracking. Large display text needs negative tracking to stop it looking
 // loose; micro text needs positive tracking to stay legible at 12px.
 $ls-display: -0.02em;
