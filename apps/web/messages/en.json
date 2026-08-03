@@ -775,7 +775,7 @@
     "amount": "OMR <amt>{amount}</amt>",
     "count": "{count, plural, =0 {None right now} one {1 car} other {# cars}}",
     "band": {
-      "asIs": "1,000–1,500",
+      "asIs": "1,000–1,499",
       "entry": "1,500–2,500",
       "mid": "2,500–4,000",
       "upper": "4,000–6,000"

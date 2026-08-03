@@ -25,7 +25,7 @@ export const sliderData = [
     imgAlt: "",
     heading: "Find your first car in Oman",
     description:
-      "Affordable used cars from OMR 1,500 to 6,000 — in Muscat, Salalah,\n Sohar, Nizwa, Sur, Ibri and Barka.",
+      "Affordable used cars from OMR 1,000 to 6,000 — in Muscat, Salalah,\n Sohar, Nizwa, Sur, Ibri and Barka.",
   },
   {
     imgSrc: "/assets/images/slider/slide5.jpg",
@@ -196,7 +196,7 @@ export const slidesData = [
     imgSrc: "/assets/images/slider/slide10.jpg",
     heading: "Affordable used cars in Oman",
     paragraph:
-      "Every car between OMR 1,500 and 6,000 — the range most people in\n Oman actually buy in.",
+      "Every car between OMR 1,000 and 6,000 — the range most people in\n Oman actually buy in.",
     linkText: "View Detail",
     linkHref: "#",
   },

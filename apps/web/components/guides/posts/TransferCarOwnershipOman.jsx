@@ -418,7 +418,7 @@ export default function TransferCarOwnershipOman() {
       <H2 id="how-we-fit">Where Autosouq fits in this</H2>
       <P>
         We are not part of the transfer and we never hold your money. What we do
-        is narrower: every car listed is between OMR 1,500 and 6,000, we check
+        is narrower: every car listed is between OMR 1,000 and 6,000, we check
         that the asking price is real and that the listing matches the car, and
         we state the import origin — including when the seller has not.{" "}
         <Link className="fw-6" href="/how-it-works">

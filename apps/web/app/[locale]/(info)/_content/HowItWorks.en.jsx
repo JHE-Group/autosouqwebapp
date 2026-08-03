@@ -8,7 +8,7 @@ export default function HowItWorksEn() {
       <h1 className="mb-20">How Autosouq works</h1>
       <p className="font-2 fs-18 lh-28 mb-40">
         Autosouq.om is a marketplace for affordable used cars in Oman, priced
-        between OMR 1,500 and 6,000. We put buyers and sellers in touch and we
+        between OMR 1,000 and 6,000. We put buyers and sellers in touch and we
         are honest about what we know. We are not the seller, and we are not in
         the middle of the deal. This page explains exactly what happens.
       </p>

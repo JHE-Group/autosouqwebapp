@@ -48,14 +48,14 @@ export const toggleItems = [
       ar: "ما هو Autosouq.om؟",
     },
     content: {
-      en: "Autosouq is a marketplace for affordable used cars in Oman. Every car listed is between OMR 1,500 and 6,000 — the range most people here actually buy in. You browse, you check the details, and you message the seller directly on WhatsApp.",
-      ar: "أوتوسوق منصة للسيارات المستعملة بأسعار في المتناول في عُمان. كل سيارة معروضة بسعر بين 1,500 و6,000 ر.ع — وهو النطاق الذي يشتري فيه معظم الناس هنا فعلاً. تتصفّح، وتقرأ التفاصيل، وتراسل البائع مباشرة على واتساب.",
+      en: "Autosouq is a marketplace for affordable used cars in Oman. Every car listed is between OMR 1,000 and 6,000 — the range most people here actually buy in. You browse, you check the details, and you message the seller directly on WhatsApp.",
+      ar: "أوتوسوق منصة للسيارات المستعملة بأسعار في المتناول في عُمان. كل سيارة معروضة بسعر بين 1,000 و6,000 ر.ع — وهو النطاق الذي يشتري فيه معظم الناس هنا فعلاً. تتصفّح، وتقرأ التفاصيل، وتراسل البائع مباشرة على واتساب.",
     },
   },
   {
     title: {
-      en: "Why is every car between OMR 1,500 and 6,000?",
-      ar: "لماذا كل السيارات بين 1,500 و6,000 ر.ع؟",
+      en: "Why is every car between OMR 1,000 and 6,000?",
+      ar: "لماذا كل السيارات بين 1,000 و6,000 ر.ع؟",
     },
     content: {
       en: "Because that is the part of the market we know, and we would rather do one band properly than cover everything badly. A site that lists a 2,000 rial Corolla next to a 40,000 rial Land Cruiser ends up serving neither buyer well. Keeping to one band means the search, the prices and the advice all stay relevant to you.",
@@ -162,8 +162,8 @@ export const feeItems = [
       ar: "كيف أبيع سيارتي على أوتوسوق؟",
     },
     content: {
-      en: "List it from your dashboard: the car's details, honest mileage in kilometres, whether it is GCC spec or an import, and your asking price. The price has to be between OMR 1,500 and 6,000. Between 1,000 and 1,499 we will still take it, but it publishes with a “sold as-is” label.",
-      ar: "اعرضها من لوحة التحكم: تفاصيل السيارة، والممشى الحقيقي بالكيلومترات، وهل هي خليجية أم مستوردة، وسعرك المطلوب. ويجب أن يكون السعر بين 1,500 و6,000 ر.ع. وبين 1,000 و1,499 ر.ع سنقبلها أيضاً، لكنها تُنشر بعلامة «تُباع كما هي».",
+      en: "List it from your dashboard: the car's details, honest mileage in kilometres, whether it is GCC spec or an import, and your asking price. The price has to be between OMR 1,000 and 6,000. Between 1,000 and 1,499 we will still take it, but it publishes with a “sold as-is” label.",
+      ar: "اعرضها من لوحة التحكم: تفاصيل السيارة، والممشى الحقيقي بالكيلومترات، وهل هي خليجية أم مستوردة، وسعرك المطلوب. ويجب أن يكون السعر بين 1,000 و6,000 ر.ع. وبين 1,000 و1,499 ر.ع سنقبلها أيضاً، لكنها تُنشر بعلامة «تُباع كما هي».",
     },
   },
   {

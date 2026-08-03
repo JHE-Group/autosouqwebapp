@@ -299,7 +299,7 @@ export default function GccSpecVsAmericanImport() {
       </P>
       <P>
         What we will claim is narrower and we think it is worth more: every car
-        on Autosouq is between OMR 1,500 and 6,000, we state the import origin —
+        on Autosouq is between OMR 1,000 and 6,000, we state the import origin —
         including when the seller has not stated it — and nothing gets promoted
         above anything else for money. That last one is not a small thing at this
         end of the market: when we sampled OpenSooq’s first three pages, they

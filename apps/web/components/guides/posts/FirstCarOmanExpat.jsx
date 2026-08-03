@@ -431,7 +431,7 @@ export default function FirstCarOmanExpat() {
         We are a listings site, not a dealer. We do not sell cars, we never hold
         your money, and we are not in the middle of your deal. What we do is
         narrow and we would rather state it plainly than dress it up: every car
-        listed is between OMR 1,500 and 6,000, we check the asking price is real
+        listed is between OMR 1,000 and 6,000, we check the asking price is real
         and the listing matches the car, we state the import origin — including
         when the seller has not — and nothing gets pushed up the page because
         somebody paid for it.

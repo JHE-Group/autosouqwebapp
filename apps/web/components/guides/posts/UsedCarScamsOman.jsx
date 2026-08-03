@@ -428,7 +428,7 @@ export default function UsedCarScamsOman() {
       <H2 id="why-we-are-built-this-way">Why Autosouq is built the way it is</H2>
       <P>
         Our honest claim is narrow. Every car on Autosouq is priced between OMR
-        1,500 and 6,000, we check that the asking price is a real asking price
+        1,000 and 6,000, we check that the asking price is a real asking price
         and that the listing matches the car, we state the import origin —
         including when the seller has not stated it — and nothing is promoted
         above anything else because someone paid.

@@ -5,7 +5,7 @@ export default function WhatOmr3000Buys() {
   return (
     <>
       <P>
-        Autosouq only lists affordable used cars between OMR 1,500 and 6,000.
+        Autosouq only lists affordable used cars between OMR 1,000 and 6,000.
         The middle of that band — around OMR 3,000 — is where many buyers in
         Oman actually stop scrolling. This note is about what that money
         usually means on the ground, not a promise that every OMR 3,000 car is

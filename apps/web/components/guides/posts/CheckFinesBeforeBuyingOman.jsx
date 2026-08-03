@@ -254,7 +254,7 @@ export default function CheckFinesBeforeBuyingOman() {
       <P>
         Because it is the most common way a straightforward deal turns into a
         month of messages, and because it is completely preventable with two
-        minutes of phone work. Every car on Autosouq is priced between OMR 1,500
+        minutes of phone work. Every car on Autosouq is priced between OMR 1,000
         and 6,000 — at that end of the market people pay in cash, often most of
         what they have saved, and there is no comfortable way to unwind a payment
         after the fact.
