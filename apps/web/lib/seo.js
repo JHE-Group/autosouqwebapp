@@ -528,6 +528,8 @@ const LISTING_COPY = {
     separator: ", ",
     asIs: " Sold as-is. Message the seller on WhatsApp.",
     verified: " Verified listing. Message the seller on WhatsApp.",
+    // Neither as-is nor checked yet. Says the true thing and stops.
+    unverified: " Message the seller on WhatsApp.",
   },
   ar: {
     fallback: "سيارة مستعملة للبيع في عُمان",
@@ -538,6 +540,7 @@ const LISTING_COPY = {
     separator: "، ",
     asIs: " تُباع كما هي. راسل البائع على واتساب.",
     verified: " إعلان محقَّق منه. راسل البائع على واتساب.",
+    unverified: " راسل البائع على واتساب.",
   },
 };
 
@@ -580,7 +583,35 @@ export function listingDescription(car, locale = "en") {
   const head = facts.length
     ? `${car.title}: ${facts.join(c.separator)}.`
     : `${car.title}.`;
-  return `${head}${car.soldAsIs ? c.asIs : c.verified}`;
+  /*
+   * Three states, because there are three.
+   *
+   * This read `car.soldAsIs ? c.asIs : c.verified` — so "Verified listing"
+   * was appended to every car that merely was not sold as-is, whether or not
+   * anyone had verified it. `verified` was never consulted.
+   *
+   * Observed live on 2026-08-03, in both languages, on the Honda Civic at OMR
+   * 1,680 — `verified: false` in the CMS, and its meta description in Google
+   * saying "Verified listing." / "إعلان محقَّق منه.". A demo car happened to be
+   * the one caught, but nothing about the bug was demo-specific: the first real
+   * seller to file a car would have had the same claim made on their behalf,
+   * before a moderator had looked at it.
+   *
+   * NICHE.md makes "listings are verified" one of four promises the product is
+   * built on, and names competitors' unverified listings as the thing Autosouq
+   * is not. Asserting it untruthfully in a search result — the first thing a
+   * buyer ever sees — spends the whole differentiator to fill a sentence.
+   *
+   * So: as-is says as-is, verified says verified, and anything else says
+   * neither. The third string exists because the honest answer to "is this
+   * checked?" is sometimes "not yet", and there was no way to say it.
+   */
+  const status = car.soldAsIs
+    ? c.asIs
+    : car.verified
+      ? c.verified
+      : c.unverified;
+  return `${head}${status}`;
 }
 
 /* ------------------------------------------------------------------ */
