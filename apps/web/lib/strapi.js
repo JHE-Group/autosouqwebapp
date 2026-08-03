@@ -430,4 +430,61 @@ export async function getListing(idOrSlug, locale = DEFAULT_LOCALE) {
   }
 }
 
+/**
+ * The make/model vocabulary, for the sell form's suggestions.
+ *
+ * Ordered by `id`, which is CREATION order — not the band-prevalence order the
+ * seed array is written in.
+ *
+ * Those differ, and it is worth being exact about why. apps/cms/src/index.ts
+ * lists makes by observed prevalence in the OMR 1,000-6,000 band, so Nissan is
+ * first. But `findOrCreate` returns early for a row that already exists, and
+ * Toyota, Nissan, Honda, Hyundai, Kia, Mitsubishi and Suzuki were created long
+ * before that reordering, in the theme demo's order with Toyota first. Their ids
+ * are historical and reordering the array does not renumber them. So Toyota
+ * leads this list and Nissan follows.
+ *
+ * Alphabetical would be worse — it opens on BMW — and hardcoding the order here
+ * would be the seed's decision copied into a second place to drift from it.
+ * Making it genuinely band-ordered needs a `rank` integer on the make content
+ * type plus an update path for the rows that already exist, since findOrCreate
+ * will not backfill them. Worth doing when the field becomes a real dropdown;
+ * not worth a schema migration for the order of a suggestion list.
+ *
+ * Each make carries its own models, so the form can narrow the model list to
+ * the make already chosen without a second request.
+ *
+ * `nameAr` travels with every row. The sell form runs in Arabic by default, and
+ * apps/web/app/api/listings/route.js matches the seller's typed value against
+ * slug, name AND nameAr — so offering the Arabic label is what makes the
+ * suggestion round-trip into a real relation.
+ *
+ * Failure returns `[]` rather than throwing. The fields stay free text, which
+ * is what they were before this existed: a seller must be able to file a car
+ * when the CMS is having a bad minute, and a datalist is a convenience, not a
+ * gate.
+ */
+export async function getMakeVocabulary() {
+  try {
+    const json = await strapiFetch(
+      "/api/makes?populate=models&pagination[pageSize]=100&sort=id:asc",
+    );
+    return (json.data ?? []).map((make) => ({
+      name: make.name ?? "",
+      nameAr: make.nameAr ?? "",
+      slug: make.slug ?? "",
+      models: (make.models ?? [])
+        .map((model) => ({
+          name: model.name ?? "",
+          nameAr: model.nameAr ?? "",
+          slug: model.slug ?? "",
+        }))
+        .filter((model) => model.name),
+    })).filter((make) => make.name);
+  } catch (err) {
+    console.warn(`[strapi] make vocabulary unavailable. ${err.message}`);
+    return [];
+  }
+}
+
 export { STRAPI_URL };

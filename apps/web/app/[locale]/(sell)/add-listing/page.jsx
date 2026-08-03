@@ -4,6 +4,7 @@ import Header2 from "@/components/headers/Header2";
 import { Link, redirect } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth";
+import { getMakeVocabulary } from "@/lib/strapi";
 
 /**
  * The sell form, with the site's own chrome rather than the dashboard's.
@@ -45,6 +46,20 @@ export default async function Page({ params }) {
 
   const crumb = await getTranslations({ locale, namespace: "breadcrumb" });
 
+  /*
+   * Fetched here rather than in the form.
+   *
+   * AddListing is a client component, so a fetch inside it would run in the
+   * browser — which the CSP forbids (`connect-src 'self'`, precisely so the
+   * browser never talks to the CMS) and which would also mean every seller
+   * waits for a round trip after the page has already painted. The server
+   * already has the data by the time the form exists.
+   *
+   * An empty array is a legitimate answer: the fields degrade to plain text
+   * inputs, which is what they were before suggestions existed.
+   */
+  const makes = await getMakeVocabulary();
+
   return (
     <>
       <div className="header-fixed">
@@ -71,7 +86,7 @@ export default async function Page({ params }) {
       </section>
       <section className="tf-section3">
         <div className="container">
-          <AddListing />
+          <AddListing makes={makes} />
         </div>
       </section>
       <SiteFooter locale={locale} />

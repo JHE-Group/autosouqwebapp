@@ -212,7 +212,7 @@ const isDirty = (form) =>
       : form[key] !== EMPTY_FORM[key],
   );
 
-export default function AddListing() {
+export default function AddListing({ makes = [] }) {
   const locale = useLocale();
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing");
@@ -598,7 +598,12 @@ export default function AddListing() {
                           hidden={!isOpen}
                         >
                           {index === 0 ? (
-                            <StepCar form={form} set={set} derivedTitle={derivedTitle} />
+                            <StepCar
+                              form={form}
+                              set={set}
+                              derivedTitle={derivedTitle}
+                              makes={makes}
+                            />
                           ) : null}
                           {index === 1 ? <StepSpec form={form} set={set} /> : null}
                           {index === 2 ? (
@@ -890,10 +895,50 @@ function DraftStatus({ dirty, onDiscard }) {
 
 /* ------------------------------------------------------------- step 1 -- */
 
-function StepCar({ form, set, derivedTitle }) {
+function StepCar({ form, set, derivedTitle, makes = [] }) {
   const t = useTranslations("addListing.car");
   const tc = useTranslations("addListing");
   const tOptions = useTranslations("addListing.options");
+  const locale = useLocale();
+
+  /**
+   * Suggest, do not constrain.
+   *
+   * `<datalist>` rather than `<select>`, and the reason is in the submit path:
+   * a miss on the vocabulary leaves the field unset and files the car anyway,
+   * because "a seller whose make we do not carry should still be able to file
+   * the car". A dropdown would take that away — it would turn 23 researched
+   * makes into the complete list of cars Oman is allowed to sell, and the
+   * seller with a Daihatsu would be stuck. A datalist offers the vocabulary and
+   * still accepts anything typed.
+   *
+   * It is also the right control on the phones these sellers use: native, no
+   * JavaScript, no popup to mis-tap, and the keyboard stays a keyboard.
+   */
+  const labelFor = (row) =>
+    locale === "ar" && row.nameAr ? row.nameAr : row.name;
+
+  /**
+   * Models offered for the make already chosen — the sub-category.
+   *
+   * Matched the same way the server matches: against name, Arabic name and
+   * slug, case- and space-insensitively. Anything stricter and a seller who
+   * typed "toyota" would be offered no models while a seller who picked
+   * "Toyota" from the list would.
+   *
+   * With no make chosen, or a make we do not carry, this falls back to EVERY
+   * model. An empty suggestion list reads as "there are none", which is a lie —
+   * and a seller part-way through typing a make should still see their model.
+   */
+  const wanted = String(form.make ?? "").trim().toLowerCase();
+  const chosen = wanted
+    ? makes.find((m) =>
+        [m.name, m.nameAr, m.slug].some(
+          (v) => String(v ?? "").trim().toLowerCase() === wanted,
+        ),
+      )
+    : null;
+  const modelOptions = chosen ? chosen.models : makes.flatMap((m) => m.models);
 
   return (
     <div className="tfcl-add-listing">
@@ -902,18 +947,31 @@ function StepCar({ form, set, derivedTitle }) {
       </p>
       <div className="form-group-2">
         <Field label={t("make")} id="listing_make">
-          {/* Make and model are CMS relations; until the listing API is wired
-              up they stay free text rather than a dropdown of options we would
-              have to invent. */}
+          {/*
+            Free text with suggestions, not a dropdown — see the note on
+            `labelFor` above. The options are the seeded vocabulary, so a seller
+            who picks one produces a value the submit path resolves to a real
+            relation, and a listing with relations is a listing with a URL.
+          */}
           <input
             id="listing_make"
             type="text"
             className="form-control"
+            // `off` would suppress the datalist in some browsers; the list is
+            // the vocabulary, not the browser's memory of other forms.
             autoComplete="off"
+            list={makes.length ? "listing_make_options" : undefined}
             placeholder={t("makePlaceholder")}
             value={form.make}
             onChange={(e) => set("make", e.target.value)}
           />
+          {makes.length ? (
+            <datalist id="listing_make_options">
+              {makes.map((make) => (
+                <option key={make.slug} value={labelFor(make)} />
+              ))}
+            </datalist>
+          ) : null}
         </Field>
         <Field label={t("model")} id="listing_model">
           <input
@@ -921,10 +979,18 @@ function StepCar({ form, set, derivedTitle }) {
             type="text"
             className="form-control"
             autoComplete="off"
+            list={modelOptions.length ? "listing_model_options" : undefined}
             placeholder={t("modelPlaceholder")}
             value={form.model}
             onChange={(e) => set("model", e.target.value)}
           />
+          {modelOptions.length ? (
+            <datalist id="listing_model_options">
+              {modelOptions.map((model) => (
+                <option key={model.slug} value={labelFor(model)} />
+              ))}
+            </datalist>
+          ) : null}
         </Field>
       </div>
 
