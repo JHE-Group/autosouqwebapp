@@ -1,4 +1,5 @@
 import { DEFAULT_LOCALE, pickLocale, pickLocaleWithLang } from "./locale";
+import { composeTitle } from "./listingTitle";
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL ?? "http://localhost:1337";
 
@@ -140,14 +141,16 @@ function galleryAlt(title, n, locale = DEFAULT_LOCALE) {
   return subject ? `${subject} — image ${n}` : `Car photo ${n}`;
 }
 
+// Composition — including the make-doubling rule — lives in lib/listingTitle.js
+// so scripts/check-title-dedup.mjs can exercise it against the real CMS
+// taxonomy without a Next runtime. See that file for why the rule exists.
 function derivedTitle(listing, locale = DEFAULT_LOCALE) {
-  const make = label(listing.make, locale);
-  const model = label(listing.model, locale);
-  if (!make && !model) return null;
-  const year = listing.year ? String(listing.year) : null;
-  const parts =
-    locale === "ar" ? [make, model, year] : [year, make, model];
-  return parts.filter(Boolean).join(" ") || null;
+  return composeTitle(
+    label(listing.make, locale),
+    label(listing.model, locale),
+    listing.year,
+    locale,
+  );
 }
 
 /**
