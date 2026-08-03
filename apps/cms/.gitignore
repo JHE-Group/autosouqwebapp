@@ -129,3 +129,8 @@ dist
 build
 .strapi-updater.json
 .strapi-cloud.json
+# Written by scripts/deploy-cms.sh after a successful pull, so the box can say
+# which revision it is serving. Untracked on purpose: if this path were ever
+# committed, `git pull --ff-only` would refuse the next deploy outright, because
+# git will not overwrite an untracked working-tree file with an incoming one.
+.deployed-revision
