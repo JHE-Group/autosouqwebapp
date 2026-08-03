@@ -1,6 +1,7 @@
 "use client";
 import { useLocale, useTranslations } from "next-intl";
 
+import { filterLabel } from "@/lib/filterLabels";
 import { formatPrice } from "@/lib/format";
 import { activeFilterKeys } from "./filterLogic";
 
@@ -76,7 +77,17 @@ export function chipsFor(state, locale) {
     } else if (key === "year") {
       chips.push({ key, text: range(state.year, plain) });
     } else {
-      chips.push({ key, text: String(state[key]) });
+      /**
+       * Most of these arrive localised already — toCar() resolves make,
+       * model, body, fuel, transmission, colour and city through label(),
+       * so on /ar the state holds Arabic and filterLabel passes it back
+       * unchanged. The exceptions are door and cylinder, which
+       * buildFilterOptions constructs in English in both locales
+       * (`${n} Door`), so the chip read "4 Door" on an Arabic page while
+       * the dropdown beside it — which does call filterLabel, via
+       * DropDownSelect — read "4 أبواب".
+       */
+      chips.push({ key, text: filterLabel(String(state[key]), locale) });
     }
   }
   return chips;
