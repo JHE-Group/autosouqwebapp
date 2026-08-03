@@ -32,7 +32,7 @@ import { getListingsResult } from "@/lib/strapi";
  * Set NEXT_PUBLIC_ALLOW_DEMO_LISTINGS=true to force it on in production — for a
  * staging deploy or a stakeholder demo, deliberately and temporarily.
  */
-function demoFallbackAllowed() {
+export function demoFallbackAllowed() {
   if (process.env.NEXT_PUBLIC_ALLOW_DEMO_LISTINGS === "true") return true;
   return process.env.NODE_ENV !== "production";
 }

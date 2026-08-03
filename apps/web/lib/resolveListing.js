@@ -1,4 +1,5 @@
 import { allCars } from "@/data/cars";
+import { demoFallbackAllowed } from "@/lib/listingSource";
 import { getListing, getListings } from "@/lib/strapi";
 import { listingSlug } from "@/lib/seo";
 
@@ -25,6 +26,27 @@ const MAX_SLUG_TOKENS = 16;
 const MAX_STRIP_ATTEMPTS = 3;
 
 function asDemoListing(car) {
+  /*
+   * Gated in production, on the same switch every browse surface uses.
+   *
+   * `noindex` was already set on these pages, and that was treated as enough.
+   * lib/listingSource.js argues, in its own words, why it is not: "it protects
+   * Google, not the person looking at the page." That reasoning was applied to
+   * the homepage grid and /used-cars and never reached here.
+   *
+   * So on 2026-08-04, with the CMS holding ZERO published listings,
+   * /en/car/3-toyota-corolla answered 200 on the live domain with "2019 Nissan
+   * Sunny" — a car from data/cars.js — and a WhatsApp button beside it. The ten
+   * seeded demo cars had been indexed until hours earlier, so a stale search
+   * result or a shared link lands a real buyer on a car that does not exist,
+   * carrying a number that reaches nobody, on a site whose entire claim is that
+   * its listings are real.
+   *
+   * A 404 is the honest answer. The fallback still works outside production,
+   * where it does its actual job: letting the site be developed and demoed
+   * without a CMS running.
+   */
+  if (!demoFallbackAllowed()) return null;
   return car ? { ...car, isDemoListing: true } : null;
 }
 
