@@ -103,11 +103,51 @@ if (ref.ASIS_MAX + 1 !== ref.STANDARD_MIN) {
  * "under OMR 1,500" is correct and common, because 1,000–1,499 is the sold-as-is
  * tier — so matching a lone 1,500 would fail on true sentences and teach people
  * to bypass this script.
+ *
+ * That is also why this does NOT simply match every "1,500–6,000". Two escaped
+ * the first version of this check — a meta description and a Terms clause — and
+ * widening the separator to include the en-dash would have caught them along
+ * with about thirty *correct* sentences. "1,500–6,000" is the right name for the
+ * standard tier; priceBand.js's own header says so, SellYourCar.jsx uses it as a
+ * tier heading, and a dozen guides use "the OMR 1,500–6,000 band" as shorthand
+ * for the bulk of the catalogue. A check that fires on those is a check people
+ * learn to ignore.
+ *
+ * No regex separates "the standard band is 1,500–6,000" (true) from "this site
+ * sells cars at 1,500–6,000" (false). So the range alone is not the signal.
+ * Two narrower things are:
  */
+
+/**
+ * Rule A — a TOTALITY claim next to the range. "every car", "between X and Y",
+ * "nothing above" turn a tier name into a statement about the whole catalogue,
+ * which is the thing that is false. Caught Terms.en.jsx ("between OMR 1,500 and
+ * OMR 6,000") and heroSlides.js ("Every car OMR 1,500 – 6,000. Nothing above.").
+ */
+const SEP = String.raw`\s*(?:[–—-]|and|to|إلى|و)\s*(?:OMR\s*|ر\.ع\s*)?`;
+const RANGE = String.raw`${ref.STANDARD_MIN.toLocaleString("en-US")}${SEP}${ref.MAX.toLocaleString("en-US")}`;
+const TOTALITY = String.raw`(?:every car|all cars|only cars|nothing above|between|كل سيارة|جميع السيارات|بين)`;
 const RANGE_RE = new RegExp(
-  String.raw`${ref.STANDARD_MIN.toLocaleString("en-US")}\s*(?:and|to|إلى|و)\s*${ref.MAX.toLocaleString("en-US")}`,
-  "g",
+  `${TOTALITY}[^.\\n]{0,40}?${RANGE}|${RANGE}[^.\\n]{0,40}?${TOTALITY}`,
+  "gi",
 );
+
+/**
+ * Rule B — the range appearing at all in a file that describes the SITE rather
+ * than a tier or an article. The one that escaped Rule A was the root layout's
+ * meta description: "Oman's marketplace for affordable used cars, OMR
+ * 1,500–6,000." No totality word in it — the claim is site-wide because of where
+ * it sits, and that string is what Google prints under the domain.
+ *
+ * Kept to an explicit short list on purpose. Per-article descriptions in
+ * data/blog and data/guides say "the OMR 1,500–6,000 band" correctly and must
+ * not be swept in; the distinction is whose scope the sentence speaks for.
+ */
+const IDENTITY_FILES = new Set([
+  "apps/web/app/[locale]/layout.js",
+  "apps/web/data/heroSlides.js",
+]);
+const BARE_RANGE_RE = new RegExp(RANGE, "gi");
 
 // lib/seo.js documents a fixed bug by quoting the old sentence. Quoting history
 // is not repeating it.
@@ -138,12 +178,25 @@ for (const root of proseRoots) {
     const rel = file.replace(/^\.\//, "");
     if (PROSE_EXEMPT.has(rel)) continue;
     const text = readFileSync(file, "utf8");
+    const floor = `the floor is ${ref.ASIS_MIN.toLocaleString("en-US")}, not ${ref.STANDARD_MIN.toLocaleString("en-US")}`;
+
     const hits = text.match(RANGE_RE);
     if (hits) {
       problems.push(
-        `${rel}: ${hits.length} string(s) name the band as "${hits[0]}" — the floor is ` +
-          `${ref.ASIS_MIN.toLocaleString("en-US")}, not ${ref.STANDARD_MIN.toLocaleString("en-US")}`,
+        `${rel}: ${hits.length} string(s) claim the whole catalogue is ` +
+          `"${hits[0].replace(/\s+/g, " ").trim()}" — ${floor}`,
       );
+    }
+
+    if (IDENTITY_FILES.has(rel)) {
+      const bare = text.match(BARE_RANGE_RE);
+      if (bare) {
+        problems.push(
+          `${rel}: describes the site itself as "${bare[0]}" — ${floor}. ` +
+            `This file speaks for the whole marketplace, so naming the standard ` +
+            `tier here reads as the full range.`,
+        );
+      }
     }
   }
 }

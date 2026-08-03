@@ -97,7 +97,7 @@ export function generateStaticParams() {
 // these were the last two English strings served on every /ar page.
 const title = "Autosouq.om — Affordable used cars in Oman";
 const description =
-  "Oman's marketplace for affordable used cars, OMR 1,500–6,000. Real prices, verified listings, GCC spec or import stated, one WhatsApp tap to the seller.";
+  "Oman's marketplace for affordable used cars, OMR 1,000–6,000. Real prices, verified listings, GCC spec or import stated, one WhatsApp tap to the seller.";
 
 /**
  * Locale-level metadata only: robots + shared defaults.

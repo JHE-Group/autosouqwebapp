@@ -61,7 +61,7 @@ export default function TermsEn() {
 
     <h2 className="mb-20">4. The price band</h2>
     <p className="font-2 fs-16 lh-26 mb-30">
-      Autosouq only publishes cars priced between OMR 1,500 and OMR 6,000.
+      Autosouq only publishes cars priced between OMR 1,000 and OMR 6,000. Cars from OMR 1,000 to OMR 1,499 are published labelled sold as-is.
       Cars priced from OMR 1,000 to OMR 1,499 may be accepted and are
       published labelled <strong>sold as-is</strong>. We decline anything
       outside those ranges. We may remove a listing that is repriced outside

@@ -10,7 +10,7 @@ export const slides2 = [
   {
     imgSrc: "/assets/images/slider/slide3.jpg",
     heading: "Affordable used cars in Oman",
-    subHeading: "Every car OMR 1,500 – 6,000. Nothing above.",
+    subHeading: "Every car OMR 1,000 – 6,000. Nothing above.",
   },
   {
     imgSrc: "/assets/images/slider/slide4.jpg",
