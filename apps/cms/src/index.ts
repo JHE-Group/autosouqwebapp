@@ -348,14 +348,48 @@ async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
     cityDocs[city.slug] = await findOrCreate(strapi, "api::city.city", city);
   }
 
+  /**
+   * The makes that actually populate OMR 1,000-6,000 in Oman.
+   *
+   * Ordered by observed prevalence IN THIS BAND, which is not the same as brand
+   * fame here: Nissan leads, not Toyota. Toyota dominates the Omani market
+   * overall, but its volume is Hilux, Land Cruiser and Prado — vehicles that sit
+   * ABOVE OMR 6,000 and are therefore not this product. Source: the n=376
+   * OpenSooq sample in design/seo-research.md §3 (line ~260), [VERIFIED].
+   *
+   * Band membership is about age and depreciation, not badge. Mercedes, BMW,
+   * Lexus, Land Rover and Cadillac are all here because the sample observed them
+   * IN band as older cars — filtering them out as 'luxury' would be the exact
+   * mistake NICHE.md warns against. Equally, a nameplate that only exists above
+   * the ceiling is excluded however common it is elsewhere.
+   *
+   * The previous list was seven makes carried over from the WordPress theme demo
+   * and was partly the wrong seven for this band.
+   */
   const makes = [
-    { name: "Toyota", nameAr: "تويوتا", slug: "toyota" },
     { name: "Nissan", nameAr: "نيسان", slug: "nissan" },
-    { name: "Honda", nameAr: "هوندا", slug: "honda" },
-    { name: "Hyundai", nameAr: "هيونداي", slug: "hyundai" },
-    { name: "Kia", nameAr: "كيا", slug: "kia" },
+    { name: "Toyota", nameAr: "تويوتا", slug: "toyota" },
     { name: "Mitsubishi", nameAr: "ميتسوبيشي", slug: "mitsubishi" },
+    { name: "Hyundai", nameAr: "هيونداي", slug: "hyundai" },
+    { name: "Honda", nameAr: "هوندا", slug: "honda" },
+    { name: "Kia", nameAr: "كيا", slug: "kia" },
+    { name: "Mercedes", nameAr: "مرسيدس", slug: "mercedes" },
+    { name: "Jeep", nameAr: "جيب", slug: "jeep" },
+    { name: "Dodge", nameAr: "دودج", slug: "dodge" },
     { name: "Suzuki", nameAr: "سوزوكي", slug: "suzuki" },
+    { name: "MG", nameAr: "ام جي", slug: "mg" },
+    { name: "Volkswagen", nameAr: "فولكس فاجن", slug: "volkswagen" },
+    { name: "Mazda", nameAr: "مازدا", slug: "mazda" },
+    { name: "Chevrolet", nameAr: "شفروليه", slug: "chevrolet" },
+    { name: "Ford", nameAr: "فورد", slug: "ford" },
+    { name: "Lexus", nameAr: "لكزس", slug: "lexus" },
+    { name: "BMW", nameAr: "بي ام دبليو", slug: "bmw" },
+    { name: "GMC", nameAr: "جي ام سي", slug: "gmc" },
+    { name: "GAC", nameAr: "جي ايه سي", slug: "gac" },
+    { name: "Land Rover", nameAr: "لاند روفر", slug: "land-rover" },
+    { name: "Cadillac", nameAr: "كاديلاك", slug: "cadillac" },
+    { name: "Infiniti", nameAr: "انفينيتي", slug: "infiniti" },
+    { name: "Geely", nameAr: "جيلي", slug: "geely" },
   ];
 
   const makeDocs: Record<string, string> = {};
@@ -363,16 +397,68 @@ async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
     makeDocs[make.slug] = await findOrCreate(strapi, "api::make.make", make);
   }
 
+  /**
+   * Models, keyed to their make by slug.
+   *
+   * Same source and same rule as the makes above. Nissan Altima is the single
+   * most common model in the band and was absent from this file entirely.
+   *
+   * ## The last three rows
+   *
+   * `prado`, `tucson` and `swift-dzire` are retained DELIBERATELY, and none of
+   * them earned a place on band evidence — Prado is above the ceiling, and the
+   * other two are WordPress theme artifacts.
+   *
+   * They stay because the demo listings below still reference them, and
+   * `findOrCreate` is additive: it has no delete path. Removing a row here does
+   * not remove it from the database, but it does make `modelDocs[slug]` return
+   * undefined for the demo listing that wants it — which is the same relation
+   * failure as 985cc28 and d9a72f4, where every seller listing lost its make and
+   * model and 404'd.
+   *
+   * Delete them in the same change that retires the demo listings, not before.
+   * Suzuki Swift and Swift Dzire are genuinely different cars (hatchback and
+   * saloon), so both existing is correct rather than a duplicate.
+   */
   const models = [
-    { name: "Corolla", nameAr: "كورولا", slug: "corolla", make: "toyota" },
-    { name: "Yaris", nameAr: "يارس", slug: "yaris", make: "toyota" },
-    { name: "Camry", nameAr: "كامري", slug: "camry", make: "toyota" },
-    { name: "Prado", nameAr: "برادو", slug: "prado", make: "toyota" },
+    { name: "Altima", nameAr: "التيما", slug: "altima", make: "nissan" },
     { name: "Sunny", nameAr: "صني", slug: "sunny", make: "nissan" },
-    { name: "Civic", nameAr: "سيفيك", slug: "civic", make: "honda" },
-    { name: "Tucson", nameAr: "توسان", slug: "tucson", make: "hyundai" },
-    { name: "Picanto", nameAr: "بيكانتو", slug: "picanto", make: "kia" },
+    { name: "Sentra", nameAr: "سنترا", slug: "sentra", make: "nissan" },
+    { name: "Maxima", nameAr: "مكسيما", slug: "maxima", make: "nissan" },
+    { name: "Tiida", nameAr: "تيدا", slug: "tiida", make: "nissan" },
+    { name: "Camry", nameAr: "كامري", slug: "camry", make: "toyota" },
+    { name: "Corolla", nameAr: "كورولا", slug: "corolla", make: "toyota" },
+    { name: "Yaris", nameAr: "ياريس", slug: "yaris", make: "toyota" },
+    { name: "Avalon", nameAr: "افالون", slug: "avalon", make: "toyota" },
     { name: "Pajero", nameAr: "باجيرو", slug: "pajero", make: "mitsubishi" },
+    { name: "Outlander", nameAr: "اوتلاندر", slug: "outlander", make: "mitsubishi" },
+    { name: "Lancer", nameAr: "لانسر", slug: "lancer", make: "mitsubishi" },
+    { name: "Attrage", nameAr: "اتراج", slug: "attrage", make: "mitsubishi" },
+    { name: "Sonata", nameAr: "سوناتا", slug: "sonata", make: "hyundai" },
+    { name: "Accent", nameAr: "اكسنت", slug: "accent", make: "hyundai" },
+    { name: "Santa Fe", nameAr: "سنتافي", slug: "santa-fe", make: "hyundai" },
+    { name: "Elantra", nameAr: "النترا", slug: "elantra", make: "hyundai" },
+    { name: "Creta", nameAr: "كريتا", slug: "creta", make: "hyundai" },
+    { name: "Civic", nameAr: "سيفيك", slug: "civic", make: "honda" },
+    { name: "Accord", nameAr: "اكورد", slug: "accord", make: "honda" },
+    { name: "Sportage", nameAr: "سبورتاج", slug: "sportage", make: "kia" },
+    { name: "Rio", nameAr: "ريو", slug: "rio", make: "kia" },
+    { name: "Cerato", nameAr: "سيراتو", slug: "cerato", make: "kia" },
+    { name: "Picanto", nameAr: "بيكانتو", slug: "picanto", make: "kia" },
+    { name: "Wrangler", nameAr: "رانجلر", slug: "wrangler", make: "jeep" },
+    { name: "Charger", nameAr: "تشارجر", slug: "charger", make: "dodge" },
+    { name: "Vitara", nameAr: "فيتارا", slug: "vitara", make: "suzuki" },
+    { name: "Swift", nameAr: "سويفت", slug: "swift", make: "suzuki" },
+    { name: "Mazda 6", nameAr: "مازدا 6", slug: "mazda-6", make: "mazda" },
+    { name: "Mazda 3", nameAr: "مازدا 3", slug: "mazda-3", make: "mazda" },
+    { name: "Malibu", nameAr: "ماليبو", slug: "malibu", make: "chevrolet" },
+    { name: "Captiva", nameAr: "كابتيفا", slug: "captiva", make: "chevrolet" },
+    { name: "Cruze", nameAr: "كروز", slug: "cruze", make: "chevrolet" },
+    { name: "Explorer", nameAr: "اكسبلورر", slug: "explorer", make: "ford" },
+    { name: "Taurus", nameAr: "تورس", slug: "taurus", make: "ford" },
+    { name: "Lexus IS", nameAr: "لكزس IS", slug: "lexus-is", make: "lexus" },
+    { name: "Prado", nameAr: "برادو", slug: "prado", make: "toyota" },
+    { name: "Tucson", nameAr: "توسان", slug: "tucson", make: "hyundai" },
     { name: "Swift Dzire", nameAr: "سويفت ديزاير", slug: "swift-dzire", make: "suzuki" },
   ];
 
