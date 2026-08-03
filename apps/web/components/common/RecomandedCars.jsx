@@ -223,7 +223,7 @@ export default function RecomandedCars({ listings, locale: localeProp }) {
                           <span>
                             {Number.isFinite(car.km)
                               ? `${car.km.toLocaleString("en-US")} km`
-                              : "km not stated"}
+                              : t("kmUnstated")}
                           </span>
                         </div>
                         {car.transmission && (

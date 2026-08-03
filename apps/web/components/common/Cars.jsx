@@ -159,7 +159,7 @@ export default async function Cars({
                       <span>
                         {Number.isFinite(car.km)
                           ? `${car.km.toLocaleString("en-US")} km`
-                          : "km not stated"}
+                          : tCard("kmUnstated")}
                       </span>
                     </div>
                     {car.transmission && (

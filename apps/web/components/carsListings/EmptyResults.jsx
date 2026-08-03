@@ -110,6 +110,8 @@ function AlertCapture({ chips }) {
  * so it must not be dressed as if it were.
  */
 function RelaxedMatch({ car, locale }) {
+  const t = useTranslations("browse.card");
+
   return (
     <div
       className="d-flex align-items-start gap-3 py-3"
@@ -141,7 +143,9 @@ function RelaxedMatch({ car, locale }) {
           {formatPrice(car.price, car.currency, locale)}
         </div>
         <p className="fs-12 mb-1" style={{ color: "#5C6368" }}>
-          {Number.isFinite(car.km) ? `${car.km.toLocaleString("en-US")} km` : "km not stated"}
+          {Number.isFinite(car.km)
+              ? `${car.km.toLocaleString("en-US")} km`
+              : t("kmUnstated")}
           {car.transmission ? ` · ${car.transmission}` : ""}
           {car.location ? ` · ${car.location}` : ""}
         </p>

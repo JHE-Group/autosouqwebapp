@@ -214,8 +214,16 @@ export default async function RootLayout({ children, params }) {
         />
         <script type="application/ld+json" {...jsonLdScript(webSiteJsonLd())} />
         {/* Chrome namespaces only. Route groups add their own — see
-            i18n/clientMessages.js for why this is not the default. */}
-        <NextIntlClientProvider messages={await pickMessages()}>
+            i18n/clientMessages.js for why this is not the default.
+
+            `errorPage` is the exception that has to live here. error.jsx sits
+            at this level, and an error boundary replaces the segment *below*
+            its own layout — so when it renders, no route-group layout has run
+            and no group provider exists. This provider is the only one it ever
+            sees. Without the namespace, next-intl falls back to printing the
+            key path: the page read "errorPage.title" over a button labelled
+            "errorPage.retry", in both languages. */}
+        <NextIntlClientProvider messages={await pickMessages("errorPage")}>
           <ClientShell>{children}</ClientShell>
         </NextIntlClientProvider>
         <SpeedInsights />
