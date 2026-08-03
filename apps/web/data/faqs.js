@@ -85,7 +85,7 @@ export const toggleItems = [
   {
     title: {
       en: "What does “verified” mean on a listing?",
-      ar: "ماذا تعني كلمة «محقَّق منه» في الإعلان؟",
+      ar: "ماذا يعني «تحقّقنا منه» في الإعلان؟",
     },
     content: {
       en: "It means we checked the listing before publishing it: that the details are internally consistent, that the price is a real asking price rather than bait, and that the seller is reachable on the number given. It is not a mechanical inspection and it is not a guarantee about the car. See the car yourself, and have it checked by a workshop you chose, before you pay anything.",
