@@ -23,10 +23,12 @@ uses that value verbatim. Point it at the apex while serving from `www` and
 every page declares a canonical on a host it is not served from, which is the
 one thing a canonical must never do.
 
-**Redirect the apex to www with a 301** at the DNS/proxy layer:
+**Redirect the apex to www**. The web app enforces this with a permanent
+host-level redirect in `apps/web/next.config.mjs`; keep any DNS/proxy rule pointed
+the same way:
 
 ```
-https://autosouq.om/*  ->  301  ->  https://www.autosouq.om/*
+https://autosouq.om/*  ->  301/308  ->  https://www.autosouq.om/*
 ```
 
 Not a 302, and not both hosts answering 200 — two hosts serving identical
@@ -34,7 +36,7 @@ content splits every ranking signal between them and doubles the crawl. Verify
 after deploying:
 
 ```bash
-curl -sI https://autosouq.om | head -3        # expect 301 -> https://www.autosouq.om
+curl -sI https://autosouq.om | head -3        # expect 301/308 -> https://www.autosouq.om
 curl -s https://www.autosouq.om/robots.txt    # Sitemap: must say www
 ```
 
