@@ -44,6 +44,27 @@ import { getListings } from "@/lib/strapi";
  * near-duplicate would ask Google to choose between them for us — which is the
  * problem, not the fix.
  */
+/**
+ * Regenerate on a clock, because this file makes claims about other URLs.
+ *
+ * Without this the route is fully static: generated once at build and served
+ * unchanged until the next deploy. Every other surface that depends on
+ * inventory already self-heals — the facet pages revalidate in 30s and 404 when
+ * they drop below MIN_LISTINGS_FOR_FACET, and the footer stops linking them —
+ * so the sitemap was the one place that could keep nominating a URL after it
+ * had started returning 404.
+ *
+ * Observed on 2026-08-03, minutes after the ten demo listings were unpublished:
+ * all four facet pages correctly 404'd, the footer correctly dropped them, and
+ * /sitemap.xml still listed all eight of their locale variants — asking Google
+ * to crawl pages the same deploy had just decided should not exist.
+ *
+ * Five minutes, matching the order of the rest of the inventory surfaces. This
+ * walks the listings once per window at a page size of 100, which at this
+ * catalogue's size is a single request.
+ */
+export const revalidate = 300;
+
 export default async function sitemap() {
   // CMS only. Demo fallback is for the UI; nominating fake cars in the sitemap
   // would ask Google to index inventory that does not exist.

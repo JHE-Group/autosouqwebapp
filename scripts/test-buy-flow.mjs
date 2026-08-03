@@ -42,10 +42,31 @@ async function main() {
     await page.waitForLoadState("networkidle").catch(() => {});
     const cards = page.locator('a[href*="/car/"]');
     const cardCount = await cards.count();
+    /*
+     * Zero cars is a legitimate state, not a failure.
+     *
+     * This asserted `cardCount > 0`, which was true only because ten demo
+     * listings were published. They were unpublished on 2026-08-03 and the site
+     * is now genuinely empty until real sellers arrive — a window the launch
+     * research puts at 8-16 weeks. A smoke test that fails for the whole of it
+     * is a smoke test nobody runs, and it would have been red for a reason
+     * that is not a defect.
+     *
+     * What must hold either way is that the page tells the truth: cars, or an
+     * empty state that says so. Silence is the failure — a 200 with neither is
+     * the "CMS is down and we rendered nothing" case that lib/listingSource.js
+     * exists to distinguish.
+     */
+    const emptyState = await page
+      .getByText(/no cars match|catalogue is still small|لا توجد سيارات/i)
+      .count();
+    const browseHonest =
+      r?.status() === 200 && (cardCount > 0 || emptyState > 0);
     log(
       `[${name}] used-cars browse`,
-      r?.status() === 200 && cardCount > 0,
-      `${ms(Date.now() - t1)} status=${r?.status()} cards=${cardCount}`,
+      browseHonest,
+      `${ms(Date.now() - t1)} status=${r?.status()} cards=${cardCount}` +
+        (cardCount === 0 ? ` empty-state=${emptyState > 0}` : ""),
     );
 
     // Legacy browse URL must 301/308 to /used-cars
@@ -91,9 +112,27 @@ async function main() {
     // Open first listing card from browse
     await page.goto(`${BASE}/en/used-cars`, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle").catch(() => {});
-    const href = await page.locator('a[href*="/car/"]').first().getAttribute("href");
+    /*
+     * `count()` before `getAttribute()`.
+     *
+     * The old code called `.first().getAttribute()` unconditionally, which on an
+     * empty catalogue waits for a selector that will never appear and dies on a
+     * 15s Playwright timeout — taking the whole run with it, including the
+     * checks after this one. The `if (!href)` below could never run: there was
+     * no path to it that did not throw first.
+     */
+    const cardHrefCount = await page.locator('a[href*="/car/"]').count();
+    const href = cardHrefCount
+      ? await page.locator('a[href*="/car/"]').first().getAttribute("href")
+      : null;
     if (!href) {
-      log(`[${name}] open listing`, false, "no card href");
+      // Nothing to open is correct when nothing is listed; it is only a failure
+      // if the browse page claimed to have cards.
+      log(
+        `[${name}] open listing`,
+        cardCount === 0,
+        cardCount === 0 ? "no inventory — skipped" : "no card href despite cards on browse",
+      );
     } else {
       const td = Date.now();
       r = await page.goto(new URL(href, BASE).toString(), {
