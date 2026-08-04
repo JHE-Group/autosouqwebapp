@@ -5,6 +5,7 @@
  * English page rendered Arabic headings, <title> tags and WhatsApp messages.
  */
 import type { Core } from "@strapi/strapi";
+import { mountMetricsRoute } from "./metrics/route";
 
 const PUBLIC_ACTIONS = [
   "api::listing.listing.find",
@@ -1292,6 +1293,24 @@ export default {
    * actually starting.
    */
   register({ strapi }: { strapi: Core.Strapi }) {
+    /*
+     * The admin homepage metrics endpoint, mounted before the production-only
+     * preflight below — the dashboard has to exist in development too, and the
+     * early return under it would skip this.
+     *
+     * It is `type: 'admin'`, which is the whole security boundary; see the
+     * docblock in src/metrics/route.ts before touching its policies, because
+     * `admin::isAuthenticatedAdmin` does not mean what its name says.
+     *
+     * Wrapped, like everything else that runs at start-up here: a metrics
+     * dashboard is not worth trading a bootable CMS for.
+     */
+    try {
+      mountMetricsRoute(strapi);
+    } catch (err) {
+      strapi.log.error(`Autosouq: could not mount the metrics route — ${err}`);
+    }
+
     if (process.env.NODE_ENV !== "production") return;
 
     /**
