@@ -731,6 +731,11 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
         number
       >;
     model: Schema.Attribute.Relation<'manyToOne', 'api::model.model'>;
+    moderationNote: Schema.Attribute.Text;
+    moderationState: Schema.Attribute.Enumeration<
+      ['pending', 'approved', 'declined']
+    > &
+      Schema.Attribute.DefaultTo<'pending'>;
     phone: Schema.Attribute.String;
     price: Schema.Attribute.Decimal &
       Schema.Attribute.Required &

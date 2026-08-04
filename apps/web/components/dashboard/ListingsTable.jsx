@@ -313,6 +313,14 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
                         </Link>
                       )}
                     </div>
+                    {statusKey(elm) === "declined" ? (
+                      /* The reason, where the seller is already looking at the
+                         car it belongs to. A decision with no explanation is
+                         the same dead end as no decision at all. */
+                      <p className="tfcl-amber" role="note">
+                        {elm.moderationNote || t("declinedNoReason")}
+                      </p>
+                    ) : null}
                     <p className="btn-action-note">{t("editDisabled")}</p>
                   </td>
                 </tr>
@@ -374,6 +382,7 @@ function statusKey(listing) {
   if (status === "Approved" || status === "Live") return "live";
   if (status === "Sold") return "sold";
   if (status === "Pending") return "pending";
+  if (status === "Declined") return "declined";
   return status ? "pending" : "unknown";
 }
 /**
@@ -387,6 +396,7 @@ function statusLabel(key, t, tCommon) {
   if (key === "live") return t("statusLive");
   if (key === "sold") return tCommon("sold");
   if (key === "pending") return t("statusPending");
+  if (key === "declined") return t("statusDeclined");
   return null;
 }
 

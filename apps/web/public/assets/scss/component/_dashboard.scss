@@ -3552,6 +3552,33 @@
   border-color: rgba(38, 34, 98, 0.18);
 }
 
+/*
+ * Declined — the fifth state, and the only one that asks the seller to act.
+ *
+ * The note above still holds: no red. Red on a car listing reads as danger, and
+ * a listing we did not publish is not dangerous, it is unfinished. Terracotta
+ * is the palette's attention colour (the upload icon uses it for the same
+ * reason) and is warm enough to pull the eye down the row without alarming
+ * anyone. Amber stays reserved for sold-as-is, which describes terms of sale
+ * and never a fault, so the two cannot be confused.
+ *
+ * The INK is not $brand-terracotta-dark, and the arithmetic is why. That colour
+ * is a 700 step chosen against white; on an 8% tint of itself (#fbf1ee) it
+ * computes to 4.05:1, which is under AA for text this size — and dropping the
+ * tint to 4% only reaches 4.27:1, because the problem is the foreground, not
+ * the background. #B04526 on the same tint is 5.08:1. Measured, not eyeballed;
+ * the first version of this block claimed 4.42:1 and was wrong.
+ *
+ * Compare $brand-indigo on its own 8% tint at 12.12:1 — the house pattern works
+ * for pending because indigo is very dark, and copying the pattern without
+ * re-checking the numbers is exactly how a 4:1 pill ships.
+ */
+.tfcl-pill--declined {
+  color: #b04526; /* 5.08:1 on the tint below */
+  background: rgba(201, 80, 46, 0.08);
+  border-color: rgba(201, 80, 46, 0.2);
+}
+
 .tfcl-pill--sold {
   color: $color-7;
   background: #f1f1f2;

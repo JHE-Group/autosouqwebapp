@@ -310,7 +310,9 @@
         "notFound": "That listing is not yours, or no longer exists.",
         "unavailable": "We could not reach the server. Nothing has changed — try again in a moment.",
         "failed": "That did not work. The listing is unchanged."
-      }
+      },
+      "statusDeclined": "Not approved",
+      "declinedNoReason": "We could not publish this one. Get in touch and we will tell you what to change."
     },
     "reviews": {
       "emptyTitle": "No reviews yet",

@@ -351,7 +351,9 @@ export async function getMyListings() {
             ? row.listingStatus === "sold"
               ? "Sold"
               : "Live"
-            : "Pending",
+            : row.state === "declined"
+              ? "Declined"
+              : "Pending",
       })),
     };
   } catch {
