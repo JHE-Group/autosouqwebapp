@@ -13,6 +13,7 @@ import React, {
 import { Link } from "@/i18n/navigation";
 import { featureOptions } from "@/data/filterOptions";
 import { foldDigits, formatPrice } from "@/lib/format";
+import { OMAN_CITIES } from "@/lib/omanCities";
 import { normalizeOmaniMsisdn } from "@/lib/whatsapp";
 import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels";
 
@@ -2043,34 +2044,6 @@ const LIEN_OPTIONS = [
   { value: "unsure", key: "unsure" },
 ];
 
-const OMAN_CITIES = [
-  // Muscat Governorate first — highest listing volume (seo-research §3.5).
-  { en: "Muscat", ar: "مسقط" },
-  { en: "Seeb", ar: "السيب" },
-  { en: "Bawshar", ar: "بوشر" },
-  { en: "Muttrah", ar: "مطرح" },
-  { en: "Al Amarat", ar: "العامرات" },
-  { en: "Al Khuwair", ar: "الخوير" },
-  { en: "Al Ghubrah", ar: "الغبرة" },
-  { en: "Azaiba", ar: "العذيبة" },
-  { en: "Ruwi", ar: "روي" },
-  { en: "Qurum", ar: "القرم" },
-  { en: "Al Mawaleh", ar: "الموالح" },
-  { en: "Al Khoud", ar: "الخوض" },
-  { en: "Al Maabilah", ar: "المعبيلة" },
-  { en: "Quriyat", ar: "قريات" },
-  // Rest of Oman
-  { en: "Sohar", ar: "صحار" },
-  { en: "Barka", ar: "بركاء" },
-  { en: "Salalah", ar: "صلالة" },
-  { en: "Nizwa", ar: "نزوى" },
-  { en: "Sur", ar: "صور" },
-  { en: "Ibri", ar: "عبري" },
-  { en: "Rustaq", ar: "الرستاق" },
-  { en: "Ibra", ar: "إبراء" },
-  { en: "Buraimi", ar: "البريمي" },
-  { en: "Khasab", ar: "خصب" },
-];
 
 /* ------------------------------------------------------------- fragments -- */
 
