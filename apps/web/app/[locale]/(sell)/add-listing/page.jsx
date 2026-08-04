@@ -86,7 +86,10 @@ export default async function Page({ params }) {
       </section>
       <section className="tf-section3">
         <div className="container">
-          <AddListing makes={makes} />
+          {/* The id scopes the localStorage draft. Without it a shared phone
+              offers one seller the other's half-written car — see
+              lib/listingDraft.js. It is an integer, never rendered. */}
+          <AddListing makes={makes} sellerId={session.id} />
         </div>
       </section>
       <SiteFooter locale={locale} />

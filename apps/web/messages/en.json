@@ -334,7 +334,10 @@
       "buying": "Buying",
       "account": "Account",
       "closeMenu": "Close menu",
-      "logoAlt": "Autosouq.om"
+      "logoAlt": "Autosouq.om",
+      "signOut": "Sign out",
+      "signingOut": "Signing out…",
+      "ctaNote": "Free to list. Cars from OMR 1,000 to 6,000."
     },
     "password": {
       "current": "Current password",

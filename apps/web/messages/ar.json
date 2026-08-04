@@ -331,7 +331,10 @@
       "buying": "الشراء",
       "account": "الحساب",
       "closeMenu": "إغلاق القائمة",
-      "logoAlt": "Autosouq.om"
+      "logoAlt": "Autosouq.om",
+      "signOut": "تسجيل الخروج",
+      "signingOut": "جارٍ تسجيل الخروج…",
+      "ctaNote": "النشر مجاني. سيارات من 1,000 إلى 6,000 ر.ع."
     },
     "password": {
       "current": "كلمة المرور الحالية",

@@ -59,7 +59,7 @@ export default async function DashboardLayout({ children, params }) {
     <NextIntlClientProvider
       messages={await pickMessages("dashboard", "addListing", "browse")}
     >
-      <DashboardShell>{children}</DashboardShell>
+      <DashboardShell session={session}>{children}</DashboardShell>
     </NextIntlClientProvider>
   );
 }

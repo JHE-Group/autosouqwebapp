@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Link, usePathname } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { clearListingDraft } from "@/lib/listingDraft";
 
 /**
  * Dashboard navigation.
@@ -22,11 +24,42 @@ import { Link, usePathname } from "@/i18n/navigation";
  * glyph. The theme wrapped every icon in `opacity="0.2"`, which on the indigo
  * panel rendered them all but invisible until hover.
  */
-export default function Sidebar({ open = false, onClose = () => {}, closeRef }) {
+export default function Sidebar({
+  open = false,
+  onClose = () => {},
+  closeRef,
+  session = null,
+}) {
   const t = useTranslations("dashboard");
   const pathname = usePathname();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
 
   const isActive = (href) => pathname === href;
+
+  /**
+   * POST, never a link. /api/auth/logout refuses GET on purpose — a logout on
+   * GET can be fired by any `<img src>` anywhere on the internet.
+   *
+   * The local draft goes with the session. It is scoped by seller id now
+   * (lib/listingDraft.js), but a seller handing the phone to someone who does
+   * not sign in as themselves would otherwise still be offered the previous
+   * account's half-written car.
+   */
+  const signOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // The cookie is httpOnly and cleared server-side; if the request never
+      // landed the session is still live, so do not pretend otherwise — the
+      // redirect below will bounce straight back to the dashboard.
+    }
+    clearListingDraft(session?.id);
+    router.replace("/");
+    router.refresh();
+  };
 
   const item = (href, label) => (
     <li key={href}>
@@ -104,21 +137,26 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
             <Icon name="/add-listing" />
             <span>{t("page.addListing")}</span>
           </Link>
-          <p className="db-cta-note">
-            Free to list. Cars from OMR 1,000 to 6,000.
-          </p>
+          <p className="db-cta-note">{t("sidebar.ctaNote")}</p>
         </div>
 
         <div className="db-content db-author pad-30">
           <h6 className="db-title">{t("sidebar.profile")}</h6>
           <div className="author">
             <div className="content">
-              {/* Was a stock portrait plus "themesflat@gmail..." presented as
-                  the signed-in account. There is no auth yet, so there is no
-                  account to name. */}
-              <div className="name">{t("sidebar.notSignedIn")}</div>
+              {/*
+                Was a stock portrait plus "themesflat@gmail…" presented as the
+                signed-in account, then a "Not signed in" placeholder from
+                before auth existed. Every route in this group redirects to
+                /sign-in without a session, so anyone reading this IS signed in
+                — and was being told otherwise, on a shared phone, where
+                knowing which account you are in is the whole question.
+              */}
+              <div className="name">
+                {session?.email ?? t("sidebar.notSignedIn")}
+              </div>
               <Link href={`/my-profile`} className="author-position">
-                View profile
+                {t("page.profile")}
               </Link>
             </div>
           </div>
@@ -128,25 +166,42 @@ export default function Sidebar({ open = false, onClose = () => {}, closeRef }) 
           <h6 className="db-title">{t("sidebar.selling")}</h6>
           <nav className="db-dashboard-menu" aria-label={t("sidebar.selling")}>
             <ul>
-              {item("/dashboard", "Dashboard")}
-              {item("/my-listing", "My listings")}
-              {item("/message", "Messages")}
-              {item("/my-review", "Reviews")}
+              {item("/dashboard", t("page.dashboard"))}
+              {item("/my-listing", t("page.myListings"))}
+              {item("/message", t("page.messages"))}
+              {item("/my-review", t("page.reviews"))}
             </ul>
           </nav>
 
           <h6 className="db-title db-title-sub">{t("sidebar.buying")}</h6>
           <nav className="db-dashboard-menu" aria-label={t("sidebar.buying")}>
-            <ul>{item("/my-favorite", "Saved cars")}</ul>
+            <ul>{item("/my-favorite", t("page.savedCars"))}</ul>
           </nav>
 
           <h6 className="db-title db-title-sub">{t("sidebar.account")}</h6>
           <nav className="db-dashboard-menu" aria-label={t("sidebar.account")}>
             <ul>
-              {item("/my-profile", "Profile")}
-              {/* The theme's last item was a dead "Logout" link. There is no
-                  auth, so there is nothing to log out of. */}
-              {item("/change-password", "Change password")}
+              {item("/my-profile", t("page.profile"))}
+              {item("/change-password", t("page.changePassword"))}
+              {/*
+                The theme shipped a dead "Logout" link, and the comment that
+                replaced it — "there is no auth, so there is nothing to log out
+                of" — outlived the thing it described. /api/auth/logout has
+                existed since the seller flow landed and nothing in the UI ever
+                called it: a seller could sign in and then had no way out
+                except clearing cookies.
+              */}
+              <li>
+                <button
+                  type="button"
+                  className="db-signout"
+                  onClick={signOut}
+                  disabled={signingOut}
+                >
+                  <Icon name="/change-password" />
+                  {signingOut ? t("sidebar.signingOut") : t("sidebar.signOut")}
+                </button>
+              </li>
             </ul>
           </nav>
         </div>

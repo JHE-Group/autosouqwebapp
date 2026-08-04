@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { featureOptions } from "@/data/filterOptions";
 import { foldDigits, formatPrice } from "@/lib/format";
 import { OMAN_CITIES } from "@/lib/omanCities";
+import { draftKeyFor } from "@/lib/listingDraft";
 import { normalizeOmaniMsisdn } from "@/lib/whatsapp";
 import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels";
 
@@ -183,8 +184,6 @@ const EMPTY_FORM = {
   videoUrl: "",
 };
 
-const DRAFT_KEY = "autosouq:listing-draft:v1";
-
 /**
  * localStorage read through the external-store hook.
  *
@@ -198,9 +197,9 @@ function subscribeToDraft(onChange) {
   return () => window.removeEventListener("storage", onChange);
 }
 
-function readDraft() {
+function readDraftFor(key) {
   try {
-    return window.localStorage.getItem(DRAFT_KEY);
+    return window.localStorage.getItem(key);
   } catch {
     return null;
   }
@@ -213,7 +212,7 @@ const isDirty = (form) =>
       : form[key] !== EMPTY_FORM[key],
   );
 
-export default function AddListing({ makes = [] }) {
+export default function AddListing({ makes = [], sellerId }) {
   const locale = useLocale();
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing");
@@ -251,9 +250,18 @@ export default function AddListing({ makes = [] }) {
   // external stores. The server snapshot is null, which is the truth on the
   // server, so hydration matches and the offer to restore appears only once the
   // browser has actually looked.
+  /*
+   * Scoped per seller. The key was one global string, so on a shared phone —
+   * a family phone, a phone passed between flatmates, which is the audience
+   * NICHE.md describes — the second seller to open this form was offered a
+   * restore banner holding the first seller's car, asking price and WhatsApp
+   * number, looking exactly like their own unfinished work. See
+   * lib/listingDraft.js.
+   */
+  const draftKey = draftKeyFor(sellerId);
   const storedDraft = useSyncExternalStore(
     subscribeToDraft,
-    readDraft,
+    () => readDraftFor(draftKey),
     () => null,
   );
 
@@ -281,13 +289,13 @@ export default function AddListing({ makes = [] }) {
     const timer = window.setTimeout(() => {
       try {
         // Photos are deliberately not in the draft — see the SUBMIT GAP note.
-        window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ form }));
+        window.localStorage.setItem(draftKey, JSON.stringify({ form }));
       } catch {
         // Quota or private mode. The form still works; only the draft is lost.
       }
     }, 600);
     return () => window.clearTimeout(timer);
-  }, [form, dirty, hasUnhandledDraft]);
+  }, [form, dirty, hasUnhandledDraft, draftKey]);
 
   const restoreDraft = () => {
     try {
@@ -301,7 +309,7 @@ export default function AddListing({ makes = [] }) {
 
   const discardDraft = () => {
     try {
-      window.localStorage.removeItem(DRAFT_KEY);
+      window.localStorage.removeItem(draftKey);
     } catch {
       /* nothing to clear */
     }

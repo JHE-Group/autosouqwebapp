@@ -199,6 +199,39 @@
   @include focusable-inverse(-2px);
 }
 
+/*
+ * Sign out sits in the Account list and has to read as one of its rows.
+ *
+ * A <button>, not a link: /api/auth/logout refuses GET, because a logout on GET
+ * can be fired by any <img src> on any page on the internet. So it cannot be an
+ * <a>, and it inherits the row's geometry here instead — same 48px target, same
+ * padding, same radius, same inverse focus ring.
+ */
+.sidebar-dashboard .db-list-menu ul li .db-signout {
+  color: #fff; /* 14.12:1 on $brand-indigo, as the rows beside it */
+  padding: 12px 14px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  background: none;
+  border-radius: $radius-card;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22.4px;
+  text-align: start;
+  cursor: pointer;
+  @include focusable-inverse(-2px);
+}
+
+.sidebar-dashboard .db-list-menu ul li .db-signout:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .sidebar-dashboard .db-list-menu ul li a .count-page {
   width: 24px;
   height: 24px;

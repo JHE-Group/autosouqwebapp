@@ -20,7 +20,7 @@ import Sidebar from "./Sidebar";
  * missed entirely — navigating to another page. A seller who taps "My listings"
  * on a phone should land on the page, not on the menu they just used.
  */
-export default function DashboardShell({ children }) {
+export default function DashboardShell({ children, session = null }) {
   // The drawer records the route it was opened on rather than a plain boolean,
   // so "close when the seller navigates" falls out of the render instead of
   // needing an effect that fights the router. Tapping "My listings" on a phone
@@ -65,7 +65,7 @@ export default function DashboardShell({ children }) {
 
   return (
     <>
-      <Sidebar open={open} onClose={close} closeRef={closeRef} />
+      <Sidebar open={open} onClose={close} closeRef={closeRef} session={session} />
       <div id="wrapper-dashboard">
         <div id="pagee" className="clearfix">
           <Header4 />
