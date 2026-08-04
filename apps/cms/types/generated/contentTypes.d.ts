@@ -768,6 +768,10 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     verified: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     videoUrl: Schema.Attribute.String;
+    vin: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 17;
+      }>;
     whatsapp: Schema.Attribute.String & Schema.Attribute.Required;
     year: Schema.Attribute.Integer &
       Schema.Attribute.Required &

@@ -55,13 +55,18 @@ for (const city of OMAN_CITIES) {
 }
 
 /**
- * Five places are knowingly unreachable: separate cities in other governorates
- * that want their own CMS rows, which is a CMS-branch change. Listed by name so
- * that adding a 25th place to the form without a row fails here rather than
- * joining them silently — and so that adding the rows makes this list shrink
- * visibly.
+ * Empty, and it should stay that way.
+ *
+ * It held Ibri, Rustaq, Ibra, Buraimi and Khasab — separate cities in other
+ * governorates that the form offered and the CMS had no row for, so a seller in
+ * any of them answered the question and had the answer discarded. They were
+ * seeded on the CMS branch, and this check failing on "no longer missing" is
+ * what said so.
+ *
+ * Anything added here again is a place the form asks about and cannot store.
+ * That is a deliberate, temporary state, not a resting one.
  */
-const KNOWN_MISSING = ["Ibri", "Rustaq", "Ibra", "Buraimi", "Khasab"];
+const KNOWN_MISSING = [];
 
 const unexpected = unreachable.filter((c) => !KNOWN_MISSING.includes(c));
 const fixed = KNOWN_MISSING.filter((c) => !unreachable.includes(c));

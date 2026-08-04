@@ -496,6 +496,24 @@ async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
     { name: "Nizwa", nameAr: "نزوى", slug: "nizwa" },
     { name: "Sur", nameAr: "صور", slug: "sur" },
     { name: "Barka", nameAr: "بركاء", slug: "barka" },
+    /*
+     * Added because the form offered them and this list did not.
+     *
+     * apps/web/lib/omanCities.js offers 24 places. Thirteen of them are wilayats
+     * or neighbourhoods of Muscat Governorate and resolve to Muscat through a
+     * `parent`, which is what keeps that facet above MIN_LISTINGS_FOR_FACET
+     * rather than splitting it nine ways. These five are not — they are separate
+     * cities in Ad Dhahirah, South Batinah, North Sharqiyah, Al Buraimi and
+     * Musandam — so they need rows of their own, and until they had them a
+     * seller in Ibri answered the question and had the answer thrown away.
+     *
+     * scripts/check-cities.mjs holds the two lists together from now on.
+     */
+    { name: "Ibri", nameAr: "عبري", slug: "ibri" },
+    { name: "Rustaq", nameAr: "الرستاق", slug: "rustaq" },
+    { name: "Ibra", nameAr: "إبراء", slug: "ibra" },
+    { name: "Buraimi", nameAr: "البريمي", slug: "buraimi" },
+    { name: "Khasab", nameAr: "خصب", slug: "khasab" },
   ];
 
   /**
