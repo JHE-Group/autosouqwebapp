@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import React, { useMemo, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import Image from "next/image";
-import { formatPrice } from "@/lib/format";
+import { foldDigits, formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import {
   SOLD_AS_IS,
@@ -37,6 +37,48 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
   const [status, setStatusFilter] = useState(ALL_STATUSES);
   const [busy, setBusy] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [editPrice, setEditPrice] = useState("");
+
+  /**
+   * Reprice. The only edit there is, and deliberately so.
+   *
+   * Description and photos are not editable here because the seller endpoint
+   * does not return them — SELLER_LISTING_FIELDS carries price, title, year and
+   * mileage, not the prose — so a form for them would have nothing to prefill
+   * and would silently blank whatever it did not know. Repricing is also the
+   * edit sellers actually want: a car that has sat for three weeks needs a new
+   * number, not new adjectives.
+   *
+   * The change lands on the DRAFT. If the listing is live, buyers keep seeing
+   * the approved price until a moderator looks at the new one — which the note
+   * beside this says out loud, because a seller who thinks they have just cut
+   * their price and has not is worse off than one who knows they are waiting.
+   */
+  const savePrice = async (listing) => {
+    const documentId = listing?.documentId;
+    if (!documentId || busy) return;
+    setBusy(documentId);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/listings/${documentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ price: editPrice }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!data?.ok) {
+        setActionError(data?.code ?? "failed");
+        return;
+      }
+      setEditing(null);
+      router.refresh();
+    } catch {
+      setActionError("unavailable");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   /**
    * Mark sold / reserved, or take the car down.
@@ -271,9 +313,53 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
                       review. See app/api/listings/[id]/status.
                     */}
                     <div className="inner-controller">
-                      <button type="button" className="btn-action" disabled>
-                        {t("edit")}
-                      </button>
+                      {editing === elm.documentId ? (
+                        <span className="tfcl-reprice">
+                          <label
+                            className="visually-hidden"
+                            htmlFor={`price_${elm.documentId}`}
+                          >
+                            {t("newPrice")}
+                          </label>
+                          <input
+                            id={`price_${elm.documentId}`}
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9٠-٩۰-۹]*"
+                            className="form-control"
+                            value={editPrice}
+                            onChange={(e) => setEditPrice(foldDigits(e.target.value))}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            className="btn-action"
+                            onClick={() => savePrice(elm)}
+                            disabled={busy === elm.documentId || !editPrice}
+                          >
+                            {t("save")}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-action"
+                            onClick={() => setEditing(null)}
+                          >
+                            {t("cancel")}
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-action"
+                          onClick={() => {
+                            setEditing(elm.documentId);
+                            setEditPrice(String(elm.price ?? ""));
+                            setActionError(null);
+                          }}
+                        >
+                          {t("reprice")}
+                        </button>
+                      )}
                     </div>
                     {statusKey(elm) !== "sold" ? (
                       <div className="inner-controller">
@@ -321,7 +407,11 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
                         {elm.moderationNote || t("declinedNoReason")}
                       </p>
                     ) : null}
-                    <p className="btn-action-note">{t("editDisabled")}</p>
+                    <p className="btn-action-note">
+                      {statusKey(elm) === "live"
+                        ? t("repriceLiveNote")
+                        : t("repriceNote")}
+                    </p>
                   </td>
                 </tr>
               ))}

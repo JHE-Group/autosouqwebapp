@@ -297,7 +297,6 @@
       "colPosted": "Posted",
       "colAction": "Action",
       "viewListing": "View listing",
-      "edit": "Edit",
       "markSold": "Mark sold",
       "noSpec": "No specification given",
       "noMatch": "None of your listings match that. Clear the search or choose “{status}”.",
@@ -305,14 +304,19 @@
       "loadFailed": "We could not load your listings just now. That is us, not you — nothing has been deleted. Please refresh in a moment.",
       "notPublicYet": "Not public yet — we are still checking it.",
       "takeDown": "Take it down",
-      "editDisabled": "Editing the price or photos is not switched on yet — those go back through review. Marking sold and taking a car down happen straight away.",
       "actionError": {
         "notFound": "That listing is not yours, or no longer exists.",
         "unavailable": "We could not reach the server. Nothing has changed — try again in a moment.",
         "failed": "That did not work. The listing is unchanged."
       },
       "statusDeclined": "Not approved",
-      "declinedNoReason": "We could not publish this one. Get in touch and we will tell you what to change."
+      "declinedNoReason": "We could not publish this one. Get in touch and we will tell you what to change.",
+      "reprice": "Change price",
+      "newPrice": "New asking price",
+      "save": "Save",
+      "cancel": "Cancel",
+      "repriceNote": "You can change the price. Photos and the description are edited by us for now — get in touch.",
+      "repriceLiveNote": "You can change the price. Buyers keep seeing the current one until we have checked the new one."
     },
     "reviews": {
       "emptyTitle": "No reviews yet",

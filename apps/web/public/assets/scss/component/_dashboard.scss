@@ -207,6 +207,25 @@
  * <a>, and it inherits the row's geometry here instead — same 48px target, same
  * padding, same radius, same inverse focus ring.
  */
+/*
+ * The inline reprice control. Sits in the actions cell, which on a phone is a
+ * stacked column — so the input takes the full width and the two buttons sit
+ * beside each other rather than the three fighting for one line.
+ */
+.tfcl-reprice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tfcl-reprice .form-control {
+  /* Wide enough for five digits and a thousands separator, no wider — this is
+     a price in a table cell, not the sell form's field. */
+  inline-size: 9ch;
+  min-height: 44px;
+}
+
 .sidebar-dashboard .db-list-menu ul li .db-signout {
   color: #fff; /* 14.12:1 on $brand-indigo, as the rows beside it */
   padding: 12px 14px;
