@@ -47,6 +47,48 @@ export default (_config: unknown, { strapi }: { strapi: Core.Strapi }) => {
     const isContentApiUpload =
       ctx.method === 'POST' && (ctx.path === '/api/upload' || ctx.path === '/api/upload/');
 
+    /*
+     * Two things turn an upload into a write over someone else's row, and this
+     * guard only knew about one of them.
+     *
+     * `?id=` replaces an existing file — covered below. `ref`/`refId`/`field`
+     * in the body ATTACH the new file to an arbitrary entity, and Strapi's
+     * upload service performs that attachment with no ownership check at all.
+     * So any account could post an image with ref=api::listing.listing and
+     * another seller's refId and have it appear in their gallery. Verified
+     * against a published listing owned by someone else: 0 files before, 1
+     * after.
+     *
+     * On a marketplace that is not a defacement nuisance — it is a way to put a
+     * picture of your choosing on a stranger's verified car.
+     *
+     * Sellers never need it. apps/web uploads files bare and attaches them by
+     * creating or updating the listing, which goes through the ownership checks
+     * in the listing controller. So the whole mechanism is refused here rather
+     * than authorised: this middleware has no business deciding who owns what.
+     */
+    const body = ctx.request?.body ?? {};
+    if (
+      isContentApiUpload &&
+      (body.ref !== undefined || body.refId !== undefined || body.field !== undefined)
+    ) {
+      strapi.log.warn(
+        `Autosouq: refused content-API upload attaching to ` +
+          `${String(body.ref)}#${String(body.refId)}.${String(body.field)} ` +
+          `from user ${ctx.state?.user?.id ?? 'anonymous'}.`,
+      );
+      ctx.status = 403;
+      ctx.body = {
+        error: {
+          status: 403,
+          name: 'ForbiddenError',
+          message: 'Attaching an upload to a record is not permitted here.',
+        },
+      };
+      return;
+    }
+
+
     // `id` is the only thing that turns an upload into a write over someone
     // else's row. Anything without it is an ordinary create and is left alone.
     if (isContentApiUpload && ctx.query?.id !== undefined) {

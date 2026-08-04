@@ -542,7 +542,9 @@ async function main() {
       `POST /api/auth/register answered ${registered.status}`,
       registered.status === 429 || /too many/i.test(registered.text)
         ? "the CMS allows 10 registrations per 15 minutes per address. This run presents a fresh 10.x address each time, so hitting the limit means the CMS is seeing one address for everyone — check that lib/auth.js still forwards x-forwarded-for"
-        : "nobody can list a car without an account. This is the first door and everything after it is unreachable",
+        : registered.json?.code === "unreachable"
+          ? "the web app answered but could not reach Strapi — that is an environment problem, not a defect. Strapi in dev restarts on every source edit, so this is what a run that collides with a CMS reload looks like. Wait for it to come back up and run again"
+          : "nobody can list a car without an account. This is the first door and everything after it is unreachable",
       registered.text.slice(0, 300),
     );
     check(
@@ -1027,7 +1029,6 @@ async function main() {
       "the moderator's view and the buyer's view must agree about when the seller last vouched for the car; stamping the draft alone leaves the live listing looking stale forever",
       `draft=${draftOf(afterConfirm)?.confirmed} published=${publishedOf(afterConfirm)?.confirmed}`,
     );
-    check(publishedOf(afterConfirm)?.price === EXPECT_PRICE, `PROBE: live price is now ${publishedOf(afterConfirm)?.price}`, "probe");
     say("confirm-available stamped both versions");
 
     const sold = await web(`/api/listings/${documentId}/status`, {
@@ -1049,7 +1050,34 @@ async function main() {
       "this is the one seller write that must touch the PUBLISHED row: writing only the draft leaves the live page telling buyers a sold car is available, which is the exact bug the endpoint was built to avoid",
       `draft=${draftOf(afterSold)?.listing_status} published=${publishedOf(afterSold)?.listing_status}`,
     );
-    say("mark sold reached both the draft and the live version");
+
+    /**
+     * ...and it must reach the published row WITHOUT taking the draft with it.
+     *
+     * This is the assertion that only exists because both halves happened in one
+     * afternoon, and neither is visible from either endpoint on its own.
+     *
+     * `setStatus` writes the seller's change to the draft and then to the
+     * published version. Strapi 5's `update({ status: 'published' })` does not
+     * patch the live row in isolation — it can promote the whole draft — so the
+     * pending price sitting in the review queue since the reprice above rides
+     * along and goes live without a moderator. Measured at 15:20 on 2026-08-04:
+     * a live listing at OMR 1,900 became OMR 2,222 because the seller pressed
+     * "still for sale". 1b2a52d fixed the sibling case (a status write on a
+     * never-published draft was self-publishing it) and this one now holds too.
+     *
+     * The `price` here is the canary for every other field the seller can edit.
+     * If it ever moves again, moderation is decorative: any approved listing can
+     * be rewritten by editing the draft and pressing any status button.
+     */
+    check(
+      publishedOf(afterSold)?.price === EXPECT_PRICE,
+      `the live price moved to ${publishedOf(afterSold)?.price} after confirm/mark-sold, having been repriced to ${REPRICED_TO} on the DRAFT`,
+      `a status write must change only what it names. Carrying the pending draft edit onto the live listing publishes an unreviewed price — the seller edits the draft, presses "sold" or "still for sale", and their new number is on the site`,
+    );
+    say(
+      `mark sold reached both versions, and the pending ${REPRICED_TO} price stayed in the queue`,
+    );
 
     const takenDown = await web(`/api/listings/${documentId}/status`, {
       method: "PUT",
