@@ -15,7 +15,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "expandSection": "Show {section} links",
-    "collapseSection": "Hide {section} links"
+    "collapseSection": "Hide {section} links",
+    "addListing": "Add a listing"
   },
   "common": {
     "viewAll": "View all",
@@ -146,7 +147,8 @@
       "photos": "photos",
       "featured": "Featured",
       "view": "View details",
-      "kmUnstated": "km not stated"
+      "kmUnstated": "km not stated",
+      "kmUnit": "km"
     },
     "filter": {
       "heading": "Filters",
@@ -182,7 +184,8 @@
       "groupEntertainment": "Entertainment",
       "groupSafety": "Safety",
       "groupInterior": "Interior",
-      "groupExterior": "Exterior"
+      "groupExterior": "Exterior",
+      "kmUnit": "km"
     },
     "toolbar": {
       "matches": "{count, plural, one {1 car matches} other {# cars match}}",
@@ -355,7 +358,8 @@
       "logoAlt": "Autosouq.om",
       "signOut": "Sign out",
       "signingOut": "Signing out…",
-      "ctaNote": "Free to list. Cars from OMR 1,000 to 6,000."
+      "ctaNote": "Free to list. Cars from OMR 1,000 to 6,000.",
+      "openMenu": "Menu"
     },
     "password": {
       "current": "Current password",
@@ -635,7 +639,10 @@
       "spec": "Spec / import origin",
       "price": "A price inside the band",
       "city": "City",
-      "whatsapp": "A valid Omani WhatsApp number"
+      "whatsapp": "A valid Omani WhatsApp number",
+      "accountName": "Your name",
+      "accountEmail": "Your email",
+      "accountPassword": "A password of 8 characters or more"
     },
     "reviewRow": {
       "title": "Listing title",

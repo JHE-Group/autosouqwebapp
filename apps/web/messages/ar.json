@@ -15,7 +15,8 @@
     "openMenu": "فتح القائمة",
     "closeMenu": "إغلاق القائمة",
     "expandSection": "عرض روابط {section}",
-    "collapseSection": "إخفاء روابط {section}"
+    "collapseSection": "إخفاء روابط {section}",
+    "addListing": "أضف إعلاناً"
   },
   "common": {
     "viewAll": "عرض الكل",
@@ -146,7 +147,8 @@
       "photos": "صور",
       "featured": "مميّزة",
       "view": "عرض التفاصيل",
-      "kmUnstated": "لم يذكر البائع الممشى"
+      "kmUnstated": "لم يذكر البائع الممشى",
+      "kmUnit": "كم"
     },
     "filter": {
       "heading": "الفلاتر",
@@ -182,7 +184,8 @@
       "groupEntertainment": "الترفيه",
       "groupSafety": "السلامة",
       "groupInterior": "المقصورة الداخلية",
-      "groupExterior": "المظهر الخارجي"
+      "groupExterior": "المظهر الخارجي",
+      "kmUnit": "كم"
     },
     "toolbar": {
       "matches": "{count, plural, zero {لا سيارات مطابقة} one {سيارة واحدة مطابقة} two {سيارتان مطابقتان} few {# سيارات مطابقة} many {# سيارة مطابقة} other {# سيارة مطابقة}}",
@@ -351,7 +354,8 @@
       "logoAlt": "Autosouq.om",
       "signOut": "تسجيل الخروج",
       "signingOut": "جارٍ تسجيل الخروج…",
-      "ctaNote": "النشر مجاني. سيارات من 1,000 إلى 6,000 ر.ع."
+      "ctaNote": "النشر مجاني. سيارات من 1,000 إلى 6,000 ر.ع.",
+      "openMenu": "افتح القائمة"
     },
     "password": {
       "current": "كلمة المرور الحالية",
@@ -635,7 +639,10 @@
       "spec": "المواصفات / بلد الوارد",
       "price": "سعر داخل النطاق",
       "city": "المدينة",
-      "whatsapp": "رقم واتساب عُماني صالح"
+      "whatsapp": "رقم واتساب عُماني صالح",
+      "accountName": "اسمك",
+      "accountEmail": "بريدك الإلكتروني",
+      "accountPassword": "كلمة مرور من 8 خانات أو أكثر"
     },
     "reviewRow": {
       "title": "عنوان الإعلان",

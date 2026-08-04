@@ -15,13 +15,14 @@
     "check:slugs": "node scripts/check-listing-slug.mjs",
     "check:cities": "node scripts/check-cities.mjs",
     "check:fields": "node scripts/check-submitted-fields.mjs",
-    "check": "pnpm check:band && pnpm check:taxonomy && pnpm check:titles && pnpm check:slugs && pnpm check:cities && pnpm check:fields && pnpm lint",
+    "check": "pnpm check:band && pnpm check:taxonomy && pnpm check:titles && pnpm check:slugs && pnpm check:cities && pnpm check:fields && pnpm lint && pnpm check:i18n",
     "test:carousels": "node scripts/test-carousels.mjs",
     "test:sell": "node scripts/test-sell-flow.mjs",
     "test:buy": "node scripts/test-buy-flow.mjs",
     "test:journey": "node scripts/test-seller-journey.mjs",
     "test:flows": "pnpm test:sell && pnpm test:buy",
-    "check:photos": "node scripts/check-listing-photos.mjs"
+    "check:photos": "node scripts/check-listing-photos.mjs",
+    "check:i18n": "node scripts/check-i18n-keys.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -12,7 +12,7 @@ import React, {
 } from "react";
 import { Link } from "@/i18n/navigation";
 import { featureOptions } from "@/data/filterOptions";
-import { foldDigits, formatPrice } from "@/lib/format";
+import { foldDigits, formatPrice, formatKm } from "@/lib/format";
 import { OMAN_CITIES } from "@/lib/omanCities";
 import { draftKeyFor } from "@/lib/listingDraft";
 import { normalizeOmaniMsisdn } from "@/lib/whatsapp";
@@ -1740,7 +1740,7 @@ function StepReview({
    */
   const rows = [
     [tRow("title"), derivedTitle || null],
-    [tRow("km"), form.km ? `${Number(form.km).toLocaleString("en-US")} km` : null],
+    [tRow("km"), form.km ? formatKm(form.km, locale) : null],
     [
       tRow("transmission"),
       optionLabel(TRANSMISSION_OPTIONS, form.transmission, "transmission"),
