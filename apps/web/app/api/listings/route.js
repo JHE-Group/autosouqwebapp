@@ -122,10 +122,28 @@ function pickTaxonomy(rows, value) {
 }
 
 async function resolveRelations(form) {
+  /*
+   * Four of these were missing, and they are the four the buyer filters on.
+   *
+   * The route resolved make, model and city and sent nothing else, so every
+   * seller listing reached the CMS with no bodyType, transmission, fuelType or
+   * colour — columns that exist, that toCar() maps, and that
+   * components/carsListings builds its filter options from. A seller answered
+   * "Automatic" and "Petrol" and their car then matched neither the Automatic
+   * filter nor the Petrol one, and its card showed no transmission at all.
+   *
+   * The seven reads cost more than three. The note below on `no-store` already
+   * settles that trade: this runs on the rare occasion someone files a car.
+   */
   const wanted = [
     ["make", "makes", form.make],
     ["model", "models", form.model],
     ["city", "cities", form.city],
+    ["bodyType", "body-types", form.body],
+    ["transmission", "transmissions", form.transmission],
+    ["fuelType", "fuel-types", form.fuelType],
+    ["color", "car-colors", form.color],
+    ["condition", "conditions", form.condition],
   ].filter(([, , value]) => String(value ?? "").trim());
 
   if (!wanted.length) return {};
@@ -195,6 +213,24 @@ async function resolveRelations(form) {
   }
 
   return { relations, slugs };
+}
+
+/** Present only when there is a value — Strapi rejects null on some columns. */
+function optional(key, value) {
+  return value === null || value === undefined || value === "" ? {} : { [key]: value };
+}
+
+/** The form stores the label; the CMS column is an enumeration of short codes. */
+const DRIVE_ENUM = {
+  "Front-wheel drive (FWD)": "fwd",
+  "Rear-wheel drive (RWD)": "rwd",
+  "All-wheel drive (AWD)": "awd",
+  "Four-wheel drive (4WD)": "four_wd",
+};
+
+function toNumber(value) {
+  const n = Number(foldDigits(value));
+  return Number.isFinite(n) ? n : null;
 }
 
 function toInt(value) {
@@ -292,6 +328,11 @@ async function uploadPhotos(files, token) {
  */
 function buildDescription(form) {
   const lines = [
+    // The only collected field with no CMS column. addListing.review.vinHint
+    // tells the seller that adding it "lets a buyer run their own history
+    // check", so it is meant to be read — it belongs on the page rather than
+    // dropped on the floor, until the CMS gains a column for it.
+    form.vin ? `Chassis / VIN: ${String(form.vin).trim().toUpperCase()}` : null,
     form.condition ? `Condition: ${form.condition}` : null,
     form.mulkiyaExpiry ? `Mulkiya valid until: ${form.mulkiyaExpiry}` : null,
     form.underLien ? `Under lien: ${form.underLien}` : null,
@@ -396,6 +437,18 @@ export async function POST(request) {
   // URL and facet membership — see resolveRelations.
   const { relations, slugs } = await resolveRelations(form);
 
+  /*
+   * Eleven fields the seller answered used to reach neither a column nor the
+   * description. The CMS had somewhere to put every one of them.
+   *
+   * `driveType` is the odd one: the Select stores what its comment calls "the
+   * CMS vocabulary", and for the relation fields that is true — "Automatic"
+   * matches the transmission row by name. But driveType is an *enumeration*
+   * whose members are fwd / rwd / awd / four_wd, so the stored
+   * "Front-wheel drive (FWD)" would be rejected outright. Mapped here rather
+   * than changing what the form stores, because the stored string is what the
+   * seller sees in their own draft.
+   */
   const payload = {
     title,
     price,
@@ -407,6 +460,13 @@ export async function POST(request) {
     description: buildDescription(form),
     ...relations,
     ...(IMPORT_ORIGINS.has(form.importSpec) ? { importOrigin: form.importSpec } : {}),
+    ...optional("doors", toInt(form.doors)),
+    ...optional("cylinders", toInt(form.cylinders)),
+    ...optional("seats", toInt(form.seats)),
+    ...optional("engineSize", toNumber(form.engineSize)),
+    ...optional("driveType", DRIVE_ENUM[form.driveType]),
+    ...optional("phone", String(form.phone ?? "").trim() || null),
+    ...optional("videoUrl", String(form.videoUrl ?? "").trim() || null),
   };
 
   const token = await getToken();
