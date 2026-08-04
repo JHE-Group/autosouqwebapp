@@ -281,6 +281,17 @@ export function toCar(listing, locale = DEFAULT_LOCALE) {
     door: listing.doors ?? null,
     seats: listing.seats ?? null,
     engineSize: listing.engineSize ?? null,
+    /*
+     * The chassis number, which the CMS gained a column for on 2026-08-04.
+     *
+     * Before that it was appended to the description, so it reached the page as
+     * prose. Moving it to a column made it structured and invisible in the same
+     * commit — stored, never mapped, never rendered — while
+     * addListing.review.vinHint still told the seller that adding it "lets a
+     * buyer run their own history check". Caught by filing a listing end to end
+     * and looking for it on the page.
+     */
+    vin: listing.vin ?? null,
     driveType: listing.driveType
       ? { fwd: "FWD", rwd: "RWD", awd: "AWD", four_wd: "4WD" }[listing.driveType]
       : null,

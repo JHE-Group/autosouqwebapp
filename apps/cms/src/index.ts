@@ -130,6 +130,28 @@ const AUTHENTICATED_ACTIONS = [
    */
   "api::seller-auth.seller-auth.listings",
   /**
+   * The seller acting on their own listing: mark sold or reserved, take it
+   * down, or confirm it is still for sale.
+   *
+   * Same rule as the line above and the same failure if it is missing — the
+   * route mounts, a valid token gets 403, and it reads as a broken session
+   * rather than a missing grant. That is precisely what happened: setStatus and
+   * updateProfile shipped on 2026-08-04 without entries here, so every one of
+   * those buttons answered "The listing could not be updated" on a correctly
+   * signed-in seller. Found by exercising the flow end to end, because a
+   * missing permission is invisible in the code that needs it.
+   *
+   * Granting it exposes nothing extra: the controller loads the document, reads
+   * its seller and answers notFound when it is not the caller's.
+   */
+  "api::seller-auth.seller-auth.setStatus",
+  /**
+   * The seller's own name and WhatsApp number. Two named fields, id from the
+   * token — deliberately not the users-permissions update route, which takes
+   * the whole user object including `role`.
+   */
+  "api::seller-auth.seller-auth.updateProfile",
+  /**
    * Photo upload for a listing's gallery.
    *
    * This is the widest grant on the list and worth being clear-eyed about: it

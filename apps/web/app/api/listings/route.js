@@ -142,7 +142,22 @@ async function resolveRelations(form) {
     ["transmission", "transmissions", form.transmission],
     ["fuelType", "fuel-types", form.fuelType],
     ["color", "car-colors", form.color],
-    ["condition", "conditions", form.condition],
+    /*
+     * NOT condition. The names collide and the concepts do not.
+     *
+     * The CMS `conditions` collection holds one row — "Used / مستعملة" — and is
+     * a new-versus-used axis; toCar surfaces it as `conditionType`. The form's
+     * `condition` is the seller's rating of the car: Excellent, Good, Fair,
+     * Needs work. None of those can ever match that collection, so resolving it
+     * here bought a guaranteed miss, a warning line and a CMS round trip on
+     * every submission.
+     *
+     * Caught by filing a listing end to end rather than by reading the code:
+     * the lookup fails silently by design, so nothing said so.
+     *
+     * The seller's answer reaches the page through buildDescription, which is
+     * where a judgement in the seller's own words belongs.
+     */
   ].filter(([, , value]) => String(value ?? "").trim());
 
   if (!wanted.length) return {};
@@ -447,7 +462,17 @@ export async function POST(request) {
   const price = toInt(form.price);
   const year = toInt(form.year);
   const mileage = toInt(form.km);
-  const whatsapp = (form.whatsapp ?? "").toString().replace(/\D/g, "");
+  /*
+   * Fold before stripping — the third place this was needed and the one that
+   * got missed.
+   *
+   * `\d` is [0-9], so /\D/ treats ٩١٢٣٤٥٦٧ as punctuation and deletes the whole
+   * number, leaving "" and a "WhatsApp number is required" rejection for a
+   * seller who typed one. lib/whatsapp.js and toInt() were both corrected when
+   * this was first found; this copy lives in the submit path itself and was
+   * only caught by running an actual Arabic submission end to end.
+   */
+  const whatsapp = foldDigits(form.whatsapp ?? "").replace(/\D/g, "");
 
   // The CMS enforces all of this too — the band in lifecycles.ts, the rest in
   // the schema. Checking here as well turns a 400 full of Strapi's phrasing

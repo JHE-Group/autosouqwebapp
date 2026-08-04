@@ -224,7 +224,8 @@
       "missingLead": "The seller did not fill in:",
       "missingTail": "Ask on WhatsApp before you go and see the car.",
       "unit": "km",
-      "listSeparator": ", "
+      "listSeparator": ", ",
+      "vin": "Chassis / VIN"
     },
     "empty": {
       "description": "The seller has not written a description for this car. Everything known about it is in the overview above — ask on WhatsApp for anything that is missing.",

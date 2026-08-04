@@ -122,6 +122,17 @@ export default function Overview({ carItem, locale = DEFAULT_LOCALE }) {
     { key: "doors", icon: "icon-autodeal-doors", label: t("doors"), value: car.door },
     { key: "seats", icon: "icon-autodeal-seats", label: t("seats"), value: car.seats },
     { key: "colour", icon: "icon-autodeal-color", label: t("colour"), value: car.color },
+    {
+      key: "vin",
+      icon: "icon-autodeal-vin1",
+      label: t("vin"),
+      /*
+       * Seventeen Latin characters inside an Arabic page, so it carries its own
+       * direction — without it the run reverses and a buyer cannot check it
+       * against the plate. Same reason the phone inputs carry dir="ltr".
+       */
+      value: car.vin ? <bdi dir="ltr">{car.vin}</bdi> : null,
+    },
   ];
 
   const present = optional.filter(
