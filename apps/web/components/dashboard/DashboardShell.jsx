@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
 import Header4 from "../headers/Header4";
 import Sidebar from "./Sidebar";
@@ -21,6 +22,7 @@ import Sidebar from "./Sidebar";
  * on a phone should land on the page, not on the menu they just used.
  */
 export default function DashboardShell({ children, session = null }) {
+  const t = useTranslations("dashboard");
   // The drawer records the route it was opened on rather than a plain boolean,
   // so "close when the seller navigates" falls out of the render instead of
   // needing an effect that fights the router. Tapping "My listings" on a phone
@@ -87,7 +89,9 @@ export default function DashboardShell({ children, session = null }) {
               strokeLinecap="round"
             />
           </svg>
-          Menu
+          {/* Was the literal "Menu" — the only control that opens the drawer,
+              in Latin, on every Arabic dashboard page. */}
+          {t("sidebar.openMenu")}
         </button>
         {children}
       </div>

@@ -73,7 +73,7 @@ export function chipsFor(state, locale) {
         text: `${plain(state.price[0])} – ${formatPrice(state.price[1], undefined, locale)}`,
       });
     } else if (key === "km") {
-      chips.push({ key, text: `${range(state.km, plain)} km` });
+      chips.push({ key, text: `${range(state.km, plain)} ${locale === "ar" ? "كم" : "km"}` });
     } else if (key === "year") {
       chips.push({ key, text: range(state.year, plain) });
     } else {

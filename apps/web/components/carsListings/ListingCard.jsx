@@ -198,8 +198,11 @@ export default function ListingCard({
                 app/ that unwinds to Next's stock error page — so one listing
                 with a null or string `mileage` blanked the whole of
                 /used-cars and every facet lander, not one card. */}
+            {/* The unit comes from the catalogue. It was the literal "km" —
+                the only Latin word on an otherwise fully Arabic card, while
+                the detail page for the same car said "كم". */}
             {Number.isFinite(car.km)
-              ? `${car.km.toLocaleString("en-US")} km`
+              ? `${car.km.toLocaleString("en-US")} ${t("kmUnit")}`
               : t("kmUnstated")}
           </span>
           {car.transmission && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatKm } from "@/lib/format";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import DropdownSelect from "./DropDownSelect";
@@ -255,7 +255,7 @@ export default function FlatFilter3({
                       priceRange={allProps.km}
                       setPriceRange={allProps.setKM}
                       label={t("km")}
-                      formatValue={(v) => `${Number(v).toLocaleString("en-US")} km`}
+                      formatValue={(v) => formatKm(v, locale)}
                     />
                   </div>
                   {/* /.widget_price */}

@@ -38,6 +38,25 @@ export function formatPrice(value, currency = DEFAULT_CURRENCY, locale = "en") {
 }
 
 /**
+ * A mileage, with the unit written in the reader's language.
+ *
+ * "كم" in Arabic, "km" in English — the same split formatPrice already makes
+ * for the rial, and for the same reason. Eight components each carried their
+ * own `${n.toLocaleString("en-US")} km`, so every listing card, filter chip,
+ * range caption and slider announcement on the Arabic site rendered the one
+ * Latin word on an otherwise entirely Arabic line — while the car's own detail
+ * page, which goes through lib/seo.js, correctly said "310,000 كم".
+ *
+ * The digits stay Western in both languages, which is the site-wide decision:
+ * Omani sellers and buyers read prices and odometers in Western numerals.
+ */
+export function formatKm(value, locale = "en") {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return `${n.toLocaleString("en-US")} ${locale === "ar" ? "كم" : "km"}`;
+}
+
+/**
  * Arabic-Indic (٠-٩) and Extended Arabic-Indic / Persian (۰-۹) digits folded to
  * ASCII.
  *

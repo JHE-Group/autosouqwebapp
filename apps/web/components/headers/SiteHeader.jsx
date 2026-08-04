@@ -174,9 +174,18 @@ export default function SiteHeader({ variant = "solid" }) {
   // (NICHE.md), so the primary action does the thing it says. Anyone who wants
   // the rules first still has "Sell your car" in the nav, which is the same
   // label pointing at the page that explains it.
+  /*
+   * Both labels come from the catalogue.
+   *
+   * The signed-in one was the literal "Add listing" — so the largest, most
+   * prominent control in the header rendered in Latin on the Arabic site, but
+   * only once you signed in. Signed out, the same button correctly read
+   * «بيع سيارتك». The one seller who never saw the bug was the one testing it
+   * while logged out.
+   */
   const cta =
     variant === "account"
-      ? { href: "/add-listing", label: "Add listing" }
+      ? { href: "/add-listing", label: t("addListing") }
       : { href: "/add-listing", label: t("sellYourCar") };
 
   // The offcanvas is driven by a class on <body> because the backdrop, the

@@ -1,6 +1,6 @@
 "use client";
 
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatKm } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import { A11y, Navigation, Pagination } from "swiper/modules";
 import Image from "next/image";
@@ -222,7 +222,7 @@ export default function RecomandedCars({ listings, locale: localeProp }) {
                           <i className="icon-autodeal-km1" />
                           <span>
                             {Number.isFinite(car.km)
-                              ? `${car.km.toLocaleString("en-US")} km`
+                              ? formatKm(car.km, locale)
                               : t("kmUnstated")}
                           </span>
                         </div>

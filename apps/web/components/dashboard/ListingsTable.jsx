@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import React, { useMemo, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import Image from "next/image";
-import { foldDigits, formatPrice } from "@/lib/format";
+import { foldDigits, formatPrice, formatKm } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import {
   daysSinceVouched,
@@ -304,7 +304,7 @@ export default function ListingsTable({
                             {elm.title}
                           </Link>
                         </h4>
-                        <div className="features-text">{summarise(elm, t)}</div>
+                        <div className="features-text">{summarise(elm, t, locale)}</div>
                         <ListingLabels listing={elm} />
                         <div className="price">
                           <div className="inner tfcl-listing-price">
@@ -487,14 +487,14 @@ const ALL_STATUSES = "all";
  * under every single car regardless of what the car actually was. Build the
  * line from the listing's own fields instead, and print only the fields it has.
  */
-function summarise(listing, t) {
+function summarise(listing, t, locale) {
   const parts = [
     listing.year,
     listing.transmission,
     listing.fuelType,
     // km, not miles — Oman measures distance in kilometres.
     Number.isFinite(listing.km)
-      ? `${listing.km.toLocaleString("en-US")} km`
+      ? formatKm(listing.km, locale)
       : null,
   ].filter(Boolean);
   return parts.length ? parts.join(" · ") : t("noSpec");

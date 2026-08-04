@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import WhatsAppButton from "@/components/common/WhatsAppButton";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatKm } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import { buildWhatsAppUrl, WHATSAPP_BUTTON_STYLE } from "@/lib/whatsapp";
 import FilterChips, { chipsFor } from "./FilterChips";
@@ -144,7 +144,7 @@ function RelaxedMatch({ car, locale }) {
         </div>
         <p className="fs-12 mb-1" style={{ color: "#5C6368" }}>
           {Number.isFinite(car.km)
-              ? `${car.km.toLocaleString("en-US")} km`
+              ? formatKm(car.km, locale)
               : t("kmUnstated")}
           {car.transmission ? ` · ${car.transmission}` : ""}
           {car.location ? ` · ${car.location}` : ""}

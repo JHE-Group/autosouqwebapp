@@ -151,7 +151,7 @@ export default function FilterPanel({
       {hasRange(bounds.km) && (
         <Facet
           label={t("km")}
-          value={`${plain(allProps.km[0])} – ${plain(allProps.km[1])} km`}
+          value={`${plain(allProps.km[0])} – ${plain(allProps.km[1])} ${t("kmUnit")}`}
           active={active("km")}
           onReset={() => allProps.setKM(bounds.km)}
         >
@@ -161,7 +161,7 @@ export default function FilterPanel({
             priceRange={allProps.km}
             setPriceRange={allProps.setKM}
             label={t("km")}
-            formatValue={(v) => `${plain(v)} km`}
+            formatValue={(v) => `${plain(v)} ${t("kmUnit")}`}
           />
         </Facet>
       )}

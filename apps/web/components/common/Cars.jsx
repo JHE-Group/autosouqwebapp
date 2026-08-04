@@ -1,4 +1,4 @@
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatKm } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
@@ -158,7 +158,7 @@ export default async function Cars({
                       <i className="icon-autodeal-km1" />
                       <span>
                         {Number.isFinite(car.km)
-                          ? `${car.km.toLocaleString("en-US")} km`
+                          ? formatKm(car.km, locale)
                           : tCard("kmUnstated")}
                       </span>
                     </div>
