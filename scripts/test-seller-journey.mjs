@@ -935,24 +935,37 @@ async function main() {
         ?.replace(/<[^>]+>/g, "")
         .trim();
       /*
-       * Compare the heading with the tatweel folded out, because the two locales
-       * legitimately build it from different places.
+       * Each locale's heading must be in ITS OWN language, and that is the whole
+       * point of this assertion.
        *
-       * `/ar` composes the heading from the resolved taxonomy, so it reads
-       * "تويوتا كورولا 2015" — clean, whatever the seller typed. `/en` renders the
-       * stored `title`, which api/listings joined from the seller's own words, so
-       * it keeps the decorative tatweel and the Arabic-Indic year: "تـويوتا كورولا
-       * ٢٠١٥". Both are the right car; only one is the seller's keystrokes.
+       * When this test was first written it asserted the Arabic make on both
+       * pages, because both showed it: api/listings stored whatever the seller's
+       * form had composed — "تويوتا كورولا ٢٠١٥" — into `title`, the ENGLISH
+       * column, and never wrote `titleAr` at all. So /en served an Arabic
+       * heading with Arabic-Indic digits, and /ar only looked right by accident,
+       * because storedTitle found no titleAr and fell through to the generated
+       * one. The test encoded that as expected and this comment argued it was
+       * merely cosmetic.
        *
-       * (That the English page shows an Arabic title with Arabic-Indic digits is
-       * a real cosmetic gap, and it is a separate argument from this assertion —
-       * which is only that the make reached the heading at all.)
+       * It was not cosmetic — it was an Arabic <h1> on an indexed English URL.
+       * api/listings now composes both titles from the resolved taxonomy, so the
+       * assertion is per-locale and the tatweel fold is no longer needed on the
+       * English side: the seller's keystrokes never reach either heading.
        */
       const readable = (s) => String(s ?? "").replace(/ـ/g, "");
+      const expectedMake = locale === "ar" ? "تويوتا" : "Toyota";
       check(
-        h1 && readable(h1).includes("تويوتا"),
+        h1 && readable(h1).includes(expectedMake),
         `/${locale} rendered the page but its <h1> is ${JSON.stringify(h1 ?? null)}`,
-        "the seller filed in Arabic. A heading missing the make means the taxonomy did not reach the view, or the title fell back to something generic",
+        `a /${locale} heading must name the make in ${locale === "ar" ? "Arabic" : "English"}. ` +
+          `Both titles are composed from the taxonomy, so the wrong language here means ` +
+          `the seller's typed title leaked into a column it does not belong in`,
+      );
+      check(
+        h1 && !/[٠-٩۰-۹]/.test(h1),
+        `/${locale} <h1> carries Arabic-Indic digits: ${JSON.stringify(h1 ?? null)}`,
+        "the year is composed from the PARSED year, not form.year — raw form input " +
+          "put ٢٠١٥ in an English heading",
       );
       check(
         visible.includes(EXPECT_PRICE.toLocaleString("en-US")),

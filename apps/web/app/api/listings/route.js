@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { foldDigits } from "@/lib/format";
 import { slugifyTitle } from "@/lib/slugifyTitle";
+import { composeTitle } from "@/lib/listingTitle";
 import { getSession, getToken } from "@/lib/auth";
 
 /**
@@ -165,6 +166,8 @@ async function resolveRelations(form) {
   const relations = {};
   // Latin slugs for the matched rows, used to compose the public URL.
   const slugs = {};
+  // And their labels in both languages, used to compose the two titles.
+  const names = {};
 
   for (const [field, collection, value] of wanted) {
     try {
@@ -199,6 +202,8 @@ async function resolveRelations(form) {
       if (hit) {
         relations[field] = hit.documentId ?? null;
         if (hit.slug) slugs[field] = String(hit.slug);
+        // Both languages' labels, so a title can be composed in each.
+        names[field] = { name: hit.name ?? null, nameAr: hit.nameAr ?? null };
       } else {
         // Not an error: a seller may name a make we do not carry yet. Worth a
         // line, because a run of these is the signal to widen the vocabulary.
@@ -214,7 +219,7 @@ async function resolveRelations(form) {
     }
   }
 
-  return { relations, slugs };
+  return { relations, slugs, names };
 }
 
 /**
@@ -452,11 +457,11 @@ export async function POST(request) {
     }
   }
 
-  const title =
+  // A provisional title for the validation below. The real, per-language
+  // titles are composed once the taxonomy has been resolved — see further
+  // down, and see why `names` cannot be read before that call.
+  const typedTitle =
     (form.title ?? "").toString().trim() ||
-    // Make, model, year — matching the catalogue and, more importantly, keeping
-    // the derived slug from starting with digits, which resolveListing reads as
-    // a numeric id. See the note in AddListing.jsx.
     [form.make, form.model, form.year].filter(Boolean).join(" ").trim();
 
   const price = toInt(form.price);
@@ -478,7 +483,7 @@ export async function POST(request) {
   // the schema. Checking here as well turns a 400 full of Strapi's phrasing
   // into a sentence the seller can act on, without either side trusting the
   // other to have done it.
-  if (!title) {
+  if (!typedTitle) {
     return NextResponse.json(
       { ok: false, code: "missing_car", error: "Add the make, model and year of the car." },
       { status: 400 },
@@ -493,7 +498,39 @@ export async function POST(request) {
 
   // Resolved before the create, because the relations decide both the public
   // URL and facet membership — see resolveRelations.
-  const { relations, slugs } = await resolveRelations(form);
+  const { relations, slugs, names } = await resolveRelations(form);
+
+  /*
+   * One title per language, composed from the taxonomy — not one title in
+   * whichever language the seller happened to type.
+   *
+   * The form composes its preview from what the seller entered, so an Arabic
+   * seller produced "تويوتا كورولا 2015" and that string was stored in `title`,
+   * the ENGLISH column. `titleAr` was never written at all. So /en served an
+   * Arabic <h1> — and /ar only looked right by accident, because storedTitle
+   * found no titleAr and fell through to the generated one.
+   *
+   * The matched taxonomy rows carry both labels, so both titles come from the
+   * same place the URL does. composeTitle also drops a make the model already
+   * repeats — "BMW BMW 3 Series" — and orders each language its own way.
+   *
+   * When the taxonomy did not match there is nothing to compose from, so the
+   * seller's own words stand. Better a title in one language than none.
+   */
+  const titleEn =
+    composeTitle(names.make?.name, names.model?.name, year, "en") ||
+    typedTitle;
+
+  const titleAr = composeTitle(
+    names.make?.nameAr,
+    names.model?.nameAr,
+    // The PARSED year, not form.year. The raw value is whatever the seller
+    // typed, so composing from it put ٢٠١٥ in the English heading.
+    year,
+    "ar",
+  );
+
+  const title = titleEn;
 
   /*
    * Eleven fields the seller answered used to reach neither a column nor the
@@ -509,6 +546,7 @@ export async function POST(request) {
    */
   const payload = {
     title,
+    ...(titleAr ? { titleAr } : {}),
     price,
     year,
     mileage,
@@ -523,7 +561,9 @@ export async function POST(request) {
     ...optional("seats", toInt(form.seats)),
     ...optional("engineSize", toNumber(form.engineSize)),
     ...optional("driveType", DRIVE_ENUM[form.driveType]),
-    ...optional("phone", String(form.phone ?? "").trim() || null),
+    // Folded like every other number a seller types. This was the one field
+    // that missed it, so an Arabic keyboard stored ٩١٢٣٤٥٦٧ verbatim.
+    ...optional("phone", foldDigits(form.phone ?? "").trim() || null),
     ...optional("videoUrl", String(form.videoUrl ?? "").trim() || null),
     ...optional("vin", normalizedVin(form.vin)),
   };
