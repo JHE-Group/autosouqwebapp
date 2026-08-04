@@ -414,6 +414,25 @@ export default {
       return ctx.notFound('Listing not found.');
     }
 
+    /*
+     * Does a published version exist? Ask — do not infer from a thrown error.
+     *
+     * This code used to wrap the published write in try/catch on the assumption
+     * that updating a version which does not exist throws. Strapi 5 CREATES it
+     * instead, so the catch never ran and the write published the document.
+     *
+     * That turned "mark sold", "still available" and every other status call
+     * into a self-publish button: a seller filed a draft, pressed one control,
+     * and their car went live without a moderator ever seeing it — defeating
+     * the forceVersion(ctx, 'draft') clamp that the rest of this API is built
+     * around. Verified by calling the endpoint with a real seller token: one
+     * row and published=0 before, two rows and published=1 after.
+     */
+    const liveVersion = await strapi.documents('api::listing.listing').findOne({
+      documentId,
+      status: 'published',
+    });
+
     if (confirmAvailable) {
       /*
        * "Yes, it is still for sale."
@@ -434,14 +453,12 @@ export default {
         status: 'draft',
         data: stamp,
       });
-      try {
+      if (liveVersion) {
         await strapi.documents('api::listing.listing').update({
           documentId,
           status: 'published',
           data: stamp,
         });
-      } catch {
-        // Not published; the draft stamp is enough.
       }
       ctx.body = { data: { documentId, availabilityConfirmedAt: now } };
       return;
@@ -470,15 +487,14 @@ export default {
       status: 'draft',
       data,
     });
-    try {
+    if (liveVersion) {
+      // Only when one already exists. A pending car can still be marked sold —
+      // the draft carries it — but saying so must never be what publishes it.
       await strapi.documents('api::listing.listing').update({
         documentId,
         status: 'published',
         data,
       });
-    } catch {
-      // Not published yet — nothing live to update, and not an error. A pending
-      // car can still be marked sold before anyone has approved it.
     }
 
     ctx.body = { data: { documentId, listingStatus } };
