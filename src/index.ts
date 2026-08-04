@@ -21,6 +21,21 @@ const PUBLIC_ACTIONS = [
   "api::fuel-type.fuel-type.find",
   "api::car-color.car-color.find",
   "api::feature.feature.find",
+  /*
+   * Showrooms are a public read, clamped to `approved` in the controller.
+   *
+   * find and findOne only. There is deliberately no create, update or delete
+   * grant anywhere: a seller applies through /seller/register, which writes a
+   * `pending` record, and a human moves it to approved in the admin. A seller
+   * who could write here could approve themselves, and a badge you can award
+   * yourself tells a buyer nothing — which is the only reason it is worth
+   * showing one.
+   *
+   * Nothing sensitive rides along. `owner`, `crNumber` and `reviewNote` are
+   * `private` in the schema, so the business is public and the account is not.
+   */
+  "api::showroom.showroom.find",
+  "api::showroom.showroom.findOne",
 ] as const;
 
 /**
@@ -117,6 +132,21 @@ const AUTHENTICATED_ACTIONS = [
   "api::fuel-type.fuel-type.find",
   "api::car-color.car-color.find",
   "api::feature.feature.find",
+  /*
+   * Showrooms are a public read, clamped to `approved` in the controller.
+   *
+   * find and findOne only. There is deliberately no create, update or delete
+   * grant anywhere: a seller applies through /seller/register, which writes a
+   * `pending` record, and a human moves it to approved in the admin. A seller
+   * who could write here could approve themselves, and a badge you can award
+   * yourself tells a buyer nothing — which is the only reason it is worth
+   * showing one.
+   *
+   * Nothing sensitive rides along. `owner`, `crNumber` and `reviewNote` are
+   * `private` in the schema, so the business is public and the account is not.
+   */
+  "api::showroom.showroom.find",
+  "api::showroom.showroom.findOne",
   /**
    * The seller's own listings, drafts included.
    *
