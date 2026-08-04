@@ -233,7 +233,6 @@ export default function AddListing({ makes = [] }) {
   const [openSection, setOpenSection] = useState(0);
   const [form, setForm] = useState(EMPTY_FORM);
   const [images, setImages] = useState([]);
-  const [attachments, setAttachments] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [draftHandled, setDraftHandled] = useState(false);
   const [showExtras, setShowExtras] = useState(false);
@@ -308,7 +307,6 @@ export default function AddListing({ makes = [] }) {
     }
     setForm(EMPTY_FORM);
     setImages([]);
-    setAttachments([]);
     setDraftHandled(true);
     setOpenSection(0);
   };
@@ -334,14 +332,6 @@ export default function AddListing({ makes = [] }) {
     addFiles(event.dataTransfer.files);
   };
 
-  const handleAttachmentChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () =>
-      setAttachments((prev) => [...prev, { name: file.name, src: reader.result }]);
-    reader.readAsDataURL(file);
-  };
 
   /* -------------------------------------------------------- validation -- */
 
@@ -643,9 +633,6 @@ export default function AddListing({ makes = [] }) {
                               form={form}
                               set={set}
                               images={images}
-                              attachments={attachments}
-                              setAttachments={setAttachments}
-                              onAttachmentChange={handleAttachmentChange}
                               derivedTitle={derivedTitle}
                               priceCheck={priceCheck}
                               missing={missing}
@@ -1537,9 +1524,6 @@ function StepReview({
   form,
   set,
   images,
-  attachments,
-  setAttachments,
-  onAttachmentChange,
   derivedTitle,
   priceCheck,
   missing,
@@ -1770,59 +1754,24 @@ function StepReview({
             <p className="tfcl-hint">
               {tc("documentsHint")}
             </p>
-            <ul className="list-attrach">
-              {attachments.map((file, index) => (
-                <li className="item" key={file.name + index}>
-                  <PdfIcon />
-                  <span className="tfcl-attach-name">{file.name}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAttachments((prev) =>
-                        prev.filter((_, i) => i !== index),
-                      )
-                    }
-                    aria-label={`Remove ${file.name}`}
-                    className="tfcl-thumb-remove"
-                  >
-                    <TrashIcon />
-                  </button>
-                </li>
-              ))}
-              <li className="item upload">
-                <label className="inner">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width={30}
-                    height={30}
-                    viewBox="0 0 30 30"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    {/* Brand terracotta, 700 step (#C9502E = $brand-terracotta-dark).
-                        Was the AutoDeal template's orange. The 500 step #E97451 is
-                        only 2.97:1 on this white panel and misses the 3:1 WCAG
-                        minimum for a meaningful icon; #C9502E is 4.50:1. */}
-                    <path
-                      d="M15 20.625V12.1875M15 12.1875L18.75 15.9375M15 12.1875L11.25 15.9375M8.43751 24.375C7.0993 24.3765 5.80441 23.9008 4.78539 23.0334C3.76636 22.166 3.08995 20.9637 2.87765 19.6424C2.66534 18.3212 2.93104 16.9675 3.62704 15.8245C4.32303 14.6815 5.40371 13.8241 6.67501 13.4063C6.34839 11.7327 6.68596 9.99778 7.61624 8.5688C8.54653 7.13981 9.99647 6.12902 11.659 5.75046C13.3216 5.37191 15.0662 5.65531 16.5235 6.54067C17.9807 7.42602 19.0361 8.8438 19.4663 10.4938C20.1313 10.2775 20.8435 10.2515 21.5225 10.4186C22.2016 10.5858 22.8203 10.9395 23.3089 11.4398C23.7975 11.9401 24.1365 12.5671 24.2875 13.2499C24.4386 13.9326 24.3957 14.6441 24.1638 15.3038C25.1871 15.6947 26.0413 16.4314 26.5782 17.3862C27.1151 18.341 27.3009 19.4537 27.1033 20.5311C26.9057 21.6086 26.3372 22.5829 25.4963 23.285C24.6555 23.9871 23.5954 24.3727 22.5 24.375H8.43751Z"
-                      stroke="#C9502E"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="upload">
-                    {t("uploadFile")}
-                    <input
-                      type="file"
-                      className="ip-file"
-                      accept="application/pdf"
-                      onChange={onAttachmentChange}
-                    />
-                  </div>
-                </label>
-              </li>
-            </ul>
+            {/*
+              The file picker that used to be here uploaded nothing.
+
+              Attachments were held in component state, listed with an icon and
+              a remove button, and never referenced by lib/submitListing at all
+              — and could not have been: the Listing content type has one media
+              field, `gallery`, and it is images-only. So a seller attached
+              their service history, watched it appear in a list, pressed
+              Publish and lost it silently, having been told on the line above
+              that buyers at this price "trust paperwork more than adjectives".
+
+              A control that discards what you give it is worse than no
+              control, so it is gone rather than relabelled. Reinstating it
+              needs a documents media field on the CMS and an upload path that
+              does not go through the Next route — PDFs plus ten photos will
+              not fit Vercel's 4.5 MB request cap, which is the same wall
+              fitPhotoBudget was written for.
+            */}
           </div>
         ) : null}
       </div>
