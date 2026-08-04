@@ -1027,6 +1027,7 @@ async function main() {
       "the moderator's view and the buyer's view must agree about when the seller last vouched for the car; stamping the draft alone leaves the live listing looking stale forever",
       `draft=${draftOf(afterConfirm)?.confirmed} published=${publishedOf(afterConfirm)?.confirmed}`,
     );
+    check(publishedOf(afterConfirm)?.price === EXPECT_PRICE, `PROBE: live price is now ${publishedOf(afterConfirm)?.price}`, "probe");
     say("confirm-available stamped both versions");
 
     const sold = await web(`/api/listings/${documentId}/status`, {

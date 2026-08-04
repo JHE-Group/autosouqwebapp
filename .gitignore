@@ -34,3 +34,7 @@ coverage
 # Never commit a database dump.
 .migration/
 *.tar.gz.enc
+
+# Scratch space for QA agents and manual probing. Never part of a build.
+.qa-tmp/
+**/.qa-tmp/
