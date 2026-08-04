@@ -34,10 +34,37 @@ export function normalizeOmaniMsisdn(raw) {
   return /^968[79]\d{7}$/.test(d) ? d : null;
 }
 
-/** E.164 for tel: links — here the leading + is wanted. */
-export function toTelHref(raw) {
+/**
+ * E.164 with the leading +, for message bodies and anywhere a human reads it.
+ *
+ * Split out from toTelHref because the two callers want different things and
+ * conflating them shipped a broken Call button. lib/submitListing puts this
+ * into the seller's WhatsApp message as text ("Contact: +96891234567"); if it
+ * received a URI it would read "Contact: tel:+96891234567".
+ */
+export function toE164(raw) {
   const d = normalizeOmaniMsisdn(raw);
   return d ? `+${d}` : null;
+}
+
+/**
+ * An RFC 3966 tel: URI — the scheme included, which is the entire point.
+ *
+ * This returned a bare "+96891234567" and both Call buttons spread it straight
+ * into `href`. Without a scheme that is not a URI at all: RFC 3986 reads it as
+ * a RELATIVE PATH (`+` is a legal sub-delim in a path segment), so it resolved
+ * against the listing URL. Tapping "Call the seller" on a car page navigated to
+ * /ar/car/+96890000001, which 404s. The dialler never opened and the car
+ * vanished from the screen — on the button whose only job is to start the one
+ * conversation this site exists to start, in a market where the phone call IS
+ * the transaction.
+ *
+ * It failed silently in the worst way: the href was present, the button looked
+ * enabled, and nothing errored. Only following the link reveals it.
+ */
+export function toTelHref(raw) {
+  const e164 = toE164(raw);
+  return e164 ? `tel:${e164}` : null;
 }
 
 /** Build a click-to-chat URL, or null when the number is unusable. */

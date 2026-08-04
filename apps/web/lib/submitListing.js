@@ -1,5 +1,6 @@
 import { importOriginLabel } from "./listingLabels";
-import { buildWhatsAppUrl, normalizeOmaniMsisdn, toTelHref } from "./whatsapp";
+import { buildWhatsAppUrl, normalizeOmaniMsisdn, toE164 } from "./whatsapp";
+import { formatPrice } from "./format";
 
 /**
  * How a completed listing leaves the browser.
@@ -102,14 +103,21 @@ export function listingSubmissionMessage(form, { locale = "ar", title } = {}) {
     ? origin.text
     : form.importSpec || "";
   const contact =
-    toTelHref(form.whatsapp) ||
+    // Text, not a URI — see the note on toE164.
+    toE164(form.whatsapp) ||
     (form.whatsapp ? String(form.whatsapp).trim() : "");
 
   return [
     t.intro,
     "",
     line(t.title, title || [form.year, form.make, form.model].filter(Boolean).join(" ")),
-    line(t.price, form.price ? `OMR ${Number(form.price).toLocaleString("en-US")}` : ""),
+    /*
+     * Through formatPrice, so the rial is written the way the message's own
+     * language writes it. This line hardcoded "OMR 2,700" while every label
+     * around it was Arabic — the same mistake the sell form's band note made,
+     * in the message a seller actually sends us.
+     */
+    line(t.price, form.price ? formatPrice(form.price, undefined, lang) : ""),
     line(t.km, Number.isFinite(km) && km > 0 ? km.toLocaleString("en-US") : ""),
     line(t.spec, specText),
     line(t.condition, form.condition),

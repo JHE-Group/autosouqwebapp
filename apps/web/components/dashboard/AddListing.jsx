@@ -72,14 +72,29 @@ import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels
 // exactly this class of mistake once shipped in ListingCard.jsx.
 import { BAND, CURRENCY } from "@/lib/priceBand";
 
-const money = (n) => `${CURRENCY} ${n.toLocaleString("en-US")}`;
+/**
+ * A band figure, written the way the reader's language writes money.
+ *
+ * This used to be `${CURRENCY} ${n.toLocaleString("en-US")}`, which hardcodes
+ * the ISO code in front of the number — so the Arabic sell form, which is what
+ * most sellers see, opened with "أوتوسوق يعرض السيارات من OMR 1,500 إلى OMR
+ * 6,000". Latin currency code, in front of the number, inside an Arabic
+ * sentence, on the one screen whose whole job is to explain the rule the
+ * business is built on.
+ *
+ * lib/format's formatPrice already solves this and its own docblock warns
+ * about exactly this shape; every price elsewhere on the site goes through it
+ * and reads "1,500 ر.ع". This helper is now a thin wrapper so the fourteen
+ * call sites below keep their shape, and so the two can never diverge again.
+ */
+const money = (n, locale) => formatPrice(n, CURRENCY, locale);
 
 /**
  * Same decision the CMS makes, in the same order, so the two can never
  * disagree about a given number. `soldAsIs` is derived from the price and never
  * chosen by the seller — exactly as `applyBand()` derives it server-side.
  */
-function checkPrice(raw) {
+function checkPrice(raw, locale) {
   const trimmed = String(raw).trim();
   if (trimmed === "") return { state: "empty" };
 
@@ -103,7 +118,7 @@ function checkPrice(raw) {
     return {
       state: "invalid",
       reason: "aboveBand",
-      values: { max: money(BAND.MAX), value: money(price) },
+      values: { max: money(BAND.MAX, locale), value: money(price, locale) },
     };
   }
 
@@ -111,7 +126,7 @@ function checkPrice(raw) {
     return {
       state: "invalid",
       reason: "belowBand",
-      values: { min: money(BAND.ASIS_MIN), value: money(price) },
+      values: { min: money(BAND.ASIS_MIN, locale), value: money(price, locale) },
     };
   }
 
@@ -360,7 +375,7 @@ export default function AddListing({ makes = [], sellerId, signedIn = true }) {
 
   /* -------------------------------------------------------- validation -- */
 
-  const priceCheck = checkPrice(form.price);
+  const priceCheck = checkPrice(form.price, locale);
   const priceOk = priceCheck.state === "ok" || priceCheck.state === "as-is";
   const msisdn = normalizeOmaniMsisdn(form.whatsapp);
 
@@ -432,14 +447,14 @@ export default function AddListing({ makes = [], sellerId, signedIn = true }) {
     }
     if (code === "price_above_band") {
       return t("priceCheck.aboveBand", {
-        max: money(BAND.MAX),
-        value: money(Number(form.price)),
+        max: money(BAND.MAX, locale),
+        value: money(Number(form.price), locale),
       });
     }
     if (code === "price_below_band") {
       return t("priceCheck.belowBand", {
-        min: money(BAND.ASIS_MIN),
-        value: money(Number(form.price)),
+        min: money(BAND.ASIS_MIN, locale),
+        value: money(Number(form.price), locale),
       });
     }
     const known = new Set([
@@ -607,10 +622,10 @@ export default function AddListing({ makes = [], sellerId, signedIn = true }) {
                     rather than sprung on the seller at the price field. */}
                 <div className="tfcl-band-note">
                   {t("bandNote", {
-                    stdMin: money(BAND.STANDARD_MIN),
-                    max: money(BAND.MAX),
-                    asisMin: money(BAND.ASIS_MIN),
-                    asisMax: money(BAND.ASIS_MAX),
+                    stdMin: money(BAND.STANDARD_MIN, locale),
+                    max: money(BAND.MAX, locale),
+                    asisMin: money(BAND.ASIS_MIN, locale),
+                    asisMax: money(BAND.ASIS_MAX, locale),
                     label: tCommon("soldAsIs"),
                   })}
                 </div>
@@ -1300,6 +1315,7 @@ function StepSpec({ form, set }) {
 /* ------------------------------------------------------------- step 3 -- */
 
 function StepPrice({ form, set, priceCheck }) {
+  const locale = useLocale();
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing.price");
   const tCheck = useTranslations("addListing.priceCheck");
@@ -1336,7 +1352,7 @@ function StepPrice({ form, set, priceCheck }) {
             <span style={SOLD_AS_IS_STYLE}>{tCommon("soldAsIs")}</span>
             <p className="tfcl-amber">
               {t("asIs", {
-                threshold: money(BAND.STANDARD_MIN),
+                threshold: money(BAND.STANDARD_MIN, locale),
                 label: tCommon("soldAsIs"),
               })}
             </p>
@@ -1352,11 +1368,11 @@ function StepPrice({ form, set, priceCheck }) {
         {priceCheck.state === "empty" ? (
           <p className="tfcl-hint">
             {t("empty", {
-              asisMin: money(BAND.ASIS_MIN),
-              asisMax: money(BAND.ASIS_MAX),
+              asisMin: money(BAND.ASIS_MIN, locale),
+              asisMax: money(BAND.ASIS_MAX, locale),
               label: tCommon("soldAsIs"),
-              stdMin: money(BAND.STANDARD_MIN),
-              max: money(BAND.MAX),
+              stdMin: money(BAND.STANDARD_MIN, locale),
+              max: money(BAND.MAX, locale),
             })}
           </p>
         ) : null}
