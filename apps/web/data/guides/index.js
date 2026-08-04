@@ -157,6 +157,36 @@ export const guides = [
     datePublished: "2026-07-25",
     dateModified: "2026-07-25",
   },
+  {
+    order: 6,
+    slug: "chassis-number-vin-check-oman",
+    /**
+     * The Arabic here is not a translation of the English — it is the side with
+     * the demand. On 2026-08-04, رقم الشاصي returned a full completion set led
+     * by the وارد أمريكي cluster, deeper than anything the English seeds
+     * returned. Hence الشاصي rather than the رقم الهيكل the other guides use,
+     * which stays correct as the formal term: both complete, but الهيكل's
+     * completions are generic while الشاصي's carry this page's exact intent.
+     */
+    title: {
+      en: "What a chassis number can and can’t tell you in Oman",
+      ar: "رقم الشاصي في عُمان: ماذا يكشف وماذا لا يكشف",
+    },
+    h1: {
+      en: "What a chassis number can and can’t tell you in Oman",
+      ar: "رقم الشاصي في عُمان: ماذا يكشف وماذا لا يكشف",
+    },
+    description: {
+      en: "Where to find the chassis number, what a VIN report shows about an American import, why a clean title is not a clean car — and the free checks to run before you pay for anything.",
+      ar: "أين تجد رقم الشاصي، وماذا يكشف تقرير الوارد الأمريكي، ولماذا «كلين تايتل» ليست سيارة نظيفة — والفحوصات المجانية قبل أن تدفع مقابل أي شيء.",
+    },
+    summary: {
+      en: "A VIN report describes the years before the car reached Oman. This is what it covers, what it cannot, and which free checks to do first.",
+      ar: "تقرير الشاصي يصف السنوات التي سبقت وصول السيارة إلى عُمان. وهذا ما يغطيه، وما لا يغطيه، وأي الفحوصات المجانية تبدأ بها.",
+    },
+    datePublished: "2026-08-04",
+    dateModified: "2026-08-04",
+  },
 ];
 
 /** Index order for the hub and the sitemap. */

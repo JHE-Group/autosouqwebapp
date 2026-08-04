@@ -1,9 +1,11 @@
 import React from "react";
+import ChassisNumberVinCheckOman from "@/components/guides/posts/ChassisNumberVinCheckOman";
 import CheckFinesBeforeBuyingOman from "@/components/guides/posts/CheckFinesBeforeBuyingOman";
 import FirstCarOmanExpat from "@/components/guides/posts/FirstCarOmanExpat";
 import GccSpecVsAmericanImport from "@/components/guides/posts/GccSpecVsAmericanImport";
 import TransferCarOwnershipOman from "@/components/guides/posts/TransferCarOwnershipOman";
 import UsedCarScamsOman from "@/components/guides/posts/UsedCarScamsOman";
+import ChassisNumberVinCheckOmanAr from "@/components/guides/posts/ar/ChassisNumberVinCheckOman";
 import CheckFinesBeforeBuyingOmanAr from "@/components/guides/posts/ar/CheckFinesBeforeBuyingOman";
 import FirstCarOmanExpatAr from "@/components/guides/posts/ar/FirstCarOmanExpat";
 import GccSpecVsAmericanImportAr from "@/components/guides/posts/ar/GccSpecVsAmericanImport";
@@ -39,6 +41,8 @@ export function GuideBody({ slug, locale = "en" }) {
       return ar ? <CheckFinesBeforeBuyingOmanAr /> : <CheckFinesBeforeBuyingOman />;
     case "first-car-oman-expat":
       return ar ? <FirstCarOmanExpatAr /> : <FirstCarOmanExpat />;
+    case "chassis-number-vin-check-oman":
+      return ar ? <ChassisNumberVinCheckOmanAr /> : <ChassisNumberVinCheckOman />;
     default:
       return null;
   }
@@ -55,6 +59,7 @@ export const GUIDE_BODY_SLUGS = [
   "used-car-scams-oman",
   "check-fines-before-buying-oman",
   "first-car-oman-expat",
+  "chassis-number-vin-check-oman",
 ];
 
 export function hasGuideBody(slug) {
