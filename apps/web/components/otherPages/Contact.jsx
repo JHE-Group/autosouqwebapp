@@ -137,6 +137,7 @@ export default function Contact() {
                         <input
                           id="contact-phone"
                           type="tel"
+                        dir="ltr"
                           className="tb-my-input"
                           name="tel"
                           placeholder={t("phonePlaceholder")}

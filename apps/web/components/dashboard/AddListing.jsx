@@ -262,10 +262,23 @@ export default function AddListing({ makes = [] }) {
   // Restoring is a decision the seller makes, not something that happens to
   // them. Silently refilling a form from a draft they had forgotten about is
   // how a stale price ends up published.
-  const offerRestore = !draftHandled && !dirty && storedDraft !== null;
+  /*
+   * The offer used to carry `!dirty`, which made a single keystroke destroy the
+   * draft it was offering.
+   *
+   * Typing one character set `dirty`, which hid this banner AND armed the
+   * autosave below — so 600ms later the stored draft was overwritten with a
+   * nearly-empty form. The seller had not decided anything; they had touched
+   * the keyboard. There is an explicit Discard beside the Restore, so the offer
+   * does not need to disappear on its own, and the autosave now waits until one
+   * of the two has been pressed.
+   */
+  const hasUnhandledDraft = !draftHandled && storedDraft !== null;
+  const offerRestore = hasUnhandledDraft;
 
   useEffect(() => {
-    if (!dirty) return undefined;
+    // Never overwrite a draft the seller has not yet chosen to keep or discard.
+    if (!dirty || hasUnhandledDraft) return undefined;
     const timer = window.setTimeout(() => {
       try {
         // Photos are deliberately not in the draft — see the SUBMIT GAP note.
@@ -275,7 +288,7 @@ export default function AddListing({ makes = [] }) {
       }
     }, 600);
     return () => window.clearTimeout(timer);
-  }, [form, dirty]);
+  }, [form, dirty, hasUnhandledDraft]);
 
   const restoreDraft = () => {
     try {
@@ -1473,6 +1486,10 @@ function StepContact({ form, set, msisdn }) {
               id="listing_whatsapp"
               type="tel"
               inputMode="tel"
+              // A phone number reads left-to-right in any language. Without
+              // this the +968 and the digit groups reorder under RTL and the
+              // seller cannot read back the number they just entered.
+              dir="ltr"
               className="form-control"
               placeholder="+968 9XXX XXXX"
               value={form.whatsapp}
@@ -1486,6 +1503,10 @@ function StepContact({ form, set, msisdn }) {
               id="listing_phone"
               type="tel"
               inputMode="tel"
+              // A phone number reads left-to-right in any language. Without
+              // this the +968 and the digit groups reorder under RTL and the
+              // seller cannot read back the number they just entered.
+              dir="ltr"
               className="form-control"
               placeholder="+968 …"
               value={form.phone}

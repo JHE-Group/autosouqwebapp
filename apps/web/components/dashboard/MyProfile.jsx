@@ -114,6 +114,7 @@ export default function MyProfile() {
                       <input
                         id="profile_whatsapp"
                         type="tel"
+                        dir="ltr"
                         inputMode="tel"
                         className="form-control"
                         name="whatsapp"
@@ -128,6 +129,7 @@ export default function MyProfile() {
                       <input
                         id="profile_phone"
                         type="tel"
+                        dir="ltr"
                         inputMode="tel"
                         className="form-control"
                         name="phone"

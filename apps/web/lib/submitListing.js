@@ -217,11 +217,25 @@ function dataUrlToFile(dataUrl, index) {
   if (!encoded) return null;
 
   const mime = /data:([^;]+)/.exec(header)?.[1] ?? "image/jpeg";
+
+  /*
+   * The extension has to follow the MIME, not the happy path.
+   *
+   * downscaleToDataUrl falls back to the untouched original when
+   * createImageBitmap or canvas is unavailable — an older WebView, or an HEIC
+   * an iPhone handed over that the browser cannot decode. That fallback is
+   * deliberate and worth keeping: a seller on an old phone should still be able
+   * to list a car. But every file was then named `photo-N.jpg` regardless, so
+   * an HEIC reached Strapi under a filename asserting it was a JPEG, and any
+   * browser that cannot render HEIC showed a broken image on the listing.
+   */
+  const subtype = String(mime).split("/")[1] ?? "jpeg";
+  const ext = subtype === "jpeg" ? "jpg" : subtype.replace(/[^a-z0-9]/g, "") || "bin";
   const binary = atob(encoded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
 
-  return new File([bytes], `photo-${index + 1}.jpg`, { type: mime });
+  return new File([bytes], `photo-${index + 1}.${ext}`, { type: mime });
 }
 
 /**
