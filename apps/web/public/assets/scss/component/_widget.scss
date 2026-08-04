@@ -2365,7 +2365,16 @@
   }
 
   .asq-card__price {
-    font-size: 21px;
+    /*
+     * 23px, not 21.
+     *
+     * The base rule was raised to 26px for the squint test and this override
+     * silently undid it on every phone at or below 400px — which is the device
+     * the audit measured on and the one most of this site's traffic uses. The
+     * title beside it is 16px here, so 23px keeps the price clearly first
+     * without crowding a long Arabic model name.
+     */
+    font-size: 23px;
   }
 
   .asq-card__title,
@@ -2390,5 +2399,31 @@
 
   .asq-card__cta {
     inline-size: 100%;
+  }
+}
+
+/*
+ * The price, written the same way wherever a card appears.
+ *
+ * The home row and the recommendations row use their own card markup rather
+ * than ListingCard, and they styled the price as 20px/500 terracotta while the
+ * browse card used 23-26px/700 ink. One marketplace, one car, two different
+ * answers about the most important number on it — and terracotta is reserved
+ * for actions here, so a price in it reads as a control.
+ *
+ * Matches .asq-card__price deliberately, including the mobile step, so the two
+ * cannot drift again while both card components exist.
+ */
+.asq-price-strong {
+  font-family: $font-1;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: $color-2;
+}
+
+@media only screen and (max-width: 400px) {
+  .asq-price-strong {
+    font-size: 23px;
   }
 }

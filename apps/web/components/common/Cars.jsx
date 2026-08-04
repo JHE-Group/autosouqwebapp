@@ -166,7 +166,20 @@ export default async function Cars({
                       {car.title}
                     </Link>
                   </h3>
-                  <div className="money fs-20 fw-5 lh-25 text-color-3">
+                  {/*
+                  Same treatment as the browse card's price.
+                    
+                  Measured on the same car: 20px/500 in terracotta here
+                  against 23px/700 in ink on /used-cars. Two cards for one
+                  marketplace disagreeing about how to write the one number a
+                  buyer came to read — and terracotta is the accent this
+                  codebase reserves for ACTIONS, so a price wearing it reads
+                  as something to tap.
+                    
+                  The real fix is one card component; this is the divergence
+                  that actually shows, fixed without a refactor.
+                  */}
+                  <div className="money asq-price-strong">
                     {formatPrice(car.price, car.currency, locale)}
                   </div>
                   <ListingSignals car={car} locale={locale} className="mt-2" />
