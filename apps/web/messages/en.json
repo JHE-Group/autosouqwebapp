@@ -325,7 +325,8 @@
       "sortBy": "Sort by"
     },
     "notice": {
-      "noAccounts": "There is no account system yet, so there is no password to change. The rules below are the ones that will apply when there is."
+      "noAccounts": "There is no account system yet, so there is no password to change. The rules below are the ones that will apply when there is.",
+      "noRecovery": "Changing your password here works. Recovering a forgotten one does not yet — there is no reset email, so if you lose your password you will need to contact us. We would rather say that than show you a link that goes nowhere."
     },
     "sidebar": {
       "profile": "Profile",
@@ -342,7 +343,21 @@
     "password": {
       "current": "Current password",
       "new": "New password",
-      "confirm": "Confirm password"
+      "confirm": "Confirm password",
+      "saving": "Changing…",
+      "changed": "Your password has been changed. You are still signed in on this device.",
+      "mismatch": "The two passwords do not match.",
+      "rule": {
+        "number": "One number",
+        "lower": "One lowercase character",
+        "upper": "One uppercase character",
+        "length": "8 characters minimum"
+      },
+      "error": {
+        "badCurrent": "That is not your current password.",
+        "unavailable": "We could not reach the server. Nothing has changed — try again in a moment.",
+        "failed": "The password could not be changed."
+      }
     },
     "profile": {
       "title": "Edit profile",

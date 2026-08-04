@@ -3,28 +3,63 @@ import { useTranslations } from "next-intl";
 import React, { useState } from "react";
 
 const RULES = [
-  { id: "number", labelEn: "One number", test: (v) => /\d/.test(v) },
-  {
-    id: "lower",
-    labelEn: "One lowercase character",
-    test: (v) => /[a-z]/.test(v),
-  },
-  {
-    id: "upper",
-    labelEn: "One uppercase character",
-    test: (v) => /[A-Z]/.test(v),
-  },
-  { id: "length", labelEn: "8 characters minimum", test: (v) => v.length >= 8 },
+  { id: "number", test: (v) => /\d/.test(v) },
+  { id: "lower", test: (v) => /[a-z]/.test(v) },
+  { id: "upper", test: (v) => /[A-Z]/.test(v) },
+  { id: "length", test: (v) => v.length >= 8 },
 ];
 
 export default function ChangePass() {
   const t = useTranslations("dashboard");
+  const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [state, setState] = useState("idle");
+  const [error, setError] = useState(null);
 
   const met = RULES.filter((rule) => rule.test(next));
   const mismatch = confirm.length > 0 && confirm !== next;
-  const canSubmit = met.length === RULES.length && confirm === next && !!next;
+  const canSubmit =
+    met.length === RULES.length &&
+    confirm === next &&
+    !!next &&
+    !!current &&
+    state !== "saving";
+
+  /**
+   * The CMS owns the check on the current password — this only proxies. Codes
+   * rather than the CMS's own English, because Strapi's messages are
+   * unlocalised and occasionally describe its internals.
+   */
+  const submit = async () => {
+    if (!canSubmit) return;
+    setState("saving");
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: current,
+          password: next,
+          passwordConfirmation: confirm,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (data?.ok) {
+        setState("done");
+        setCurrent("");
+        setNext("");
+        setConfirm("");
+        return;
+      }
+      setState("failed");
+      setError(data?.code ?? "failed");
+    } catch {
+      setState("failed");
+      setError("unavailable");
+    }
+  };
 
   return (
     <div className="container">
@@ -35,7 +70,7 @@ export default function ChangePass() {
               <div className="tfcl-dashboard">
                 <h1 className="admin-title mb-3">{t("page.changePassword")}</h1>
                 <div className="tfcl-notice" role="note">
-                  {t("notice.noAccounts")}
+                  {t("notice.noRecovery")}
                 </div>
                 <div className="tfcl-add-listing profile-inner">
                   {/* No submit path exists — there is no auth backend, so this
@@ -52,6 +87,8 @@ export default function ChangePass() {
                         className="form-control"
                         name="old_password"
                         placeholder={t("password.current")}
+                        value={current}
+                        onChange={(e) => setCurrent(e.target.value)}
                       />
                     </div>
                     <div className="form-group">
@@ -76,7 +113,7 @@ export default function ChangePass() {
                           key={rule.id}
                           className={rule.test(next) ? "check" : ""}
                         >
-                          <span>{rule.labelEn}</span>
+                          <span>{t(`password.rule.${rule.id}`)}</span>
                         </li>
                       ))}
                     </ul>
@@ -95,7 +132,7 @@ export default function ChangePass() {
                       />
                       {mismatch ? (
                         <p className="tfcl-amber" role="alert">
-                          The two passwords do not match.
+                          {t("password.mismatch")}
                         </p>
                       ) : null}
                     </div>
@@ -103,12 +140,25 @@ export default function ChangePass() {
                       <button
                         type="button"
                         className="pre-btn"
+                        onClick={submit}
                         disabled={!canSubmit}
                         style={canSubmit ? undefined : DISABLED}
                       >
-                        Change password
+                        {state === "saving"
+                          ? t("password.saving")
+                          : t("page.changePassword")}
                       </button>
                     </div>
+                    {state === "done" ? (
+                      <p className="tfcl-notice" role="status">
+                        {t("password.changed")}
+                      </p>
+                    ) : null}
+                    {state === "failed" ? (
+                      <p className="tfcl-amber" role="alert">
+                        {t(`password.error.${error === "bad_current_password" ? "badCurrent" : error === "unavailable" ? "unavailable" : "failed"}`)}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </div>
