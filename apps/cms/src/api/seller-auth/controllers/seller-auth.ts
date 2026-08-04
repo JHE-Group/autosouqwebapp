@@ -91,6 +91,35 @@ type ListingsCtx = {
   unauthorized: (message: string) => unknown;
 };
 
+/**
+ * Patch ONE column on the published row, touching nothing else.
+ *
+ * `documents().update({ status: 'published' })` cannot be used for this, and
+ * the reason is the whole point of this helper. In Strapi 5 that call does not
+ * patch the published version — it takes the DRAFT's current content, applies
+ * the data, and writes the result as the published version. So a seller who had
+ * repriced their draft from OMR 2,000 to 5,555 and then pressed "mark sold"
+ * pushed the unreviewed 5,555 live along with it. Reproduced exactly:
+ * draft=5555 published=2000 before, draft=5555 published=5555 after.
+ *
+ * That defeats the entire review model. Editing goes to the draft precisely so
+ * a moderator sees a change before a buyer does, and any status call was
+ * silently promoting every pending edit.
+ *
+ * The query engine writes columns, not documents, so it changes the one field
+ * asked for and leaves the rest of the published row alone.
+ */
+async function patchPublished(
+  strapi: Core.Strapi,
+  documentId: string,
+  data: Record<string, unknown>,
+) {
+  await strapi.db.query('api::listing.listing').updateMany({
+    where: { documentId, publishedAt: { $notNull: true } },
+    data,
+  });
+}
+
 type ProfileCtx = ListingsCtx & {
   request?: { body?: { fullName?: string; whatsapp?: string } };
   badRequest: (message: string) => unknown;
@@ -454,10 +483,8 @@ export default {
         data: stamp,
       });
       if (liveVersion) {
-        await strapi.documents('api::listing.listing').update({
-          documentId,
-          status: 'published',
-          data: stamp,
+        await patchPublished(strapi, documentId, {
+          availabilityConfirmedAt: now,
         });
       }
       ctx.body = { data: { documentId, availabilityConfirmedAt: now } };
@@ -488,13 +515,10 @@ export default {
       data,
     });
     if (liveVersion) {
-      // Only when one already exists. A pending car can still be marked sold —
-      // the draft carries it — but saying so must never be what publishes it.
-      await strapi.documents('api::listing.listing').update({
-        documentId,
-        status: 'published',
-        data,
-      });
+      // Only when one already exists, and only this column. A pending car can
+      // still be marked sold — the draft carries it — but saying so must
+      // neither publish the listing nor promote an unreviewed edit with it.
+      await patchPublished(strapi, documentId, { listingStatus });
     }
 
     ctx.body = { data: { documentId, listingStatus } };
