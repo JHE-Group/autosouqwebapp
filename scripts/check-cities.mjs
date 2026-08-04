@@ -1,34 +1,40 @@
 #!/usr/bin/env node
 /**
- * Every place the form offers must reach a CMS city row — directly, or through
- * a parent.
+ * Three lists in three places have to agree about Omani geography.
  *
- * The form offered 24 places and apps/cms/src/index.ts seeded six, so 18 of
- * them resolved to nothing. `resolveRelations` logs a warning and files the
- * listing anyway, by design, so nobody found out: the seller was asked for
- * their location, answered, and the answer was dropped between the form and
- * the database.
+ *   apps/web/lib/omanCities.js         what the seller can choose
+ *   apps/cms/src/index.ts              what the CMS can store
+ *   apps/web/data/muscatLocalities.js  what /used-cars/muscat counts
  *
- * It cost more than a field. The city relation composes the public URL and
- * decides facet membership, so the Muscat-area sellers — most sellers — filed
- * cars that joined no city facet, while `/used-cars/muscat` waited for enough
- * listings to exist. The people who would have unlocked it were the ones being
- * dropped.
+ * None of them imports another, and a disagreement between them fails
+ * silently in both directions.
  *
- * Two lists in two apps that must agree, with no import between them, is
- * exactly the shape that drifts. So: assert it.
+ * It already had. The form offered 24 places and the CMS seeded six, so 18
+ * resolved to nothing — resolveRelations logs a warning and files the listing
+ * anyway, deliberately, so that a vocabulary gap never blocks a seller. The
+ * effect was that a seller in Ruwi answered the location question and the
+ * answer was thrown away, taking the listing's place in every city facet with
+ * it, while `/used-cars/muscat` waited for five listings that the Muscat-area
+ * sellers were being prevented from contributing.
+ *
+ * The first fix mapped those places onto "Muscat" when the listing was written.
+ * That passed the facet gate and was still wrong: muscatLocalities.js already
+ * aggregates at READ time, and flattening on write discards the locality for
+ * good — which forecloses the neighbourhood facet pages that file's header
+ * plans for. So every place now has its own row, and this checks all three
+ * agree.
  *
  * Run: node scripts/check-cities.mjs   (also `pnpm check:cities`)
  */
 import { readFileSync } from "node:fs";
-import { OMAN_CITIES, cityParent } from "../apps/web/lib/omanCities.js";
+import { OMAN_CITIES } from "../apps/web/lib/omanCities.js";
+import { MUSCAT_LISTING_LOCATIONS } from "../apps/web/data/muscatLocalities.js";
 
 const src = readFileSync(
   new URL("../apps/cms/src/index.ts", import.meta.url),
   "utf8",
 );
 
-// The city seed block, read out of the CMS rather than duplicated here.
 const block = src.match(/cities\s*(?::[^=]*)?=\s*\[(.*?)\n\s*\];/s);
 if (!block) {
   console.error(
@@ -37,61 +43,69 @@ if (!block) {
   );
   process.exit(1);
 }
-const cmsCities = [...block[1].matchAll(/name:\s*"([^"]+)"/g)].map((m) => m[1]);
 
-if (cmsCities.length < 3) {
-  console.error(`✗ parsed only ${cmsCities.length} CMS cities — check went blind`);
+const cms = [...block[1].matchAll(/name:\s*"([^"]+)",\s*nameAr:\s*"([^"]+)",\s*slug:\s*"([^"]+)"/g)]
+  .map(([, name, nameAr, slug]) => ({ name, nameAr, slug }));
+
+if (cms.length < 10) {
+  console.error(`✗ parsed only ${cms.length} CMS cities — check went blind`);
   process.exit(1);
 }
 
-const known = new Set(cmsCities.map((c) => c.toLowerCase()));
-const unreachable = [];
+const problems = [];
+const byName = new Map(cms.map((c) => [c.name.toLowerCase(), c]));
 
+// 1. Every place the form offers must be storable.
 for (const city of OMAN_CITIES) {
-  if (known.has(city.en.toLowerCase())) continue;
-  const parent = cityParent(city.en);
-  if (parent && known.has(parent.toLowerCase())) continue;
-  unreachable.push(city.en);
+  if (!byName.has(city.en.toLowerCase())) {
+    problems.push(
+      `"${city.en}" is in the seller's dropdown and has no CMS row — the ` +
+        `answer will be discarded silently`,
+    );
+  }
+}
+
+// 2. Arabic labels must match, or an Arabic seller's choice misses pickTaxonomy
+//    on the nameAr candidate and falls through to a different row.
+for (const city of OMAN_CITIES) {
+  const row = byName.get(city.en.toLowerCase());
+  if (row && row.nameAr !== city.ar) {
+    problems.push(
+      `"${city.en}" is «${city.ar}» in the form and «${row.nameAr}» in the CMS`,
+    );
+  }
 }
 
 /**
- * Empty, and it should stay that way.
- *
- * It held Ibri, Rustaq, Ibra, Buraimi and Khasab — separate cities in other
- * governorates that the form offered and the CMS had no row for, so a seller in
- * any of them answered the question and had the answer discarded. They were
- * seeded on the CMS branch, and this check failing on "no longer missing" is
- * what said so.
- *
- * Anything added here again is a place the form asks about and cannot store.
- * That is a deliberate, temporary state, not a resting one.
+ * 3. isMuscatListing compares a listing's citySlug against these names with
+ *    spaces turned to hyphens. A CMS slug in any other shape drops the car out
+ *    of /used-cars/muscat without changing anything visible.
  */
-const KNOWN_MISSING = [];
+const slugOf = (name) => name.toLowerCase().replace(/\s+/g, "-");
+for (const name of MUSCAT_LISTING_LOCATIONS) {
+  const row = byName.get(name.toLowerCase());
+  if (!row) continue; // Not offered by the form yet; forward-compatible.
+  if (row.slug !== slugOf(name)) {
+    problems.push(
+      `"${name}" has CMS slug "${row.slug}" but isMuscatListing looks for ` +
+        `"${slugOf(name)}" — this car will not count toward /used-cars/muscat`,
+    );
+  }
+}
 
-const unexpected = unreachable.filter((c) => !KNOWN_MISSING.includes(c));
-const fixed = KNOWN_MISSING.filter((c) => !unreachable.includes(c));
-
-if (unexpected.length) {
+if (problems.length) {
   console.error(
-    "✗ places the form offers that reach no CMS city:\n" +
-      unexpected.map((c) => `  ${c} — add a CMS row, or give it a parent`).join("\n"),
+    "✗ the form, the CMS and the Muscat facet disagree:\n" +
+      problems.map((p) => "  " + p).join("\n"),
   );
   process.exit(1);
 }
 
-if (fixed.length) {
-  console.error(
-    "✗ these are no longer missing — remove them from KNOWN_MISSING:\n" +
-      fixed.map((c) => "  " + c).join("\n"),
-  );
-  process.exit(1);
-}
-
-const viaParent = OMAN_CITIES.filter(
-  (c) => !known.has(c.en.toLowerCase()) && cityParent(c.en),
+const muscatRows = MUSCAT_LISTING_LOCATIONS.filter((n) =>
+  byName.has(n.toLowerCase()),
 ).length;
 
 console.log(
-  `✓ ${OMAN_CITIES.length - unreachable.length}/${OMAN_CITIES.length} places reach a CMS city ` +
-    `(${viaParent} via a parent); ${KNOWN_MISSING.length} known-missing await CMS rows`,
+  `✓ all ${OMAN_CITIES.length} places the form offers have a CMS row with a ` +
+    `matching Arabic name; ${muscatRows} of them count toward /used-cars/muscat`,
 );

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { foldDigits } from "@/lib/format";
-import { cityParent } from "@/lib/omanCities";
 import { slugifyTitle } from "@/lib/slugifyTitle";
 import { getSession, getToken } from "@/lib/auth";
 
@@ -180,19 +179,7 @@ async function resolveRelations(form) {
       }
 
       const rows = (await res.json())?.data ?? [];
-      let hit = pickTaxonomy(rows, value);
-
-      /*
-       * A place the CMS does not carry as its own row may still belong to one
-       * it does. Seeb, Ruwi and Al Khuwair are Muscat Governorate; filing them
-       * under Muscat is what the geography says and what keeps them inside the
-       * facet, rather than dropping the seller's answer on the floor. The
-       * specific area survives in the description either way.
-       */
-      if (!hit && field === "city") {
-        const parent = cityParent(value);
-        if (parent) hit = pickTaxonomy(rows, parent);
-      }
+      const hit = pickTaxonomy(rows, value);
 
       if (hit) {
         relations[field] = hit.documentId ?? null;

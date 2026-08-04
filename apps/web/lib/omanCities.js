@@ -1,55 +1,42 @@
 /**
- * The places a seller can choose, and what the CMS can actually store.
+ * The places a seller can choose, in the order the dropdown shows them.
  *
- * These are not the same list, and the gap was silent. The form offers 24
- * places; apps/cms/src/index.ts seeds six city rows — Muscat, Salalah, Sohar,
- * Nizwa, Sur, Barka. `pickTaxonomy` missed on the other 18, `resolveRelations`
- * logged a warning and filed the listing anyway by design, and the seller was
- * never told their answer had gone.
+ * Every one of these now has its own CMS city row. That was not true until
+ * 2026-08-04: the form offered 24 places, apps/cms seeded six, and the other 18
+ * resolved to nothing — resolveRelations logged a warning and filed the listing
+ * anyway by design, so the seller's answer was dropped between the form and the
+ * database without anything failing.
  *
- * The cost was not only a missing field. The city relation composes the public
- * URL and decides facet membership, so a seller in Ruwi or Al Khuwair — which
- * is most sellers, this being where the cars are — produced a listing that
- * joined no city facet at all. `/used-cars/muscat` needs MIN_LISTINGS_FOR_FACET
- * behind it before it exists, and the sellers most likely to unlock it were the
- * ones being dropped.
+ * An earlier version of this file mapped the Muscat-area places onto "Muscat"
+ * at write time, to keep them inside the facet. That was the wrong branch of a
+ * decision the codebase had already made. data/muscatLocalities.js aggregates
+ * them at READ time — `isMuscatListing` matches a listing's citySlug against
+ * the sixteen Muscat-area locations and rolls all of them onto
+ * /used-cars/muscat — so the facet gate counts a Ruwi car exactly as it counts
+ * a Muscat car, and the listing still says Ruwi. Flattening on write passed the
+ * same gate and lost the locality permanently, which forecloses the
+ * neighbourhood facet pages that file plans for.
  *
- * So `parent` rather than 18 new taxonomy rows. Seeb, Bawshar, Muttrah, Al
- * Amarat and Quriyat are wilayats of Muscat Governorate; Al Khuwair, Ruwi,
- * Qurum and the rest are neighbourhoods inside them. Making each a peer of
- * Muscat would split one facet nine ways and leave every part below the gate.
- * Relating them to Muscat concentrates it, which is both what the geography
- * says and what the site needs.
- *
- * Nothing the seller said is lost: buildDescription already writes
- * `Location: {city} — {area}` into the listing prose, so "Ruwi" survives as
- * text on the page while the relation says Muscat.
- *
- * Five places have no parent and no CMS row — Ibri, Rustaq, Ibra, Buraimi,
- * Khasab. They are genuinely separate cities in other governorates and want
- * their own rows, which is a CMS-branch change. Until then they resolve to
- * nothing, exactly as before, and the seller's answer still reaches the
- * description.
+ * So: no mapping here. One row per place, and the aggregation stays where it
+ * was designed to be. scripts/check-cities.mjs holds the three lists together.
  */
-
-const MUSCAT = "Muscat";
 
 export const OMAN_CITIES = [
   // Muscat Governorate first — highest listing volume (seo-research §3.5).
   { en: "Muscat", ar: "مسقط" },
-  { en: "Seeb", ar: "السيب", parent: MUSCAT },
-  { en: "Bawshar", ar: "بوشر", parent: MUSCAT },
-  { en: "Muttrah", ar: "مطرح", parent: MUSCAT },
-  { en: "Al Amarat", ar: "العامرات", parent: MUSCAT },
-  { en: "Al Khuwair", ar: "الخوير", parent: MUSCAT },
-  { en: "Al Ghubrah", ar: "الغبرة", parent: MUSCAT },
-  { en: "Azaiba", ar: "العذيبة", parent: MUSCAT },
-  { en: "Ruwi", ar: "روي", parent: MUSCAT },
-  { en: "Qurum", ar: "القرم", parent: MUSCAT },
-  { en: "Al Mawaleh", ar: "الموالح", parent: MUSCAT },
-  { en: "Al Khoud", ar: "الخوض", parent: MUSCAT },
-  { en: "Al Maabilah", ar: "المعبيلة", parent: MUSCAT },
-  { en: "Quriyat", ar: "قريات", parent: MUSCAT },
+  { en: "Seeb", ar: "السيب" },
+  { en: "Bawshar", ar: "بوشر" },
+  { en: "Muttrah", ar: "مطرح" },
+  { en: "Al Amarat", ar: "العامرات" },
+  { en: "Al Khuwair", ar: "الخوير" },
+  { en: "Al Ghubrah", ar: "الغبرة" },
+  { en: "Azaiba", ar: "العذيبة" },
+  { en: "Ruwi", ar: "روي" },
+  { en: "Qurum", ar: "القرم" },
+  { en: "Al Mawaleh", ar: "الموالح" },
+  { en: "Al Khoud", ar: "الخوض" },
+  { en: "Al Maabilah", ar: "المعبيلة" },
+  { en: "Quriyat", ar: "قريات" },
   // Rest of Oman
   { en: "Sohar", ar: "صحار" },
   { en: "Barka", ar: "بركاء" },
@@ -63,18 +50,3 @@ export const OMAN_CITIES = [
   { en: "Khasab", ar: "خصب" },
 ];
 
-/**
- * The city a place should be filed under, or null if it is already one.
- *
- * Matches on either language, because the form stores whichever label the
- * seller picked and Arabic is the default locale.
- */
-export function cityParent(value) {
-  const wanted = String(value ?? "").trim().toLowerCase();
-  if (!wanted) return null;
-  const hit = OMAN_CITIES.find(
-    (city) =>
-      city.en.toLowerCase() === wanted || city.ar === String(value).trim(),
-  );
-  return hit?.parent ?? null;
-}
