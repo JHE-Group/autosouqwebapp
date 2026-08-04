@@ -1,0 +1,17 @@
+import { BASE, browser } from "./lib.mjs";
+const b = await browser();
+const p = await b.newPage({ viewport: { width: 1400, height: 1400 } });
+await p.goto(`${BASE}/ar/used-cars?price=1500-2500`, { waitUntil: "domcontentloaded" });
+await p.waitForSelector(".asq-toolbar");
+await p.waitForTimeout(1500);
+console.log("PRICES:", await p.$$eval("article.asq-card .asq-card__price", e=>e.map(x=>x.textContent)));
+console.log("CHIPS:", await p.$$eval('button[aria-label^="إزالة"]', e=>e.map(x=>x.parentElement.textContent)));
+console.log("COUNT:", await p.locator(".asq-toolbar__count").first().textContent());
+const labels = await p.$$eval("[role=slider]", e=>e.map(x=>JSON.stringify(x.getAttribute("aria-label"))+" now="+x.getAttribute("aria-valuenow")));
+console.log("SLIDERS closed:\n"+labels.join("\n"));
+await p.locator("button.icon-filter").click();
+await p.waitForTimeout(600);
+const l2 = await p.$$eval("[role=slider]", e=>e.map(x=>JSON.stringify(x.getAttribute("aria-label"))+" now="+x.getAttribute("aria-valuenow")));
+console.log("SLIDERS open:\n"+l2.join("\n"));
+console.log("panel show?", await p.locator("div.wd-search-form.show").count());
+await b.close();

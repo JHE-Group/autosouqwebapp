@@ -19,6 +19,7 @@
     "test:carousels": "node scripts/test-carousels.mjs",
     "test:sell": "node scripts/test-sell-flow.mjs",
     "test:buy": "node scripts/test-buy-flow.mjs",
+    "test:journey": "node scripts/test-seller-journey.mjs",
     "test:flows": "pnpm test:sell && pnpm test:buy",
     "check:photos": "node scripts/check-listing-photos.mjs"
   },
