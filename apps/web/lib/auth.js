@@ -117,7 +117,7 @@ function clientIp(request) {
   return first || request?.headers?.get?.("x-real-ip") || "";
 }
 
-async function cmsPost(path, body, { cookie, clientAddress } = {}) {
+async function cmsPost(path, body, { cookie, clientAddress, bearer } = {}) {
   try {
     const res = await fetch(`${STRAPI_URL}${path}`, {
       method: "POST",
@@ -125,6 +125,9 @@ async function cmsPost(path, body, { cookie, clientAddress } = {}) {
         "Content-Type": "application/json",
         ...(clientAddress ? { "X-Autosouq-Client-IP": clientAddress } : {}),
         ...(cookie ? { Cookie: cookie } : {}),
+        // Only /api/auth/logout uses this: it is an authenticated route, so it
+        // needs the access token as well as the refresh cookie.
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
       },
       body: JSON.stringify(body ?? {}),
       cache: "no-store",
@@ -290,9 +293,61 @@ export async function startSession(refreshCookie) {
   return true;
 }
 
-/** Drop it. */
+/**
+ * Sign out for real: revoke the session at the CMS, then drop the cookie.
+ *
+ * This used to be the `jar.set(..., maxAge: 0)` line alone, and that is not a
+ * sign-out — it is hiding the key rather than changing the lock. Verified on
+ * localhost: a copy of the cookie value taken before sign-out still rendered
+ * the seller's own dashboard afterwards and still minted fresh CMS access
+ * tokens, because not one database row had changed.
+ *
+ * Two subtleties, both of which a "looks right" fix gets wrong:
+ *
+ * 1. **`scope: "all"` is required, not a nicety.** getToken() below trades the
+ *    cookie for an access token on every request and throws away the rotated
+ *    cookie the CMS hands back, so what we store is permanently the ROOT of a
+ *    rotation family. A default-scope logout deletes only the current leaf,
+ *    and Strapi's rotate path returns an existing child for a known parent
+ *    without checking the parent's status — so the held cookie mints a
+ *    replacement immediately. Measured: rows for the user went 3 → 2, and the
+ *    same cookie then refreshed successfully. With `scope: "all"` they go to 0
+ *    and the cookie 401s.
+ *
+ * 2. **The cookie is cleared whatever happens.** A CMS that is down must not
+ *    leave someone unable to sign out of a shared phone, which is the case
+ *    this actually protects. Revocation is the better outcome; clearing is the
+ *    guaranteed one.
+ *
+ * The trade is that signing out on one device signs the seller out everywhere.
+ * For a marketplace account on a shared family phone that is the behaviour you
+ * want. Per-device sign-out would mean passing a deviceId at login and
+ * revoking by it — worth doing only if sellers ever ask.
+ */
 export async function endSession() {
   const jar = await cookies();
+  const refreshCookie = jar.get(COOKIE)?.value;
+
+  if (refreshCookie) {
+    try {
+      const minted = await cmsPost(
+        "/api/auth/refresh",
+        {},
+        { cookie: refreshCookie },
+      );
+      const jwt = minted.ok ? minted.data?.jwt : null;
+      if (jwt) {
+        await cmsPost(
+          "/api/auth/logout",
+          { scope: "all" },
+          { bearer: jwt, cookie: refreshCookie },
+        );
+      }
+    } catch {
+      // Deliberately swallowed — see (2) above. The cookie still goes.
+    }
+  }
+
   jar.set(COOKIE, "", { ...COOKIE_OPTIONS, maxAge: 0 });
 }
 

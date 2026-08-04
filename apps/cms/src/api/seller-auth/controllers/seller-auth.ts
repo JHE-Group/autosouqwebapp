@@ -626,10 +626,20 @@ export default {
    * saying "Accounts are not switched on yet, so nothing on this page is
    * saved". Accounts had been switched on for weeks.
    *
-   * Two fields, because two is what the user model holds. The form also asked
-   * for a phone, a city, an area and an "about" paragraph; none of them exist
-   * on the content type and nothing renders a seller profile to buyers, so
-   * they are gone from the form rather than given columns nobody reads.
+   * Two fields, because two is all there is anywhere to SHOW — not because the
+   * others are missing. An earlier version of this comment claimed phone, city,
+   * area and "about" did not exist on the content type. They do: all four are
+   * declared in the users-permissions schema.json a couple of directories from
+   * here, and all four are columns on `up_users`. The claim was wrong here and
+   * in apps/web's MyProfile.jsx, both written in the same commit, and it is
+   * corrected rather than deleted so the next reader does not check the schema,
+   * find the columns, and helpfully restore the fields.
+   *
+   * What is true is that nothing READS them. `seller` is `private: true` on the
+   * listing, so the public API refuses to populate it, and there is no seller
+   * profile page for the values to land on. The business-facing about, city and
+   * area live on api::showroom, which /showrooms/[slug] renders. Accepting them
+   * here would write columns no buyer can reach.
    *
    * Deliberately NOT the users-permissions update route. That takes the whole
    * user object, so exposing it would let a seller write `role`, `confirmed`

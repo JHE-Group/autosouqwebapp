@@ -17,12 +17,28 @@ import ShowroomApplication from "./ShowroomApplication";
  *
  * It now saves, and it asks only for what there is somewhere to put.
  *
- * **Four fields are gone rather than wired.** The form asked for a phone, a
- * city, an area and an "about" paragraph. None exists on the user content type,
- * and nothing anywhere renders a seller profile to a buyer — there is no
- * /seller/:id page — so wiring them would have meant adding four columns nobody
- * reads to make a form look complete. The avatar uploader goes for the same
- * reason: no image field, no public profile to show it on.
+ * **Four fields and the avatar are left out — and not because they are
+ * missing.** An earlier version of this comment said phone, city, area and an
+ * "about" paragraph "do not exist on the user content type", and that the
+ * avatar had "no image field". Both were false when written. All five are
+ * declared on the users-permissions User (see the extension's schema.json) and
+ * all five are real columns on `up_users`; they were added in d4e1246. The
+ * correction is recorded here rather than quietly fixed, because the next
+ * reader who checks the schema would otherwise conclude the fields had been
+ * dropped by accident and helpfully restore them.
+ *
+ * The decision was right for a different reason, and that reason still holds:
+ * **nothing reads them.** `seller` is `private: true` on the listing, so the
+ * public API will not populate it at all — it answers a `populate[seller]`
+ * with "Invalid key seller" — and there is no /seller/:id page for the values
+ * to appear on. Wiring them would give a seller a form that writes to columns
+ * no buyer can ever reach, which is the same "complete-looking control that
+ * quietly discards what you give it" this file exists to correct, only subtler.
+ *
+ * The buyer-facing version of these fields already exists elsewhere: about,
+ * city, area and a logo live on api::showroom, which /showrooms/[slug]
+ * actually renders. That is the thing to reach for if a public seller profile
+ * is ever wanted — not four columns bolted onto the account.
  *
  * **Email is shown and not editable.** It is the sign-in identity, so changing
  * it is a re-verification flow rather than a text field, and there is no

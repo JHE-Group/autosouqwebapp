@@ -101,6 +101,23 @@ const PUBLIC_DENIED_ACTIONS = [
  * does not.
  */
 const AUTHENTICATED_ACTIONS = [
+  /**
+   * Signing out, which has to be granted or sign-out silently does nothing.
+   *
+   * apps/web's endSession() calls /api/auth/logout to revoke the seller's
+   * sessions at the CMS rather than only dropping the local cookie. That route
+   * is authenticated, so without this row it answers 403, the web app swallows
+   * the failure by design, and sign-out quietly degrades to what it used to be
+   * — a deleted cookie over a session that is still live.
+   *
+   * Granted at boot rather than left to the admin UI for the same reason as
+   * every other row here: permissions are per-environment database rows, so an
+   * action that works locally can be missing in production with no code
+   * difference to show for it. Three endpoints returned 403 to every seller
+   * that way once already.
+   */
+  "plugin::users-permissions.auth.logout",
+
   "api::listing.listing.create",
   "api::listing.listing.update",
   "api::listing.listing.delete",
