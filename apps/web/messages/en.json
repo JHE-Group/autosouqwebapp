@@ -587,7 +587,8 @@
     "metaTitle": "Add a listing — Autosouq.om",
     "metaDescription": "Tell us about your car. We check every listing before it goes live.",
     "submitSignedOut": "You have been signed out. Please sign in again — your listing has not been lost.",
-    "submitting": "Submitting…"
+    "submitting": "Submitting…",
+    "submitTooLarge": "Those photos were too large to send together. Remove one or two of the biggest and try again — the rest of your listing is still here."
   },
   "blog": {
     "brand": "Autosouq.om",

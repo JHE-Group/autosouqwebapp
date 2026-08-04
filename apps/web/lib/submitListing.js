@@ -154,6 +154,64 @@ function submitViaWhatsApp(form, { locale, title }) {
  * larger, and ten photos from a phone camera is exactly the payload where a
  * third matters most, on exactly the connection least able to spare it.
  */
+/**
+ * Vercel caps a serverless function's request body at 4.5 MB and rejects it at
+ * the edge — FUNCTION_PAYLOAD_TOO_LARGE, before the handler runs. So
+ * api/listings' own limits (MAX_PHOTOS 10, MAX_PHOTO_BYTES 6 MB) describe a
+ * request that can never arrive, and none of its careful named errors execute.
+ *
+ * Ten photos at a 1600px edge and q0.82 are roughly 300-600 KB each. That is
+ * 3-6 MB: under the cap for a modest phone camera, over it for a good one. The
+ * seller with the better photos is the one who loses the submission, and what
+ * they saw was a generic failure — a 413 is not JSON, so `data` came back null
+ * and the reason was reported as "rejected" with no message at all.
+ *
+ * Rather than fail, fit. Re-encode at descending quality until the batch is
+ * under budget, worst-offender first. Quality drops before dimensions do,
+ * because a 1600px photo at q0.6 still reads as the same car while a 900px one
+ * stops showing the panel gap the buyer is looking for.
+ */
+const PAYLOAD_BUDGET = 3.9 * 1024 * 1024; // 4.5 MB cap, less form fields and
+                                          // multipart boundaries.
+
+async function reencode(dataUrl, quality) {
+  if (typeof document === "undefined") return dataUrl;
+  const img = new Image();
+  img.src = dataUrl;
+  try {
+    await img.decode();
+  } catch {
+    return dataUrl;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvas.getContext("2d").drawImage(img, 0, 0);
+  return canvas.toDataURL("image/jpeg", quality);
+}
+
+/** Rough byte count of a data URL without allocating the bytes. */
+function dataUrlBytes(dataUrl) {
+  const encoded = String(dataUrl).split(",")[1] ?? "";
+  return Math.floor((encoded.length * 3) / 4);
+}
+
+export async function fitPhotoBudget(images, budget = PAYLOAD_BUDGET) {
+  let current = [...images];
+  let total = current.reduce((n, d) => n + dataUrlBytes(d), 0);
+  if (total <= budget) return current;
+
+  for (const quality of [0.72, 0.62, 0.52, 0.42]) {
+    current = await Promise.all(current.map((d) => reencode(d, quality)));
+    total = current.reduce((n, d) => n + dataUrlBytes(d), 0);
+    if (total <= budget) return current;
+  }
+  // Still over after the lowest quality worth shipping: the caller decides
+  // whether to drop photos or tell the seller. Returning what we have keeps
+  // this function honest about what it did.
+  return current;
+}
+
 function dataUrlToFile(dataUrl, index) {
   const [header, encoded] = String(dataUrl).split(",");
   if (!encoded) return null;
@@ -184,7 +242,10 @@ async function submitViaApi(form, { locale, title, images = [] } = {}) {
     const body = new FormData();
     body.append("payload", JSON.stringify({ ...form, title }));
 
-    images.forEach((dataUrl, index) => {
+    // Shrink to fit before sending, not after being rejected.
+    const fitted = await fitPhotoBudget(images);
+
+    fitted.forEach((dataUrl, index) => {
       const file = dataUrlToFile(dataUrl, index);
       if (file) body.append("photos", file);
     });
@@ -199,6 +260,13 @@ async function submitViaApi(form, { locale, title, images = [] } = {}) {
       // The session went away mid-form. Say so specifically: "something went
       // wrong" would have them retyping a listing that was never the problem.
       return { ok: false, reason: "signed-out", error: data?.error };
+    }
+
+    // A 413 comes from the platform, not the route, so it is not JSON and
+    // `data` is null. Without this the seller was told nothing at all after
+    // filling the entire form and waiting out the upload.
+    if (res.status === 413) {
+      return { ok: false, reason: "too-large", error: data?.error };
     }
 
     if (!res.ok || !data?.ok) {

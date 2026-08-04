@@ -404,7 +404,9 @@ export default function AddListing({ makes = [] }) {
         ? "not-configured"
         : result.reason === "signed-out"
           ? "signed-out"
-          : "failed",
+          : result.reason === "too-large"
+            ? "too-large"
+            : "failed",
     );
   };
 
@@ -1859,6 +1861,15 @@ function StepReview({
           {submitState === "signed-out" && (
             <p className="tfcl-amber" role="alert">
               {tc("submitSignedOut")}
+            </p>
+          )}
+          {submitState === "too-large" && (
+            <p className="tfcl-amber" role="alert">
+              {/* The platform rejected the request before our route saw it, so
+                  there is no CMS message to show. Say what to do, because "it
+                  failed" after a long upload on a metered connection is the
+                  worst thing this form can say. */}
+              {tc("submitTooLarge")}
             </p>
           )}
           {submitState === "failed" && (
