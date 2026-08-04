@@ -111,6 +111,11 @@ const SELLER_MAY_SET_STATUS = new Set(['available', 'reserved', 'sold']);
 /** What a seller is shown about their own car. */
 const SELLER_LISTING_FIELDS = [
   'title',
+  // The moderator's decision, and what they want the seller to do about it.
+  // Both are in SELLER_MAY_NOT_SET, so they are readable here and writable
+  // only from the admin.
+  'moderationState',
+  'moderationNote',
   'slug',
   'price',
   'currency',
@@ -306,7 +311,23 @@ export default {
          * rows are the draft versions. Reading it directly is the bug this
          * replaces, which labelled every listing "pending" forever.
          */
-        state: liveIds.has(row.documentId) ? 'live' : 'pending',
+        /*
+         * Three states, not two.
+         *
+         * This read `live : pending`, so a car a moderator had turned down was
+         * indistinguishable from one nobody had looked at yet — and since
+         * declining a listing is just "leave it unpublished", the seller waited
+         * on a decision that had already been made, with no way to learn what
+         * was wrong or that anything had been decided at all.
+         *
+         * Published still wins: a live listing is live whatever the moderation
+         * field says, because what a buyer can see is the fact that matters.
+         */
+        state: liveIds.has(row.documentId)
+          ? 'live'
+          : row.moderationState === 'declined'
+            ? 'declined'
+            : 'pending',
       })),
     };
   },
