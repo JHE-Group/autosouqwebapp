@@ -500,11 +500,11 @@
     "sectionPhotos": "{count, plural, one {# photo} other {# photos}}",
     "sectionOptional": "Optional",
     "bandNote": "Autosouq lists cars from {stdMin} to {max} only. Cars from {asisMin} to {asisMax} are accepted but are published with a “{label}” label. Anything above {max} we cannot publish — that is the whole point of the site, not a limit we can lift.",
-    "submitted": "Sent — check WhatsApp",
-    "submittedBody": "Your car has been sent to us on WhatsApp. Send the photos in that same chat and we will check the listing and put it live. Nothing is published until we have.",
+    "submitted": "Sent for review",
+    "submittedBody": "Your car is with us, photos and all. A person reads every listing before it goes live, and we will call you on the number you gave if anything needs checking. Nothing is published until then.",
     "submitFailed": "That did not send. Nothing has reached us, so please do not assume we have your car — try again.",
-    "notConfigured": "Submitting is not switched on yet — there is no WhatsApp number configured to send this to. Your answers are kept on this phone only.",
-    "publishHint": "Opens WhatsApp with your answers as a message. You can read it before you send it.",
+    "notConfigured": "Submitting is not switched on yet. Your answers are kept on this phone only.",
+    "publishHint": "Sends your listing to Autosouq for review. Nothing goes live until a person has read it.",
     "startAnother": "List another car",
     "options": {
       "condition": {
@@ -586,7 +586,7 @@
     "readyNotice": "Everything required is here. Publishing sends the listing to Autosouq for checking — a person reads it, calls you, and it goes live after that. It does not appear on the site the moment you press the button.",
     "metaTitle": "Add a listing — Autosouq.om",
     "metaDescription": "Tell us about your car. We check every listing before it goes live.",
-    "submitSignedOut": "You have been signed out. Please sign in again — your listing has not been lost.",
+    "submitSignedOut": "We could not confirm your session. Your answers are saved on this phone, but the photos are not — so sign in again in a new tab and come back to this one, rather than leaving this page.",
     "submitting": "Submitting…",
     "submitTooLarge": "Those photos were too large to send together. Remove one or two of the biggest and try again — the rest of your listing is still here."
   },
