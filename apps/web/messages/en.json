@@ -369,31 +369,30 @@
     },
     "profile": {
       "title": "Edit profile",
-      "notice": "Accounts are not switched on yet, so nothing on this page is saved. It is here so you can see exactly what a buyer will be shown about you before we turn it on.",
-      "photo": "Photo",
-      "noPhoto": "No photo",
-      "upload": "Upload a photo",
-      "chooseFile": "Choose file",
-      "photoHint": "PNG or JPG, square, up to 4 MB. A smaller file loads faster for buyers on mobile data.",
-      "details": "Your details",
+      "notice": "This is what a buyer is told about you. Your WhatsApp number is the one they tap on your listings.",
       "detailsHint": "Your name and WhatsApp number are shown on every car you list. Buyers contact you on WhatsApp in one tap, so a wrong number means no calls.",
       "fullName": "Full name *",
       "fullNamePlaceholder": "Your name",
-      "about": "About you",
-      "aboutPlaceholder": "A line or two about yourself — buyers see this",
       "whatsapp": "WhatsApp number *",
       "otherPhone": "Other phone (optional)",
       "email": "Email address",
       "emailPlaceholder": "you@example.com",
-      "city": "City",
       "selectCity": "Select your city",
-      "area": "Area (optional)",
       "areaPlaceholder": "e.g. Al Khuwair",
       "save": "Save changes",
       "password": "Password",
       "passwordHint": "Change your password on its own page.",
       "changePassword": "Change password",
-      "avatarAlt": "Your profile photo"
+      "avatarAlt": "Your profile photo",
+      "whatsappHint": "An Omani mobile, eight digits starting 7 or 9. A landline cannot receive WhatsApp.",
+      "emailFixed": "This is how you sign in, so it cannot be changed here yet. Contact us if you need it moved.",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "error": {
+        "invalid": "Check your name and WhatsApp number.",
+        "unavailable": "We could not reach the server. Nothing has changed — try again in a moment.",
+        "failed": "Your profile could not be saved."
+      }
     }
   },
   "addListing": {

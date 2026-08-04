@@ -93,5 +93,18 @@ export default {
           middlewares: [],
         },
       },
+      {
+        method: 'PUT',
+        path: '/seller/profile',
+        handler: 'seller-auth.updateProfile',
+        config: {
+          // Authenticated; the controller reads the id from the token and
+          // writes exactly two fields. Not the users-permissions update route,
+          // which takes the whole user object and would let a seller set their
+          // own role.
+          policies: [],
+          middlewares: [],
+        },
+      },
   ],
 };

@@ -91,6 +91,11 @@ type ListingsCtx = {
   unauthorized: (message: string) => unknown;
 };
 
+type ProfileCtx = ListingsCtx & {
+  request?: { body?: { fullName?: string; whatsapp?: string } };
+  badRequest: (message: string) => unknown;
+};
+
 type StatusCtx = ListingsCtx & {
   params?: { id?: string };
   request?: { body?: { listingStatus?: string; takeDown?: boolean } };
@@ -426,5 +431,56 @@ export default {
     }
 
     ctx.body = { data: { documentId, listingStatus } };
+  },
+
+  /**
+   * Update the signed-in seller's own name and WhatsApp number.
+   *
+   * /my-profile rendered a seven-field form that posted nowhere, under a notice
+   * saying "Accounts are not switched on yet, so nothing on this page is
+   * saved". Accounts had been switched on for weeks.
+   *
+   * Two fields, because two is what the user model holds. The form also asked
+   * for a phone, a city, an area and an "about" paragraph; none of them exist
+   * on the content type and nothing renders a seller profile to buyers, so
+   * they are gone from the form rather than given columns nobody reads.
+   *
+   * Deliberately NOT the users-permissions update route. That takes the whole
+   * user object, so exposing it would let a seller write `role`, `confirmed`
+   * or `blocked` on themselves. This writes exactly two fields and reads the
+   * id from the token, never from the request.
+   */
+  async updateProfile(ctx: ProfileCtx) {
+    const strapi = (global as unknown as { strapi: Core.Strapi }).strapi;
+    const userId = ctx.state?.user?.id;
+    if (!userId) {
+      return ctx.unauthorized('You must be signed in.');
+    }
+
+    const { fullName, whatsapp } = ctx.request?.body ?? {};
+
+    const name = typeof fullName === 'string' ? fullName.trim() : '';
+    if (!name) {
+      // `required: true` on the content type, and the seller's name is what a
+      // buyer is told they are dealing with.
+      return ctx.badRequest('Your name cannot be empty.');
+    }
+    if (name.length > 80) {
+      return ctx.badRequest('That name is too long.');
+    }
+
+    const number = typeof whatsapp === 'string' ? whatsapp.trim() : '';
+    if (number && !/^(?:\+?968)?[79]\d{7}$/.test(number.replace(/[\s-]/g, ''))) {
+      // Same rule the listing form applies: Omani mobiles are eight digits
+      // starting 7 or 9, and a landline cannot receive WhatsApp.
+      return ctx.badRequest('That is not an Omani mobile number.');
+    }
+
+    await strapi.query('plugin::users-permissions.user').update({
+      where: { id: userId },
+      data: { fullName: name, whatsapp: number || null },
+    });
+
+    ctx.body = { data: { fullName: name, whatsapp: number || null } };
   },
 };

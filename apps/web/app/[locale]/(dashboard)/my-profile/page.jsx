@@ -1,4 +1,5 @@
 import MyProfile from "@/components/dashboard/MyProfile";
+import { getSession } from "@/lib/auth";
 
 export const metadata = {
   title: "My profile",
@@ -7,6 +8,8 @@ export const metadata = {
 
 // The sidebar, header and mobile menu toggle live in the route group's
 // layout.jsx — see components/dashboard/DashboardShell.jsx.
-export default function Page() {
-  return <MyProfile />;
+export default async function Page() {
+  // The group layout already redirected anyone without one.
+  const session = await getSession();
+  return <MyProfile session={session} />;
 }
