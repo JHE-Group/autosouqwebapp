@@ -322,10 +322,34 @@ export default function SiteHeader({ variant = "solid" }) {
                     <AccountMenu label={t("account")} />
                   ) : null}
                   <LocaleSwitcher className="header-locale" />
+                  {/*
+                    The label is hidden below 576px, not the button.
+                    
+                    `.header-account` used to be display:none there, taking the
+                    only header route to listing a car with it — so on a phone
+                    the header was a hamburger and a logo, and the sole seller
+                    entry point above the fold was a ghost button 81% down the
+                    home page. Listing supply is the binding constraint at
+                    launch.
+                    
+                    An earlier attempt kept the whole pill and pushed the menu
+                    toggler off-screen (x=-42 at 390px, x=-112 at 320px),
+                    silently, because a clipped toggler does not register as
+                    overflow. Measured properly this time: the inner container
+                    is 296px at 320px, the logo is 180 and the toggler 44 with
+                    a 12px gap, which leaves 48px — an icon-only button and
+                    nothing more. So the icon stays, the word goes, and the
+                    accessible name comes from aria-label rather than from
+                    text that will not fit.
+                  */}
                   <div className="flat-bt-top">
-                    <Link className="sc-button" href={cta.href}>
+                    <Link
+                      className="sc-button"
+                      href={cta.href}
+                      aria-label={cta.label}
+                    >
                       <SellIcon />
-                      <span>{cta.label}</span>
+                      <span className="flat-bt-top__label">{cta.label}</span>
                     </Link>
                   </div>
                 </div>

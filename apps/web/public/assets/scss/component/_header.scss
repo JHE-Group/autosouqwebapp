@@ -938,26 +938,66 @@ $header-height-stuck: 70px;
   }
 }
 
+/*
+ * The narrowest phones get a narrower wordmark.
+ *
+ * At 320px the inner container is 296px and its children measure
+ * [180 logo, 0, 44 CTA, 44 toggler] with three 12px flex gaps — 304px, so the
+ * toggler landed at x=-34 and the menu became unreachable. 146px on the
+ * wordmark buys exactly the 34px back and is still comfortably legible; above
+ * 360px nothing changes.
+ *
+ * Selector is `.logo-box img` rather than `.logo img`: the mark is a next/image
+ * with an explicit width, and it is not inside a `.logo` wrapper here — an
+ * earlier attempt at `.logo img` silently matched nothing.
+ */
+@media only screen and (max-width: 360px) {
+  .main-header .logo-box img,
+  .main-header .header-lower.is-fixed .logo-box img {
+    width: 146px !important;
+  }
+}
+
 @media only screen and (max-width: 575px) {
   /*
-   * The sell CTA stays hidden here, and that is a known gap rather than an
-   * oversight.
+   * The sell CTA survives as an icon; everything else in this cluster does not.
    *
-   * The mobile header is a hamburger and a logo, so the only route to listing
-   * a car above the fold is the CTA in the hero — and listing supply is the
-   * binding constraint at launch. An attempt to keep `.header-account` visible
-   * at this width pushed the menu toggler to x=-42 at 390px and x=-112 at
-   * 320px: off-screen, and silently, because a clipped toggler does not
-   * register as overflow. A header row of logo + CTA + toggler does not fit in
-   * 288px of content width at 320px without shrinking the wordmark past
-   * legibility.
+   * Budget, measured rather than assumed: the inner container is 296px at a
+   * 320px viewport, the logo box is 180px, the menu toggler is 44px and the
+   * flex gap is 12px. 180 + 44 + 44 + 24 = 292, which fits in 296 — an
+   * icon-only button and not one pixel more. A first attempt kept the full
+   * pill and pushed the toggler to x=-112, off-screen and silently, because a
+   * clipped element does not register as overflow.
    *
-   * The right fix is a compact icon-only sell button with its own short label,
-   * designed rather than squeezed — and a reachable menu matters more than
-   * saving a scroll, so it waits for that rather than shipping half of it.
+   * The accessible name is on the link (aria-label), so hiding the word costs
+   * a screen-reader user nothing.
    */
   .main-header .header-account {
+    display: flex;
+    margin-inline-start: auto;
+  }
+
+  .main-header .header-account > *:not(.flat-bt-top) {
     display: none;
+  }
+
+  .main-header .header-account .flat-bt-top__label {
+    display: none;
+  }
+
+  .main-header .header-account .flat-bt-top .sc-button {
+    /* Square-ish, so the icon sits centred rather than in a stretched pill.
+       44px clears the minimum tap target on both axes. Ink on terracotta is
+       5.50:1 and is inherited — only the box changes. */
+    inline-size: 44px;
+    min-inline-size: 44px;
+    block-size: 44px;
+    min-height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
   }
 
   .main-header .inner-container {
