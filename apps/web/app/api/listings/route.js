@@ -202,6 +202,27 @@ async function resolveRelations(form) {
   return { relations, slugs };
 }
 
+/**
+ * A chassis number the `vin` column can actually hold, or null.
+ *
+ * Seventeen characters since the early 1980s, and I, O and Q are never among
+ * them — they are excluded precisely because they read as 1 and 0, which is
+ * also why a seller copying one off a dusty dashboard plate mistypes them.
+ * Folded rather than rejected: this is the same substitution the buyer would
+ * make by eye.
+ *
+ * Anything that is not a well-formed VIN returns null and stays in the
+ * description instead. The column is varchar(17); sending 20 characters would
+ * fail the create and lose a whole listing over an optional field.
+ */
+function normalizedVin(value) {
+  const raw = String(value ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .replace(/[IOQ]/g, (c) => (c === "O" || c === "Q" ? "0" : "1"));
+  return raw.length === 17 ? raw : null;
+}
+
 /** Present only when there is a value — Strapi rejects null on some columns. */
 function optional(key, value) {
   return value === null || value === undefined || value === "" ? {} : { [key]: value };
@@ -315,11 +336,19 @@ async function uploadPhotos(files, token) {
  */
 function buildDescription(form) {
   const lines = [
-    // The only collected field with no CMS column. addListing.review.vinHint
-    // tells the seller that adding it "lets a buyer run their own history
-    // check", so it is meant to be read — it belongs on the page rather than
-    // dropped on the floor, until the CMS gains a column for it.
-    form.vin ? `Chassis / VIN: ${String(form.vin).trim().toUpperCase()}` : null,
+    /*
+     * Only when it will not fit the column.
+     *
+     * `vin` got its own column in the 2026-08-04 CMS deploy, and a structured
+     * field is what a moderator can search and a buyer can be shown
+     * deliberately. But the column is varchar(17) and a seller can type
+     * anything — so a value that does not fit still goes into the prose rather
+     * than being dropped, or worse, rejecting the whole submission at the last
+     * step over a field nobody was required to fill in.
+     */
+    form.vin && !normalizedVin(form.vin)
+      ? `Chassis / VIN (as entered): ${String(form.vin).trim()}`
+      : null,
     form.condition ? `Condition: ${form.condition}` : null,
     form.mulkiyaExpiry ? `Mulkiya valid until: ${form.mulkiyaExpiry}` : null,
     form.underLien ? `Under lien: ${form.underLien}` : null,
@@ -454,6 +483,7 @@ export async function POST(request) {
     ...optional("driveType", DRIVE_ENUM[form.driveType]),
     ...optional("phone", String(form.phone ?? "").trim() || null),
     ...optional("videoUrl", String(form.videoUrl ?? "").trim() || null),
+    ...optional("vin", normalizedVin(form.vin)),
   };
 
   const token = await getToken();
