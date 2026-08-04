@@ -939,6 +939,23 @@ $header-height-stuck: 70px;
 }
 
 @media only screen and (max-width: 575px) {
+  /*
+   * The sell CTA stays hidden here, and that is a known gap rather than an
+   * oversight.
+   *
+   * The mobile header is a hamburger and a logo, so the only route to listing
+   * a car above the fold is the CTA in the hero — and listing supply is the
+   * binding constraint at launch. An attempt to keep `.header-account` visible
+   * at this width pushed the menu toggler to x=-42 at 390px and x=-112 at
+   * 320px: off-screen, and silently, because a clipped toggler does not
+   * register as overflow. A header row of logo + CTA + toggler does not fit in
+   * 288px of content width at 320px without shrinking the wordmark past
+   * legibility.
+   *
+   * The right fix is a compact icon-only sell button with its own short label,
+   * designed rather than squeezed — and a reachable menu matters more than
+   * saving a scroll, so it waits for that rather than shipping half of it.
+   */
   .main-header .header-account {
     display: none;
   }
