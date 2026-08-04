@@ -54,7 +54,31 @@ export default (config: { max?: number; windowMs?: number }, { strapi }: { strap
 
   return async (ctx: any, next: () => Promise<void>) => {
     const now = Date.now();
-    const key = ctx.ip ?? 'unknown';
+    /*
+     * The seller's address if apps/web sent one, otherwise the socket's.
+     *
+     * Every request from the site arrives through the Next route handlers, so
+     * `ctx.ip` is Vercel's egress address for every seller alive. Keying on it
+     * meant /seller/register's 10-per-15-minutes was 10 registrations per 15
+     * minutes for the WHOLE SITE — the eleventh real seller of the quarter hour
+     * refused, with nothing to tell them why. A launch-day cap nobody chose.
+     *
+     * Be clear about what this header is: something the CMS chooses to believe.
+     * It is not proof of origin, and anyone posting here directly can set it to
+     * whatever they like, which makes the limiter bypassable by a determined
+     * caller. That is a real weakness and it is the honest trade — before this
+     * the limiter could not distinguish one client from another at all, so it
+     * throttled the legitimate and the abusive together and mostly hurt the
+     * legitimate. Binding it properly wants a shared secret between the two
+     * apps, which is a deployment change and not this one.
+     *
+     * A malformed or absurd value falls back to ctx.ip rather than being
+     * trusted as a bucket of its own, so the header cannot be used to mint
+     * unlimited fresh windows.
+     */
+    const forwarded = String(ctx.request?.header?.['x-autosouq-client-ip'] ?? '').trim();
+    const usable = forwarded.length > 0 && forwarded.length <= 45 && !/[^0-9a-fA-F:.]/.test(forwarded);
+    const key = (usable ? forwarded : ctx.ip) ?? 'unknown';
 
     if (buckets.size > MAX_TRACKED_KEYS) {
       for (const [k, bucket] of buckets) {

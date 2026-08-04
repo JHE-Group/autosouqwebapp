@@ -35,7 +35,20 @@ import { factories } from '@strapi/strapi';
  * represented on the document, so accepting it from a client would let a
  * submission skip the review queue entirely.
  */
-const SELLER_MAY_NOT_SET = ['verified', 'featured', 'seller', 'publishedAt'] as const;
+const SELLER_MAY_NOT_SET = [
+  'verified',
+  'featured',
+  'seller',
+  'publishedAt',
+  // The moderator's decision and the note explaining it. A seller who
+  // could set these could mark their own car approved, or erase the
+  // reason it was turned down.
+  'moderationState',
+  'moderationNote',
+  // Set only by the confirm-available endpoint, which stamps it server-side.
+  // A seller who could write it directly could keep a sold car looking fresh.
+  'availabilityConfirmedAt',
+] as const;
 
 function stripPrivilegedFields(data: Record<string, unknown>) {
   for (const field of SELLER_MAY_NOT_SET) delete data[field];

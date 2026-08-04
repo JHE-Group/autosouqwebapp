@@ -91,9 +91,16 @@ type ListingsCtx = {
   unauthorized: (message: string) => unknown;
 };
 
+type ProfileCtx = ListingsCtx & {
+  request?: { body?: { fullName?: string; whatsapp?: string } };
+  badRequest: (message: string) => unknown;
+};
+
 type StatusCtx = ListingsCtx & {
   params?: { id?: string };
-  request?: { body?: { listingStatus?: string; takeDown?: boolean } };
+  request?: {
+    body?: { listingStatus?: string; takeDown?: boolean; confirmAvailable?: boolean };
+  };
   notFound: (message: string) => unknown;
   badRequest: (message: string) => unknown;
 };
@@ -111,6 +118,13 @@ const SELLER_MAY_SET_STATUS = new Set(['available', 'reserved', 'sold']);
 /** What a seller is shown about their own car. */
 const SELLER_LISTING_FIELDS = [
   'title',
+  // The moderator's decision, and what they want the seller to do about it.
+  // Both are in SELLER_MAY_NOT_SET, so they are readable here and writable
+  // only from the admin.
+  'moderationState',
+  'moderationNote',
+  // Drives the "is this still for sale?" prompt on the seller's dashboard.
+  'availabilityConfirmedAt',
   'slug',
   'price',
   'currency',
@@ -281,14 +295,26 @@ export default {
 
     const live = await strapi.documents('api::listing.listing').findMany({
       filters: { seller: { id: userId } } as never,
-      fields: ['id'] as never,
+      /*
+       * publishedAt too, not just the id.
+       *
+       * The rows above are DRAFT versions and their own publishedAt is null by
+       * construction — the note above says so — so the draft cannot report when
+       * the car went live. The dashboard needs that date to know how long a
+       * listing has sat unconfirmed. See apps/web/lib/listingFreshness.js.
+       */
+      fields: ['id', 'publishedAt'] as never,
       status: 'published',
       limit: 100,
     });
 
-    const liveIds = new Set(
-      (live ?? []).map((row: Record<string, unknown>) => row.documentId),
+    const livePublishedAt = new Map(
+      (live ?? []).map((row: Record<string, unknown>) => [
+        row.documentId,
+        row.publishedAt,
+      ]),
     );
+    const liveIds = new Set(livePublishedAt.keys());
 
     ctx.body = {
       data: (rows ?? []).map((row: Record<string, unknown>) => ({
@@ -306,7 +332,25 @@ export default {
          * rows are the draft versions. Reading it directly is the bug this
          * replaces, which labelled every listing "pending" forever.
          */
-        state: liveIds.has(row.documentId) ? 'live' : 'pending',
+        /*
+         * Three states, not two.
+         *
+         * This read `live : pending`, so a car a moderator had turned down was
+         * indistinguishable from one nobody had looked at yet — and since
+         * declining a listing is just "leave it unpublished", the seller waited
+         * on a decision that had already been made, with no way to learn what
+         * was wrong or that anything had been decided at all.
+         *
+         * Published still wins: a live listing is live whatever the moderation
+         * field says, because what a buyer can see is the fact that matters.
+         */
+        // The published version's date, not the draft's null.
+        publishedAt: livePublishedAt.get(row.documentId) ?? null,
+        state: liveIds.has(row.documentId)
+          ? 'live'
+          : row.moderationState === 'declined'
+            ? 'declined'
+            : 'pending',
       })),
     };
   },
@@ -346,9 +390,9 @@ export default {
       return ctx.badRequest('Which listing?');
     }
 
-    const { listingStatus, takeDown } = ctx.request?.body ?? {};
+    const { listingStatus, takeDown, confirmAvailable } = ctx.request?.body ?? {};
 
-    if (!takeDown && !SELLER_MAY_SET_STATUS.has(String(listingStatus))) {
+    if (!takeDown && !confirmAvailable && !SELLER_MAY_SET_STATUS.has(String(listingStatus))) {
       return ctx.badRequest('Not a status you can set.');
     }
 
@@ -368,6 +412,39 @@ export default {
       // notFound rather than forbidden: a 403 confirms the id exists, which
       // turns document ids into an inventory oracle for anyone with an account.
       return ctx.notFound('Listing not found.');
+    }
+
+    if (confirmAvailable) {
+      /*
+       * "Yes, it is still for sale."
+       *
+       * Stamped server-side from the clock, never from the request — a seller
+       * who could send their own timestamp could keep a car that sold months
+       * ago looking freshly confirmed, which is the exact decay this prompt
+       * exists to stop.
+       *
+       * Written to both versions so the moderator's view and the buyer's agree
+       * about when the seller last vouched for the car. It changes nothing a
+       * buyer reads, so it needs no review.
+       */
+      const now = new Date().toISOString();
+      const stamp = { availabilityConfirmedAt: now } as never;
+      await strapi.documents('api::listing.listing').update({
+        documentId,
+        status: 'draft',
+        data: stamp,
+      });
+      try {
+        await strapi.documents('api::listing.listing').update({
+          documentId,
+          status: 'published',
+          data: stamp,
+        });
+      } catch {
+        // Not published; the draft stamp is enough.
+      }
+      ctx.body = { data: { documentId, availabilityConfirmedAt: now } };
+      return;
     }
 
     if (takeDown) {
@@ -405,5 +482,56 @@ export default {
     }
 
     ctx.body = { data: { documentId, listingStatus } };
+  },
+
+  /**
+   * Update the signed-in seller's own name and WhatsApp number.
+   *
+   * /my-profile rendered a seven-field form that posted nowhere, under a notice
+   * saying "Accounts are not switched on yet, so nothing on this page is
+   * saved". Accounts had been switched on for weeks.
+   *
+   * Two fields, because two is what the user model holds. The form also asked
+   * for a phone, a city, an area and an "about" paragraph; none of them exist
+   * on the content type and nothing renders a seller profile to buyers, so
+   * they are gone from the form rather than given columns nobody reads.
+   *
+   * Deliberately NOT the users-permissions update route. That takes the whole
+   * user object, so exposing it would let a seller write `role`, `confirmed`
+   * or `blocked` on themselves. This writes exactly two fields and reads the
+   * id from the token, never from the request.
+   */
+  async updateProfile(ctx: ProfileCtx) {
+    const strapi = (global as unknown as { strapi: Core.Strapi }).strapi;
+    const userId = ctx.state?.user?.id;
+    if (!userId) {
+      return ctx.unauthorized('You must be signed in.');
+    }
+
+    const { fullName, whatsapp } = ctx.request?.body ?? {};
+
+    const name = typeof fullName === 'string' ? fullName.trim() : '';
+    if (!name) {
+      // `required: true` on the content type, and the seller's name is what a
+      // buyer is told they are dealing with.
+      return ctx.badRequest('Your name cannot be empty.');
+    }
+    if (name.length > 80) {
+      return ctx.badRequest('That name is too long.');
+    }
+
+    const number = typeof whatsapp === 'string' ? whatsapp.trim() : '';
+    if (number && !/^(?:\+?968)?[79]\d{7}$/.test(number.replace(/[\s-]/g, ''))) {
+      // Same rule the listing form applies: Omani mobiles are eight digits
+      // starting 7 or 9, and a landline cannot receive WhatsApp.
+      return ctx.badRequest('That is not an Omani mobile number.');
+    }
+
+    await strapi.query('plugin::users-permissions.user').update({
+      where: { id: userId },
+      data: { fullName: name, whatsapp: number || null },
+    });
+
+    ctx.body = { data: { fullName: name, whatsapp: number || null } };
   },
 };

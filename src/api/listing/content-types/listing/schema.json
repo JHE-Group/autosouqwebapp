@@ -66,6 +66,17 @@
       "type": "boolean",
       "default": false
     },
+    "moderationState": {
+      "type": "enumeration",
+      "enum": ["pending", "approved", "declined"],
+      "default": "pending"
+    },
+    "availabilityConfirmedAt": {
+      "type": "datetime"
+    },
+    "moderationNote": {
+      "type": "text"
+    },
     "soldAsIs": {
       "type": "boolean",
       "default": false
