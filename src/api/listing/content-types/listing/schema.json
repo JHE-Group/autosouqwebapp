@@ -115,6 +115,10 @@
     "videoUrl": {
       "type": "string"
     },
+    "vin": {
+      "type": "string",
+      "maxLength": 17
+    },
     "gallery": {
       "type": "media",
       "multiple": true,
