@@ -74,5 +74,24 @@ export default {
         middlewares: [],
       },
     },
+      {
+        method: 'PUT',
+        path: '/seller/listings/:id/status',
+        handler: 'seller-auth.setStatus',
+        config: {
+          /**
+           * Authenticated, and scoped to the caller by the controller — the
+           * same rule as the GET above, and it matters more here because this
+           * writes.
+           *
+           * `:id` is a document id and is treated as a claim, not a fact: the
+           * controller loads the document, reads its seller, and answers
+           * notFound when it is not the caller's. A 403 would confirm the id
+           * exists, which is an inventory oracle for anyone with an account.
+           */
+          policies: [],
+          middlewares: [],
+        },
+      },
   ],
 };

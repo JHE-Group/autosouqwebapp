@@ -91,6 +91,23 @@ type ListingsCtx = {
   unauthorized: (message: string) => unknown;
 };
 
+type StatusCtx = ListingsCtx & {
+  params?: { id?: string };
+  request?: { body?: { listingStatus?: string; takeDown?: boolean } };
+  notFound: (message: string) => unknown;
+  badRequest: (message: string) => unknown;
+};
+
+/**
+ * The only states a seller may move their own car between.
+ *
+ * Not the whole enum by accident — it is the whole enum on purpose, and it is
+ * written out so that adding a fourth value to the content type does not
+ * silently become something a seller can set without anyone deciding it should
+ * be.
+ */
+const SELLER_MAY_SET_STATUS = new Set(['available', 'reserved', 'sold']);
+
 /** What a seller is shown about their own car. */
 const SELLER_LISTING_FIELDS = [
   'title',
@@ -292,5 +309,101 @@ export default {
         state: liveIds.has(row.documentId) ? 'live' : 'pending',
       })),
     };
+  },
+
+  /**
+   * Mark a car sold or reserved, or take it down. The owning seller only.
+   *
+   * This is the one seller write that deliberately reaches the PUBLISHED
+   * version, and it needs its own endpoint precisely because of that.
+   *
+   * The listing controller's `update` calls forceVersion(ctx, 'draft') so a
+   * seller cannot edit live content past review — otherwise a car published at
+   * OMR 2,000 could have its price rewritten the moment it went up. That guard
+   * is right, and it is exactly why "mark sold" could not go through it: the
+   * edit would land on the draft while the live page kept telling buyers the
+   * car was available.
+   *
+   * A seller who cannot say "this is sold" is the classifieds failure everyone
+   * knows — a board of cars that went weeks ago, and buyers who stop trusting
+   * any of it. So these two operations skip review, and only these two. Both
+   * only ever REDUCE what a listing claims: sold and reserved withdraw
+   * availability, taking it down withdraws the car. Nothing here can make a
+   * listing say more than a moderator already approved.
+   *
+   * Price, description and photos still edit the draft and still go back
+   * through review.
+   */
+  async setStatus(ctx: StatusCtx) {
+    const strapi = (global as unknown as { strapi: Core.Strapi }).strapi;
+    const userId = ctx.state?.user?.id;
+    if (!userId) {
+      return ctx.unauthorized('You must be signed in.');
+    }
+
+    const documentId = ctx.params?.id;
+    if (!documentId) {
+      return ctx.badRequest('Which listing?');
+    }
+
+    const { listingStatus, takeDown } = ctx.request?.body ?? {};
+
+    if (!takeDown && !SELLER_MAY_SET_STATUS.has(String(listingStatus))) {
+      return ctx.badRequest('Not a status you can set.');
+    }
+
+    /*
+     * Ownership from the stored document, never from the request. `status:
+     * 'draft'` because every document has a draft version — a published one has
+     * both — so this finds the car whether it is live or still pending.
+     */
+    const existing = (await strapi.documents('api::listing.listing').findOne({
+      documentId,
+      populate: { seller: true },
+      status: 'draft',
+    })) as { seller?: { id?: number } | null } | null;
+
+    const ownerId = existing?.seller?.id;
+    if (!existing || !ownerId || ownerId !== userId) {
+      // notFound rather than forbidden: a 403 confirms the id exists, which
+      // turns document ids into an inventory oracle for anyone with an account.
+      return ctx.notFound('Listing not found.');
+    }
+
+    if (takeDown) {
+      /*
+       * Unpublish, not delete. The car leaves the site immediately and the
+       * draft survives — so the seller can ask for it back, and so a moderator
+       * can still see what was up there. Deleting would also destroy the
+       * evidence in a dispute.
+       */
+      await strapi.documents('api::listing.listing').unpublish({ documentId });
+      ctx.body = { data: { documentId, state: 'pending', takenDown: true } };
+      return;
+    }
+
+    /*
+     * Both versions, deliberately. The draft is what the seller edits and a
+     * moderator reviews; the published version is what a buyer reads. Writing
+     * only the draft is the exact bug this endpoint exists to avoid.
+     */
+    const data = { listingStatus } as never;
+    await strapi.documents('api::listing.listing').update({
+      documentId,
+      status: 'draft',
+      data,
+    });
+    try {
+      await strapi.documents('api::listing.listing').update({
+        documentId,
+        status: 'published',
+        data,
+      });
+    } catch {
+      // Not published yet — nothing live to update, and not an error. A pending
+      // car can still be marked sold before anyone has approved it.
+    }
+
+    ctx.body = { data: { documentId, listingStatus } };
   },
 };
