@@ -13,6 +13,19 @@ const CURRENCY_LABEL = {
 };
 
 /**
+ * Just the currency word, for the places that need it apart from a number.
+ *
+ * The sell form's price label is "Asking price (OMR)" / «السعر المطلوب (ر.ع)»,
+ * so it interpolates the unit on its own rather than formatting an amount. It
+ * was passing the raw ISO code from lib/priceBand, which put "(OMR)" inside an
+ * Arabic label on the field where a seller types the number this whole site is
+ * organised around.
+ */
+export function currencyLabel(currency = DEFAULT_CURRENCY, locale = "en") {
+  return CURRENCY_LABEL[currency]?.[locale === "ar" ? "ar" : "en"] ?? currency;
+}
+
+/**
  * Money as the marketplace shows it: "6,250 OMR" / "6,250 ر.ع".
  *
  * The theme hardcodes a `$` in front of every price, which is wrong for Omani

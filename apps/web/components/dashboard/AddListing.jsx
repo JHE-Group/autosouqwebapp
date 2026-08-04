@@ -12,7 +12,7 @@ import React, {
 } from "react";
 import { Link } from "@/i18n/navigation";
 import { featureOptions } from "@/data/filterOptions";
-import { foldDigits, formatPrice, formatKm } from "@/lib/format";
+import { currencyLabel, foldDigits, formatKm, formatPrice } from "@/lib/format";
 import { OMAN_CITIES } from "@/lib/omanCities";
 import { draftKeyFor } from "@/lib/listingDraft";
 import { normalizeOmaniMsisdn } from "@/lib/whatsapp";
@@ -1322,7 +1322,10 @@ function StepPrice({ form, set, priceCheck }) {
 
   return (
     <div className="tfcl-add-listing">
-      <Field label={t("label", { currency: CURRENCY })} id="listing_price">
+      <Field
+        label={t("label", { currency: currencyLabel(CURRENCY, locale) })}
+        id="listing_price"
+      >
         <input
           id="listing_price"
           type="text"
