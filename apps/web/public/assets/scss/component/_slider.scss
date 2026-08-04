@@ -2099,9 +2099,42 @@ $hp-hero-scrim-top: linear-gradient(
   margin-block: clamp(2rem, 4vw, 2.75rem) 0;
 }
 
-@media only screen and (min-width: 600px) {
+/*
+ * Two across from 480px, not 600px.
+ *
+ * Measured on a 390x844 phone: this band ran 1,091px — 1.29 screens — in a
+ * single column, and it sits between the hero and the first car, so the first
+ * card was at y=2,413 or 2.86 viewports down. The four promises are the trust
+ * proposition and they stay in full; the layout was simply spending a screen
+ * and a quarter on four short paragraphs.
+ *
+ * Arabic at two columns on a 390px screen is tight but readable at this size —
+ * the titles are two or three words and the bodies are one sentence. Checked
+ * against the rendered page rather than assumed.
+ */
+@media only screen and (min-width: 380px) {
   .hp-promises__list {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media only screen and (max-width: 599px) {
+  .hp-promises__list {
+    gap: 1.25rem;
+  }
+
+  .hp-promise {
+    padding-top: 12px;
+  }
+
+  .hp-promise__num {
+    width: 30px;
+    height: 30px;
+  }
+
+  .hp-promise__body {
+    font-size: 14px;
+    line-height: 1.55;
   }
 }
 
