@@ -1735,9 +1735,21 @@
 .asq-card__price {
   margin: 0;
   font-family: $font-1;
-  font-size: 24px;
+  /*
+   * 26px, not 24.
+   *
+   * Blurred to 3.5px — the squint test — the surviving shapes on a card were
+   * the green WhatsApp bar, the photo band and the chips; the price was a thin
+   * smear at about the same weight as the title above it. It is the one number
+   * a buyer came to read.
+   *
+   * The fix is not colour. Terracotta on white is 2.97:1 and fails, and the
+   * accent is reserved for actions on purpose. So the price gains a little
+   * size and its competition loses its outlines (lib/listingLabels.js).
+   */
+  font-size: 26px;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.05;
   letter-spacing: -0.01em;
   color: $color-2;
   font-variant-numeric: tabular-nums;

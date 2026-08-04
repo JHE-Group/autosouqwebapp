@@ -47,7 +47,9 @@ export const SOLD_AS_IS_DETAIL = {
 export const SOLD_AS_IS_STYLE = {
   color: "#B45309",
   background: "#FFF7ED",
-  border: "1px solid rgba(180, 83, 9, 0.25)",
+  // Amber is now the ONLY chip colour on a card, so it no longer needs an
+  // outline to separate it from its neighbours.
+  border: "none",
   borderRadius: 5,
   fontSize: 12,
   fontWeight: 600,
@@ -60,7 +62,10 @@ export const SOLD_AS_IS_STYLE = {
 export const SPEC_PILL_STYLE = {
   color: "#5C6368",
   background: "#F8F8F9",
-  border: "1px solid #EDEDED",
+  // No border. At 3.5px of blur the pill outlines survived and the price did
+  // not — four bordered boxes are four shapes competing with the one number a
+  // buyer came to read. The fill alone is enough to read as a chip.
+  border: "none",
   borderRadius: 5,
   fontSize: 12,
   fontWeight: 600,
@@ -69,10 +74,24 @@ export const SPEC_PILL_STYLE = {
   lineHeight: 1.4,
 };
 
-// Not stated — same amber family as as-is: information the buyer is missing.
+/**
+ * Not stated — quiet, like every other absence.
+ *
+ * This used the amber of SOLD_AS_IS_STYLE, and so did "not checked yet", so a
+ * browse grid rendered two identical amber chips on 8 of its 12 cards and at
+ * least one on 9. Measured across the whole page. The effect is a wall of
+ * warning colour on a marketplace whose disclosures are meant to read as
+ * candour, not as a hazard notice on every car.
+ *
+ * The distinction that matters: as-is is a FACT THE SELLER ASSERTED about the
+ * terms of sale, and it changes what the buyer is agreeing to — it earns a
+ * colour. "Not stated" and "not checked yet" are ABSENCES. They must still be
+ * said, and they are, in the same words as before; they just stop shouting.
+ *
+ * Every disclosure is kept. Only the volume changes — and the green verified
+ * chip becomes the one coloured trust mark on the card, which is what makes it
+ * mean anything.
+ */
 export const SPEC_UNSTATED_STYLE = {
   ...SPEC_PILL_STYLE,
-  color: "#B45309",
-  background: "#FFF7ED",
-  border: "1px solid rgba(180, 83, 9, 0.25)",
 };

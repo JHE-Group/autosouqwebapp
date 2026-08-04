@@ -690,6 +690,7 @@ export default function AddListing({ makes = [], sellerId, signedIn = true }) {
                           gaps={gaps}
                           required={REQUIRED_SECTIONS.has(index)}
                           photoCount={index === 3 ? images.length : null}
+                          engaged={dirty}
                           onToggle={() => toggleSection(index)}
                           headingRef={(node) => {
                             headingRefs.current[index] = node;
@@ -827,6 +828,7 @@ export default function AddListing({ makes = [], sellerId, signedIn = true }) {
                   onGoTo={goTo}
                   submitState={submitState}
                   submitError={submitError}
+                  engaged={dirty}
                 />
 
                 <DraftStatus dirty={dirty} onDiscard={discardDraft} />
@@ -897,6 +899,7 @@ function SectionHeader({
   photoCount,
   onToggle,
   headingRef,
+  engaged,
 }) {
   const t = useTranslations("addListing");
 
@@ -905,7 +908,23 @@ function SectionHeader({
   // former because they require nothing.
   let status = null;
   if (gaps.length) {
-    status = { tone: "needs", text: t("sectionNeeds", { count: gaps.length }) };
+    /*
+     * Before the seller has typed anything, an outstanding answer is not a
+     * deficit — it is just a question they have not reached yet.
+     *
+     * An untouched form opened with four amber «ناقص N» badges down the
+     * section list, under "0 / 4" and "11 إجابة متبقية", above an eleven-item
+     * blocker list. Nothing was wrong; the seller had simply arrived. Opening
+     * a form by telling someone they have already failed it four times is the
+     * wrong first impression on the flow this business most depends on.
+     *
+     * Once they start, the same badges become genuinely useful — they say
+     * which panel to go back to — so this switches on with the first keystroke
+     * rather than disappearing for good.
+     */
+    status = engaged
+      ? { tone: "needs", text: t("sectionNeeds", { count: gaps.length }) }
+      : { tone: "optional", text: t("sectionQuestions", { count: gaps.length }) };
   } else if (required) {
     status = { tone: "done", text: t("sectionDone") };
   } else if (photoCount !== null && photoCount > 0) {
@@ -965,12 +984,27 @@ function PublishBar({
   onGoTo,
   submitState,
   submitError,
+  engaged,
 }) {
   const t = useTranslations("addListing");
   return (
     <div className="tfcl-publish-bar">
       <div className="tfcl-publish-bar__status" role="status">
-        {missing.length ? (
+        {/*
+          The eleven-item blocker list waits for the first keystroke.
+          
+          On an untouched form it listed every required field as something
+          "still needed", in terracotta, before the seller had answered a
+          single question — a checklist of failures for someone who had done
+          nothing wrong yet. The neutral line says the same thing forwards.
+          
+          It is not hidden for good: the moment they start, the list is the
+          fastest way back to whatever they skipped, and each row is a button
+          that jumps to its panel.
+        */}
+        {!engaged ? (
+          <p className="tfcl-hint">{t("beforeYouStart")}</p>
+        ) : missing.length ? (
           <>
             <p className="tfcl-amber">{t("stillNeeded")}</p>
             <ul className="tfcl-missing">

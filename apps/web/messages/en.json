@@ -682,7 +682,9 @@
       "missing_fields": "The price, year, kilometres and a WhatsApp number are all needed.",
       "upload_failed": "Your photos did not upload. Nothing has been sent — try again.",
       "unavailable": "We could not reach the server. Nothing has been sent — try again in a moment."
-    }
+    },
+    "sectionQuestions": "{count, plural, one {# question} other {# questions}}",
+    "beforeYouStart": "Fill in what you know — we will tell you what is missing before you publish."
   },
   "blog": {
     "brand": "Autosouq.om",
