@@ -54,9 +54,29 @@ class RegisterError extends Error {
 /** Omani mobile numbers, with or without the 968 country code. */
 const OMANI_MSISDN = /^(?:968)?[79]\d{7}$/;
 
+/**
+ * Arabic-Indic and Persian digits folded to ASCII.
+ *
+ * JavaScript's `\d` is `[0-9]`, so `/\D/` treats ٠-٩ as punctuation and
+ * deletes an Arabic seller's number entirely rather than cleaning it. The web
+ * app folds in three places for exactly this reason; this copy was missed
+ * because registration used to be reached through its own form, where the
+ * number was typed into a Latin-defaulted field.
+ *
+ * It stopped being theoretical when the account moved to the END of the listing
+ * form: the WhatsApp number now comes from a field that explicitly accepts
+ * ٩١٢٣٤٥٦٧, so an Arabic seller filled in six sections and was refused with
+ * "enter a valid Omani mobile number" for the number they had just entered.
+ */
+function foldDigits(value: string): string {
+  return value
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+}
+
 function normalizeMsisdn(raw: unknown): string | undefined {
   if (typeof raw !== 'string' || !raw.trim()) return undefined;
-  const digits = raw.replace(/\D/g, '');
+  const digits = foldDigits(raw).replace(/\D/g, '');
   if (!OMANI_MSISDN.test(digits)) {
     throw new RegisterError(
       'bad_msisdn',
