@@ -511,7 +511,7 @@
       "drag": "or drag photos here",
       "added": "({count} of {max} added)",
       "shrinkHint": "Each photo is shrunk to about 1,600px on your phone before it goes anywhere, so uploading ten of them costs you a fraction of the data the originals would.",
-      "notSwitchedOn": "Photo upload is not switched on yet. These stay in this browser and are not part of the saved draft — if you close the tab you will need to pick them again.",
+      "notSwitchedOn": "Your photos are sent with the listing when you publish. They are not kept in the draft on this phone, so if you close the page you will need to pick them again.",
       "asItIs": "Photograph the car as it is",
       "asItIsHint": "Including the dents and the scratches. A buyer who sees the damage before they drive out to you is a buyer who still trusts you when they arrive.",
       "photoAlt": "Photo {n}",
@@ -934,7 +934,9 @@
     "businessName": "Showroom name *",
     "businessNamePlaceholder": "Al Khuwair Motors",
     "crNumber": "Commercial registration number *",
-    "crNumberHint": "Your السجل التجاري number. We check it against the public registry before the showroom badge appears on your listings — until then your cars are listed like anyone else's. Do not upload the document here; we will ask for it on WhatsApp."
+    "crNumberHint": "Your السجل التجاري number. We check it against the public registry before the showroom badge appears on your listings — until then your cars are listed like anyone else's. Do not upload the document here; we will ask for it on WhatsApp.",
+    "forgotPassword": "Forgotten your password?",
+    "forgotPasswordHelp": "There is no reset email yet — contact us and we will reset it for you."
   },
   "showroomPage": {
     "metaTitle": "{name} — used cars in Oman",

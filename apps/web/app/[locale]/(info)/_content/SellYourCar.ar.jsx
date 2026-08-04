@@ -10,13 +10,19 @@ export default function SellYourCarAr() {
         أوتوسوق هو المكان الذي يبحث فيه الناس في عُمان عن سيارة مستعملة بسعر في
         المتناول. إن كان سعر سيارتك ضمن النطاق أدناه، فسيجدها مشترون مستعدون
         للشراء بهذا السعر — وسيراسلونك على واتساب مباشرة. المشتري يدفع لك، وأوتوسوق
-        لا يتعامل مع المال إطلاقاً.
+        لا يتعامل مع المال إطلاقاً. <strong>ونشر الإعلان مجاني.</strong>
       </p>
 
+      {/* The cost, said where the decision is made.
+          A full-text dump of this page returned zero occurrences of مجاني,
+          رسوم, تكلفة or عمولة — the page that exists to persuade someone to
+          list a car never said what listing costs. On a market full of
+          middlemen, "free" is not a detail a seller should have to infer. */}
       <p className="mb-40">
         <Link className="sc-button" href="/add-listing">
           <span>أضف إعلاناً</span>
         </Link>
+        <span className="d-block mt-2 fs-14 text-color-2">النشر مجاني.</span>
       </p>
 
       <h2 className="mb-20">النطاق السعري — اقرأ هذا أولاً</h2>

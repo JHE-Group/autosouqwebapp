@@ -1280,11 +1280,23 @@
 
         .btn-toggle {
           &::after {
-            content: "\e935";
-            font-family: "autodeal";
-            // Was 2.4px — a decimal slip. At sub-pixel size the "close" marker
-            // vanished, so an open question looked identical to a closed one.
-            // 24px against the 17px collapsed glyph below.
+            /*
+             * A dash drawn in CSS, not the font's \e935.
+             *
+             * That glyph is a full-width divider rather than the minus it
+             * looks like in a glyph table — at 24px it painted a solid 192px
+             * terracotta bar straight across the question text, so an OPEN FAQ
+             * question read «ما هو ███tosouq.om». Fixing the size would only
+             * make the bar shorter; the glyph is simply the wrong character.
+             *
+             * A 14x2 block is what the collapsed "+" needs as its pair, and it
+             * cannot grow into the heading no matter what the font does.
+             */
+            content: "";
+            display: block;
+            inline-size: 14px;
+            block-size: 2px;
+            background-color: $color-3-text;
             font-size: 24px;
             color: $color-3-text;
           }

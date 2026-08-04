@@ -10,13 +10,17 @@ export default function SellYourCarEn() {
         Autosouq is where people in Oman look for an affordable used car. If
         your car is priced in the band below, buyers who are ready to buy at
         that price will find it — and they will message you on WhatsApp
-        directly. The buyer pays you — Autosouq never handles the money.
+        directly. The buyer pays you — Autosouq never handles the money.{" "}
+        <strong>Listing is free.</strong>
       </p>
 
+      {/* The cost, said where the decision is made. This page existed to
+          persuade someone to list a car and never said what listing cost. */}
       <p className="mb-40">
         <Link className="sc-button" href="/add-listing">
           <span>Add a listing</span>
         </Link>
+        <span className="d-block mt-2 fs-14 text-color-2">Free to list.</span>
       </p>
 
       <h2 className="mb-20">The price band — please read this first</h2>

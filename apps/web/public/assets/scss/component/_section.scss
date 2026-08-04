@@ -5491,3 +5491,22 @@
     color: $brand-indigo;
   }
 }
+
+/*
+ * The in-page tabs on a car detail page must not land under the fixed header.
+ *
+ * Tapping «الوصف» scrolled its heading's top to exactly y=0 — and
+ * `.header-lower.is-fixed.is-small` is 110px tall and sits at y=0, so the
+ * heading the buyer tapped for was entirely hidden and the first thing they
+ * could read was the NEXT section's title. Measured by scripting the click.
+ *
+ * `scroll-margin-block-start` is the logical form, so it is correct in both
+ * scripts, and it is honoured by the browser's own smooth scroll rather than
+ * needing the click handler to know about the header.
+ */
+#scrollspyHeading1,
+#scrollspyHeading2,
+#scrollspyHeading3,
+#scrollspyHeading4 {
+  scroll-margin-block-start: 126px;
+}

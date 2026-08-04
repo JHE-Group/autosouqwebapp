@@ -365,6 +365,26 @@ export default function SellerAuthForm({
         </span>
       </button>
 
+      {/*
+        The way out for someone who is locked out.
+        
+        The sign-in card had exactly one link — "create an account" — so a
+        seller with the wrong password had no route anywhere except making a
+        second account. The site DOES own an honest explanation of this
+        ("there is no reset email yet"), but it lived on /change-password,
+        behind the sign-in it was blocking. Same fact, moved to where the
+        person who needs it actually is.
+        
+        Sign-up does not need it: nobody arrives there having forgotten
+        anything.
+      */}
+      {!isSignUp ? (
+        <p className="tfcl-auth__forgot">
+          <Link href="/contact">{t("forgotPassword")}</Link>{" "}
+          <span className="tfcl-hint">{t("forgotPasswordHelp")}</span>
+        </p>
+      ) : null}
+
       <p className="tfcl-auth__alt">
         {isSignUp ? t("haveAccount") : t("noAccount")}{" "}
         {/* Carry `next` across: without it, a seller who clicks "sign in

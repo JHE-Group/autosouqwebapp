@@ -174,3 +174,83 @@
     color: $color-4;
     text-align: center;
 }
+
+/* ---------------------------------------------------------------------------
+ * Two repairs, both found by measuring the rendered form rather than reading
+ * the stylesheet — which is why they survived: the rules above state the right
+ * intent and lose the cascade.
+ * ------------------------------------------------------------------------ */
+
+/*
+ * A typed answer must be darker than the prompt it replaced.
+ *
+ * `.tfcl-auth__field input` already sets `color: $color-2` with a comment
+ * saying exactly this, and it loses. Measured on /ar/sign-up with a value
+ * present: the input computed #696665 while its own ::placeholder computed
+ * #5C6368 — so the placeholder was DARKER than the real answer, and every
+ * field a seller had filled in still read as empty.
+ *
+ * The attribute selector adds the specificity to win without inventing a new
+ * colour: $color-2 is the documented body ink, 16.3:1 on white.
+ */
+.tfcl-auth__field input[type] {
+    color: $color-2;
+}
+
+/*
+ * The showroom checkbox.
+ *
+ * The blanket input rule above reached it, so a checkbox rendered as a
+ * 360x52px full-width control — a Chrome-default blue tile floating in the
+ * middle of the row with its label stranded on the line below. Measured:
+ * 360x52. It is a checkbox; it should be 20px and sit beside its words.
+ *
+ * `accent-color` rather than a hand-drawn box, so the native control keeps its
+ * own focus ring, its own indeterminate state, and the platform's tick.
+ */
+.tfcl-auth__check {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+        inline-size: 20px;
+        block-size: 20px;
+        min-block-size: 0;
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        /* $color-3-text, not $brand-terracotta: the darker step is the one this
+           codebase uses wherever the accent has to carry meaning. */
+        accent-color: $color-3-text;
+    }
+
+    span {
+        /* Without this the label wraps under the box at 360px rather than
+           beside it. */
+        flex: 1 1 auto;
+    }
+}
+
+/* The recovery line. Quiet — it is for the minority who need it — but present,
+   which is the whole point. */
+.tfcl-auth__forgot {
+    margin-block: $space-4 0;
+    text-align: center;
+
+    a {
+        color: $color-3-text;
+        text-decoration: underline;
+        /* Arabic descends far below the baseline in Cairo; same reason as the
+           prose-link rule in _arabic.scss. */
+        text-underline-offset: 0.25em;
+    }
+
+    .tfcl-hint {
+        display: block;
+        margin-block-start: 4px;
+    }
+}

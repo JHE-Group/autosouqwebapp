@@ -806,6 +806,18 @@ export default function AddListing({ makes = [], sellerId, signedIn = true }) {
                   remaining panels to find it. Here it is always on screen and
                   states, in the same breath, what is still stopping it.
                 */}
+                {/*
+                  One publish control, not two.
+                  
+                  StepReview rendered its own copy of this list and its own
+                  Publish button, 654px below these ones — so a seller opening
+                  the review section saw the same eleven-item blocker list
+                  twice and two identical faded buttons, with no way to tell
+                  whether they did different things. The outcome messages were
+                  the only thing the second copy had that this one did not, so
+                  they moved here: the result belongs beside the button that
+                  was pressed.
+                */}
                 <PublishBar
                   missing={missing}
                   canPublish={canPublish}
@@ -813,6 +825,8 @@ export default function AddListing({ makes = [], sellerId, signedIn = true }) {
                   submitting={submitting}
                   onPublish={handlePublish}
                   onGoTo={goTo}
+                  submitState={submitState}
+                  submitError={submitError}
                 />
 
                 <DraftStatus dirty={dirty} onDiscard={discardDraft} />
@@ -949,6 +963,8 @@ function PublishBar({
   submitting,
   onPublish,
   onGoTo,
+  submitState,
+  submitError,
 }) {
   const t = useTranslations("addListing");
   return (
@@ -991,6 +1007,39 @@ function PublishBar({
       >
         {submitting ? t("submitting") : t("publish")}
       </button>
+
+      {/* The result, beside the button that produced it. */}
+      <div className="tfcl-publish-bar__result">
+        {submitState === "sent" && (
+            <div className="tfcl-notice" role="status">
+              <strong>{t("submitted")}</strong>
+              <br />
+              {t("submittedBody")}
+            </div>
+          )}
+          {submitState === "signed-out" && (
+            <p className="tfcl-amber" role="alert">
+              {t("submitSignedOut")}
+            </p>
+          )}
+          {submitState === "too-large" && (
+            <p className="tfcl-amber" role="alert">
+              {/* The platform rejected the request before our route saw it, so
+                  there is no CMS message to show. Say what to do, because "it
+                  failed" after a long upload on a metered connection is the
+                  worst thing this form can say. */}
+              {t("submitTooLarge")}
+            </p>
+          )}
+          {submitState === "failed" && (
+            <p className="tfcl-amber" role="alert">
+              {/* The CMS's own words when it gave any — the price-band
+                  rejection names the limit, which is the one message a seller
+                  can actually act on. Generic text only as a fallback. */}
+              {submitError || t("submitFailed")}
+            </p>
+          )}
+      </div>
     </div>
   );
 }
@@ -1478,9 +1527,22 @@ function StepPhotos({ images, setImages, addFiles, isDragging, setIsDragging, on
         {t("shrinkHint")}
       </p>
 
-      {/* The gap, said plainly rather than implied by a button that does
-          nothing. */}
-      <p className="tfcl-amber" role="note">
+      {/*
+        A hint, not a warning — and no longer a false one.
+        
+        This read "Photo upload is not switched on yet" in amber, directly
+        under the picker. It stopped being true when SUBMIT_MODE became "api":
+        submitViaApi runs fitPhotoBudget over the chosen files and the route
+        uploads them before it creates the listing. So the form was telling
+        every seller that the single highest-value field on it does not work,
+        in the site's warning colour, on the step that most determines whether
+        the car sells.
+        
+        What IS still true is narrower: the photos are not kept in the
+        localStorage draft, so closing the page loses the selection. That is a
+        hint about this phone, not a gap in the product.
+      */}
+      <p className="tfcl-hint" role="note">
         {t("notSwitchedOn")}
       </p>
 
@@ -1958,92 +2020,6 @@ function StepReview({
         ) : null}
       </div>
 
-      <div className="tfcl-add-listing">
-        <h3>{tc("publishShort")}</h3>
-        {missing.length ? (
-          <div role="status">
-            <p className="tfcl-amber">{tc("stillNeeded")}</p>
-            <ul className="tfcl-missing">
-              {missing.map((item) => (
-                <li key={item.key}>
-                  <button
-                    type="button"
-                    className="tfcl-linkish"
-                    onClick={() => onGoTo(item.step)}
-                  >
-                    {tc(`missing.${item.key}`)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="tfcl-hint">
-            {tc("readyNotice")}
-          </p>
-        )}
-
-        {/* Posts to /api/listings as the signed-in seller — see
-            lib/submitListing.js. type="button" so it cannot half-submit a form
-            POST that does not exist. */}
-        <div className="group-button-submit left">
-          <button
-            type="button"
-            className="pre-btn"
-            onClick={onPublish}
-            // Also disabled while in flight: this is a network round trip now,
-            // not a window.open, and a double tap on a slow phone connection
-            // would otherwise file the same car twice.
-            disabled={!canPublish || !submitAvailable || submitting}
-            title={submitAvailable ? tc("publishHint") : tc("notConfigured")}
-          >
-            {submitting ? tc("submitting") : tc("publish")}
-          </button>
-        </div>
-
-        {/* One live region for the outcome. Nothing is claimed until the
-            handoff has actually happened. */}
-        <div aria-live="polite">
-          {submitState === "sent" && (
-            <div className="tfcl-notice" role="status">
-              <strong>{tc("submitted")}</strong>
-              <br />
-              {tc("submittedBody")}
-            </div>
-          )}
-          {submitState === "signed-out" && (
-            <p className="tfcl-amber" role="alert">
-              {tc("submitSignedOut")}
-            </p>
-          )}
-          {submitState === "too-large" && (
-            <p className="tfcl-amber" role="alert">
-              {/* The platform rejected the request before our route saw it, so
-                  there is no CMS message to show. Say what to do, because "it
-                  failed" after a long upload on a metered connection is the
-                  worst thing this form can say. */}
-              {tc("submitTooLarge")}
-            </p>
-          )}
-          {submitState === "failed" && (
-            <p className="tfcl-amber" role="alert">
-              {/* The CMS's own words when it gave any — the price-band
-                  rejection names the limit, which is the one message a seller
-                  can actually act on. Generic text only as a fallback. */}
-              {submitError || tc("submitFailed")}
-            </p>
-          )}
-        </div>
-
-        {!submitAvailable && (
-          <p className="tfcl-amber" role="note">
-            {tc("notConfigured")}
-          </p>
-        )}
-        {submitAvailable && submitState === null && (
-          <p className="tfcl-hint">{tc("publishHint")}</p>
-        )}
-      </div>
     </>
   );
 }
