@@ -490,7 +490,37 @@ export function assertTaxonomyIsUrlSafe(
 
 async function seedTaxonomies(strapi: Core.Strapi): Promise<TaxonomyDocs> {
   const cities = [
+    /*
+     * Muscat Governorate, at locality granularity.
+     *
+     * These are rows rather than a write-time mapping onto "Muscat" because
+     * data/muscatLocalities.js already aggregates them: `isMuscatListing`
+     * matches a listing's citySlug against the sixteen Muscat-area locations
+     * and rolls every one of them onto /used-cars/muscat. So the facet gate
+     * counts a Ruwi car exactly as it counts a Muscat car, and the listing
+     * still records that it is in Ruwi.
+     *
+     * Flattening them to "Muscat" on write would pass the same gate and lose
+     * the locality permanently, which forecloses the neighbourhood facet pages
+     * that file's header says unlock once inventory clears the gate.
+     *
+     * Slugs must stay in the shape isMuscatListing derives — lowercase, spaces
+     * to hyphens. scripts/check-cities.mjs asserts that.
+     */
     { name: "Muscat", nameAr: "مسقط", slug: "muscat" },
+    { name: "Seeb", nameAr: "السيب", slug: "seeb" },
+    { name: "Bawshar", nameAr: "بوشر", slug: "bawshar" },
+    { name: "Muttrah", nameAr: "مطرح", slug: "muttrah" },
+    { name: "Al Amarat", nameAr: "العامرات", slug: "al-amarat" },
+    { name: "Quriyat", nameAr: "قريات", slug: "quriyat" },
+    { name: "Al Khuwair", nameAr: "الخوير", slug: "al-khuwair" },
+    { name: "Al Ghubrah", nameAr: "الغبرة", slug: "al-ghubrah" },
+    { name: "Azaiba", nameAr: "العذيبة", slug: "azaiba" },
+    { name: "Ruwi", nameAr: "روي", slug: "ruwi" },
+    { name: "Qurum", nameAr: "القرم", slug: "qurum" },
+    { name: "Al Mawaleh", nameAr: "الموالح", slug: "al-mawaleh" },
+    { name: "Al Khoud", nameAr: "الخوض", slug: "al-khoud" },
+    { name: "Al Maabilah", nameAr: "المعبيلة", slug: "al-maabilah" },
     { name: "Salalah", nameAr: "صلالة", slug: "salalah" },
     { name: "Sohar", nameAr: "صحار", slug: "sohar" },
     { name: "Nizwa", nameAr: "نزوى", slug: "nizwa" },
