@@ -35,11 +35,22 @@ export default function ListingsTable({ listings = [], title }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState(ALL_STATUSES);
 
+  /**
+   * Keys, not labels.
+   *
+   * This collected `statusLabel(listing)` — the rendered English string — and
+   * used it as the <option> value, the state, and the comparison target below.
+   * Translating the label in place would then have filtered nothing: the
+   * option would read «منشور» while the comparison still tested for "Live". The
+   * key/label split has to ship in the same change as the translation.
+   */
   const statuses = useMemo(() => {
     // Offer only the statuses actually present, so the dropdown never implies
     // a state this seller's inventory does not contain.
     const present = new Set(
-      listings.map((listing) => statusLabel(listing)).filter(Boolean),
+      listings
+        .map((listing) => statusKey(listing))
+        .filter((key) => key !== "unknown"),
     );
     return [ALL_STATUSES, ...Array.from(present)];
   }, [listings]);
@@ -47,7 +58,7 @@ export default function ListingsTable({ listings = [], title }) {
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return listings.filter((listing) => {
-      if (status !== ALL_STATUSES && statusLabel(listing) !== status) {
+      if (status !== ALL_STATUSES && statusKey(listing) !== status) {
         return false;
       }
       if (!needle) return true;
@@ -82,7 +93,7 @@ export default function ListingsTable({ listings = [], title }) {
       <div className="tfcl-listing-toolbar">
         <div className="group-input-icon search">
           <label className="visually-hidden" htmlFor="title_search">
-            Search your listings
+            {t("searchLabel")}
           </label>
           <input
             type="search"
@@ -90,7 +101,7 @@ export default function ListingsTable({ listings = [], title }) {
             id="title_search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search your listings…"
+            placeholder={t("searchPlaceholder")}
           />
           <span className="datepicker-icon" aria-hidden="true">
             <svg
@@ -112,7 +123,7 @@ export default function ListingsTable({ listings = [], title }) {
         </div>
         <div className="tfcl-listing-toolbar__status">
           <label className="visually-hidden" htmlFor="status_filter">
-            Filter by status
+            {t("statusFilterLabel")}
           </label>
           {/* A native <select>, not the theme's div-based nice-select: on a
               budget Android this opens the OS picker, which is a bigger, more
@@ -123,9 +134,11 @@ export default function ListingsTable({ listings = [], title }) {
             value={status}
             onChange={(event) => setStatus(event.target.value)}
           >
-            {statuses.map((option) => (
-              <option key={option} value={option}>
-                {option}
+            {statuses.map((key) => (
+              <option key={key} value={key}>
+                {key === ALL_STATUSES
+                  ? t("allStatuses")
+                  : statusLabel(key, t, tCommon)}
               </option>
             ))}
           </select>
@@ -135,29 +148,30 @@ export default function ListingsTable({ listings = [], title }) {
       <div className="tfcl-table-listing">
         <div className="table-responsive">
           <span className="result-text" aria-live="polite">
-            <b>{filtered.length}</b>{" "}
-            {filtered.length === 1 ? "listing" : "listings"}
-            {filtered.length !== listings.length
-              ? ` of ${listings.length}`
-              : ""}
+            {filtered.length === listings.length
+              ? t("results", { count: filtered.length })
+              : t("resultsOfTotal", {
+                  count: filtered.length,
+                  total: listings.length,
+                })}
           </span>
           <table className="table">
             <thead>
               <tr>
-                <th>Listing</th>
-                <th>Status</th>
-                <th>Posted</th>
-                <th>Action</th>
+                <th>{t("colListing")}</th>
+                <th>{t("colStatus")}</th>
+                <th>{t("colPosted")}</th>
+                <th>{t("colAction")}</th>
               </tr>
             </thead>
             <tbody className="tfcl-table-content">
               {filtered.map((elm, i) => (
                 <tr key={elm.id ?? i}>
-                  <td className="column-listing" data-label="Listing">
+                  <td className="column-listing" data-label={t("colListing")}>
                     <div className="tfcl-listing-product">
                       <Link href={listingPath(elm)}>
                         <Image
-                          alt={elm.title ?? "listing photo"}
+                          alt={elm.title ?? t("photoAlt")}
                           src={elm.imgSrc}
                           width={168}
                           height={95}
@@ -169,7 +183,7 @@ export default function ListingsTable({ listings = [], title }) {
                             {elm.title}
                           </Link>
                         </h4>
-                        <div className="features-text">{summarise(elm)}</div>
+                        <div className="features-text">{summarise(elm, t)}</div>
                         <ListingLabels listing={elm} />
                         <div className="price">
                           <div className="inner tfcl-listing-price">
@@ -179,19 +193,19 @@ export default function ListingsTable({ listings = [], title }) {
                       </div>
                     </div>
                   </td>
-                  <td className="column-status" data-label="Status">
-                    <StatusPill listing={elm} />
+                  <td className="column-status" data-label={t("colStatus")}>
+                    <StatusPill listing={elm} t={t} tCommon={tCommon} />
                   </td>
-                  <td className="column-date" data-label="Posted">
+                  <td className="column-date" data-label={t("colPosted")}>
                     <div className="tfcl-listing-date">{formatPosted(elm, locale)}</div>
                   </td>
-                  <td className="column-controller" data-label="Action">
+                  <td className="column-controller" data-label={t("colAction")}>
                     <div className="inner-controller">
                       <Link
                         href={listingPath(elm)}
                         className="btn-action"
                       >
-                        View listing
+                        {t("viewListing")}
                       </Link>
                     </div>
                     {/*
@@ -203,16 +217,16 @@ export default function ListingsTable({ listings = [], title }) {
                     */}
                     <div className="inner-controller">
                       <button type="button" className="btn-action" disabled>
-                        Edit
+                        {t("edit")}
                       </button>
                     </div>
                     <div className="inner-controller">
                       <button type="button" className="btn-action" disabled>
-                        Mark sold
+                        {t("markSold")}
                       </button>
                     </div>
                     <p className="btn-action-note">
-                      Editing and marking sold are not switched on yet.
+                      {t("actionsDisabled")}
                     </p>
                   </td>
                 </tr>
@@ -221,8 +235,7 @@ export default function ListingsTable({ listings = [], title }) {
           </table>
           {filtered.length === 0 ? (
             <p className="tfcl-table-noresult" role="status">
-              None of your listings match that. Clear the search or choose “
-              {ALL_STATUSES}”.
+              {t("noMatch", { status: t("allStatuses") })}
             </p>
           ) : null}
         </div>
@@ -231,14 +244,15 @@ export default function ListingsTable({ listings = [], title }) {
   );
 }
 
-const ALL_STATUSES = "All statuses";
+/** Sentinel key, never rendered — t("allStatuses") is what the seller reads. */
+const ALL_STATUSES = "all";
 
 /**
  * The template printed "1st owned, automatic transmission, Apple Carplay…"
  * under every single car regardless of what the car actually was. Build the
  * line from the listing's own fields instead, and print only the fields it has.
  */
-function summarise(listing) {
+function summarise(listing, t) {
   const parts = [
     listing.year,
     listing.transmission,
@@ -248,7 +262,7 @@ function summarise(listing) {
       ? `${listing.km.toLocaleString("en-US")} km`
       : null,
   ].filter(Boolean);
-  return parts.length ? parts.join(" · ") : "No specification given";
+  return parts.length ? parts.join(" · ") : t("noSpec");
 }
 
 /**
@@ -269,18 +283,23 @@ function statusKey(listing) {
   if (status === "Pending") return "pending";
   return status ? "pending" : "unknown";
 }
-
-function statusLabel(listing) {
-  const key = statusKey(listing);
-  if (key === "live") return "Live";
-  if (key === "sold") return "Sold";
-  if (key === "pending") return "Pending review";
+/**
+ * Display only, and it takes a KEY rather than a listing — the dropdown
+ * already holds a key and should not have to invent a listing to get a label.
+ *
+ * "Sold" reuses common.sold, which ListingSignals already shows the buyer. The
+ * seller was reading English for the same fact the buyer read in Arabic.
+ */
+function statusLabel(key, t, tCommon) {
+  if (key === "live") return t("statusLive");
+  if (key === "sold") return tCommon("sold");
+  if (key === "pending") return t("statusPending");
   return null;
 }
 
-function StatusPill({ listing }) {
+function StatusPill({ listing, t, tCommon }) {
   const key = statusKey(listing);
-  const label = statusLabel(listing);
+  const label = statusLabel(key, t, tCommon);
   if (!label) return <span className="tfcl-listing-date">—</span>;
   return (
     <span className={`tfcl-pill tfcl-pill--${key}`}>
