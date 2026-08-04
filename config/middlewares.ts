@@ -48,13 +48,22 @@ const config: Core.Config.Middlewares = [
   // every response — a free version fingerprint for anyone scanning for known
   // Strapi advisories. It buys nothing operationally.
   'strapi::query',
-  /**
-   * After `strapi::query` so `ctx.query` is parsed, and before `strapi::body`
-   * so a refused replace is rejected without its multipart payload being read
-   * off the wire first. See src/middlewares/upload-guard.ts for what it stops.
+  'strapi::body',
+  /*
+   * AFTER `strapi::body`, and the ordering is load-bearing.
+   *
+   * It sat before it, where `ctx.query` is populated and `ctx.request.body`
+   * is not — multipart has not been parsed yet. The `?id=` check worked
+   * anyway because query parsing happens earlier still, which is what made
+   * the mistake invisible: the middleware read as correct and half of it was
+   * dead. The ref/refId/field check could never have fired, and an upload
+   * could still be attached to another seller's listing.
+   *
+   * The cost is that a refused upload has been parsed before it is refused.
+   * config/plugins.ts still caps that at 12 MB, and correctness is worth more
+   * than the saving.
    */
   'global::upload-guard',
-  'strapi::body',
   'strapi::session',
   'strapi::favicon',
   'strapi::public',
