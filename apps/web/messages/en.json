@@ -30,7 +30,8 @@
     "whatsapp": "Message seller on WhatsApp",
     "soldAsIs": "Sold as-is",
     "browseAll": "Browse all cars",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "showroom": "Showroom"
   },
   "brand": {
     "name": "Autosouq.om",
@@ -246,7 +247,8 @@
       "noContact": "This seller has not given a WhatsApp number we can use, so there is no way to contact them from this page.",
       "sold": "This car has been sold.",
       "reserved": "This car is reserved.",
-      "phoneCall": "Phone call"
+      "phoneCall": "Phone call",
+      "showroomNote": "A registered showroom. We checked their commercial registration — that is all this badge means."
     },
     "report": {
       "cta": "Report this listing",
@@ -878,6 +880,11 @@
       "registration_failed": "We could not create your account. Please try again.",
       "account_created_login_failed": "Your account was created. Please sign in to continue."
     },
-    "accountCreatedSignIn": "Your account is ready — sign in to continue."
+    "accountCreatedSignIn": "Your account is ready — sign in to continue.",
+    "showroomToggle": "I am a showroom (معرض), not a private seller",
+    "businessName": "Showroom name *",
+    "businessNamePlaceholder": "Al Khuwair Motors",
+    "crNumber": "Commercial registration number *",
+    "crNumberHint": "Your السجل التجاري number. We check it against the public registry before the showroom badge appears on your listings — until then your cars are listed like anyone else's. Do not upload the document here; we will ask for it on WhatsApp."
   }
 }

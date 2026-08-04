@@ -27,6 +27,7 @@ export default function SellerAuthForm({
   const t = useTranslations("auth");
   const router = useRouter();
   const isSignUp = mode === "signup";
+  const [isShowroom, setIsShowroom] = useState(false);
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
@@ -41,7 +42,28 @@ export default function SellerAuthForm({
       email: (form.get("email") ?? "").toString().trim(),
       password: (form.get("password") ?? "").toString(),
       ...(isSignUp
-        ? { fullName: (form.get("fullName") ?? "").toString().trim() }
+        ? {
+            fullName: (form.get("fullName") ?? "").toString().trim(),
+            /*
+             * A showroom application, only when the box is ticked.
+             *
+             * The two fields are sent as-is and validated in the CMS, which
+             * refuses the whole registration if either is malformed rather than
+             * creating an account whose business details silently vanished.
+             *
+             * No document is uploaded. Strapi serves media from public URLs, so
+             * a commercial registration taken here would be published; the
+             * number is enough to check against the public registry, and it is
+             * stored as a private field.
+             */
+            ...(isShowroom
+              ? {
+                  accountType: "showroom",
+                  businessName: (form.get("businessName") ?? "").toString().trim(),
+                  crNumber: (form.get("crNumber") ?? "").toString().trim(),
+                }
+              : {}),
+          }
         : {}),
     };
 
@@ -199,6 +221,59 @@ export default function SellerAuthForm({
           />
         </div>
       ) : null}
+
+      {isSignUp && (
+        <div className="tfcl-auth__field">
+          {/*
+            A checkbox, not a second signup page.
+            *
+            * A showroom files cars through exactly the same form as anyone
+            * else — the account differs, the listing does not — so a separate
+            * flow would duplicate six sections to change two fields.
+            */}
+          <label className="tfcl-auth__check" htmlFor="auth-showroom">
+            <input
+              id="auth-showroom"
+              name="accountTypeShowroom"
+              type="checkbox"
+              checked={isShowroom}
+              onChange={(e) => setIsShowroom(e.target.checked)}
+            />
+            <span>{t("showroomToggle")}</span>
+          </label>
+
+          {isShowroom && (
+            <div className="tfcl-auth__showroom">
+              <label htmlFor="auth-business">{t("businessName")}</label>
+              <input
+                id="auth-business"
+                name="businessName"
+                type="text"
+                className="form-control"
+                required={isShowroom}
+                maxLength={80}
+                placeholder={t("businessNamePlaceholder")}
+              />
+
+              <label htmlFor="auth-cr">{t("crNumber")}</label>
+              <input
+                id="auth-cr"
+                name="crNumber"
+                type="text"
+                inputMode="numeric"
+                // Latin digits and Latin layout: a CR number is a registry key,
+                // not prose, and it reverses inside an RTL field without this.
+                dir="ltr"
+                className="form-control"
+                required={isShowroom}
+                maxLength={20}
+                placeholder="1234567"
+              />
+              <p className="tfcl-hint">{t("crNumberHint")}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="tfcl-auth__field">
         <label htmlFor="auth-email">

@@ -24,13 +24,20 @@ export async function POST(request) {
     );
   }
 
-  const { email, password, fullName, whatsapp } = body ?? {};
+  const { email, password, fullName, whatsapp, accountType, businessName, crNumber } =
+    body ?? {};
 
   const result = await registerSeller({
     email,
     password,
     fullName,
     whatsapp,
+    // A showroom application, when one was made. Validated in the CMS, which
+    // refuses the registration outright if either field is malformed rather
+    // than creating an account whose business details vanished.
+    accountType,
+    businessName,
+    crNumber,
     // Carried through so the CMS's rate limiter can key on the seller's own
     // address rather than on Vercel's — see clientIp in lib/auth.js.
     request,

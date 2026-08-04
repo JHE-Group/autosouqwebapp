@@ -45,6 +45,25 @@ const STATUS_STYLE = {
 
 // #0B7A44 on #ECFDF3 is 5.13:1 — the same green ProfileInfo already uses for
 // the detail-page badge, so the card and the page say the same thing.
+/*
+ * The showroom badge.
+ *
+ * Brand indigo rather than the green of "we checked this" or the amber of
+ * sold-as-is, because it is a different KIND of fact: not a judgement we made
+ * about the car, just who is selling it. A buyer should be able to tell those
+ * apart at a glance on a card carrying three pills.
+ *
+ * Deliberately not styled as a distinction in the showroom's favour. The first
+ * -car guide tells buyers a dealer is usually dearer and usually smoother, and
+ * that neither is better — so this reports, it does not recommend.
+ */
+const SHOWROOM_STYLE = {
+  ...SPEC_PILL_STYLE,
+  color: "#262262",
+  background: "rgba(38, 34, 98, 0.06)",
+  border: "1px solid rgba(38, 34, 98, 0.2)",
+};
+
 const VERIFIED_STYLE = {
   ...SPEC_PILL_STYLE,
   color: "#0B7A44",
@@ -95,6 +114,17 @@ export default function ListingSignals({
       <span style={style(origin.stated ? SPEC_PILL_STYLE : SPEC_UNSTATED_STYLE)}>
         {origin.text}
       </span>
+      {car.showroom?.name && (
+        /*
+         * Attached in the CMS from the seller's own approved record and
+         * stripped from anything a seller sends, so this is a fact rather than
+         * a claim. Absent means private seller — which is the honest reading of
+         * a pending or declined application too.
+         */
+        <span style={style(SHOWROOM_STYLE)}>
+          {compact ? t("showroom") : car.showroom.name}
+        </span>
+      )}
       {car.soldAsIs && (
         <span style={style(SOLD_AS_IS_STYLE)}>{t("soldAsIs")}</span>
       )}

@@ -266,6 +266,30 @@ export default function TrustBlock({ carItem, locale = DEFAULT_LOCALE }) {
         >
           {origin.text}
         </TrustRow>
+
+        {/*
+          Who is selling it — a fact, not a judgement.
+
+          Neutral tone deliberately. The first-car guide tells buyers a dealer
+          is usually dearer and usually smoother with the paperwork, and that
+          neither is better; a "good" tone here would be this block taking a
+          side it has no business taking. The caption says what the badge
+          actually rests on, which is a checked commercial registration and
+          nothing more.
+
+          Absent for a private seller rather than captioned as one. A row
+          reading "private seller" would imply we had established that, and all
+          we know is that nobody applied.
+        */}
+        {carItem.showroom?.name && (
+          <TrustRow
+            tone={TONE.neutral}
+            glyph={<GlobeGlyph />}
+            caption={t("showroomNote")}
+          >
+            {carItem.showroom.name}
+          </TrustRow>
+        )}
       </ul>
 
       {/* ---- the tap -------------------------------------------------- */}

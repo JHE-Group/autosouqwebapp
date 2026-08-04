@@ -60,6 +60,9 @@ const LISTING_POPULATE = [
   "populate[color]=true",
   "populate[city]=true",
   "populate[features]=true",
+  // The business, not the account. `seller` is private and stays that way;
+  // the showroom record exists so a badge can be shown without it.
+  "populate[showroom]=true",
 ].join("&");
 
 function absoluteUrl(url) {
@@ -292,6 +295,25 @@ export function toCar(listing, locale = DEFAULT_LOCALE) {
      * and looking for it on the page.
      */
     vin: listing.vin ?? null,
+
+    /*
+     * The showroom that filed this car, or null for a private seller.
+     *
+     * Attached in the CMS from the seller's own approved record and stripped
+     * from anything a seller sends, so its presence here is a fact rather than
+     * a claim. Null is the honest default: a pending or declined application
+     * reads as a private sale.
+     *
+     * Only the public fields travel — the relation's owner, CR number and
+     * review note are `private` in the schema and never arrive.
+     */
+    showroom: listing.showroom
+      ? {
+          name: pick(locale, listing.showroom.nameAr, listing.showroom.name),
+          slug: listing.showroom.slug ?? null,
+          area: listing.showroom.area ?? null,
+        }
+      : null,
     driveType: listing.driveType
       ? { fwd: "FWD", rwd: "RWD", awd: "AWD", four_wd: "4WD" }[listing.driveType]
       : null,

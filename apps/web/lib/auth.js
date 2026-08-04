@@ -170,11 +170,23 @@ async function cmsPost(path, body, { cookie, clientAddress } = {}) {
  * `fullName` is required by the CMS User type; `whatsapp` is optional at signup
  * because a seller supplies a number on the listing itself.
  */
-export async function registerSeller({ email, password, fullName, whatsapp, request }) {
+export async function registerSeller({
+  email,
+  password,
+  fullName,
+  whatsapp,
+  accountType,
+  businessName,
+  crNumber,
+  request,
+}) {
   const created = await cmsPost("/api/seller/register", {
     email,
     password,
     fullName,
+    ...(accountType === "showroom"
+      ? { accountType, businessName, crNumber }
+      : {}),
     ...(whatsapp ? { whatsapp } : {}),
   
   }, { clientAddress: clientIp(request) });
