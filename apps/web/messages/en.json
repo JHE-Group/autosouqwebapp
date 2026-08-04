@@ -402,6 +402,35 @@
         "unavailable": "We could not reach the server. Nothing has changed — try again in a moment.",
         "failed": "Your profile could not be saved."
       }
+    },
+    "showroom": {
+      "title": "Showroom account",
+      "intro": "Selling cars as a business? Apply for a showroom account and your listings carry a verified showroom badge.",
+      "businessName": "Showroom name",
+      "businessNamePlaceholder": "e.g. Al Khuwair Motors",
+      "crNumber": "Commercial registration number",
+      "crHint": "From your Ministry of Commerce registration. We check it before approving, and it is never shown publicly.",
+      "send": "Apply",
+      "sending": "Sending…",
+      "state": {
+        "pending": {
+          "title": "We are reviewing your application",
+          "body": "You applied as {name}. A person checks every commercial registration, so this is not instant — we will email you when it is done."
+        },
+        "approved": {
+          "title": "You are a verified showroom",
+          "body": "{name} is approved. Your listings now carry the showroom badge."
+        },
+        "declined": {
+          "title": "Your application was not approved",
+          "body": "We could not verify the commercial registration for the name {name}. Contact us and we will look at it again."
+        }
+      },
+      "error": {
+        "already": "This account has already applied.",
+        "unavailable": "We could not reach the server. Try again in a moment.",
+        "failed": "We could not send your application. Try again."
+      }
     }
   },
   "addListing": {

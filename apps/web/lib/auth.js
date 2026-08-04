@@ -340,6 +340,38 @@ export async function getToken() {
  * That is the worst thing this page can say. It reads as "your listings are
  * gone", and the button under it invites them to file a duplicate.
  */
+/**
+ * The seller's own showroom application, if they have made one.
+ *
+ * Read on the server so /my-profile paints the right state first time. Doing
+ * it in the component would mean every seller sees the private-account form
+ * for a beat before it is replaced by "we are reviewing your application" —
+ * which reads as though the application was lost.
+ *
+ * `null` covers both "has not applied" and "we could not ask": the form is the
+ * safe thing to show in either case, because the CMS refuses a second
+ * application anyway and says so. A seller who applies twice sees a clear
+ * message; a seller wrongly told they have no application would have no way to
+ * make one.
+ */
+export async function getMyShowroom() {
+  const token = await getToken();
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${STRAPI_URL}/api/seller/showroom`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    const body = await res.json().catch(() => null);
+    return body?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getMyListings() {
   const token = await getToken();
   if (!token) return { ok: false, listings: [], now: Date.now() };

@@ -1,5 +1,5 @@
 import MyProfile from "@/components/dashboard/MyProfile";
-import { getSession } from "@/lib/auth";
+import { getSession, getMyShowroom } from "@/lib/auth";
 
 export const metadata = {
   title: "My profile",
@@ -10,6 +10,11 @@ export const metadata = {
 // layout.jsx — see components/dashboard/DashboardShell.jsx.
 export default async function Page() {
   // The group layout already redirected anyone without one.
-  const session = await getSession();
-  return <MyProfile session={session} />;
+  const [session, showroom] = await Promise.all([
+    getSession(),
+    // Read here so the page paints the right panel first time — a seller with
+    // an application pending should never see the apply form, even briefly.
+    getMyShowroom(),
+  ]);
+  return <MyProfile session={session} showroom={showroom} />;
 }

@@ -158,6 +158,11 @@ function slugifyName(name: string): string {
   return base || 'showroom';
 }
 
+type ShowroomCtx = ListingsCtx & {
+  request?: { method?: string; body?: { businessName?: string; crNumber?: string } };
+  badRequest: (message: string) => unknown;
+};
+
 type ProfileCtx = ListingsCtx & {
   request?: { body?: { fullName?: string; whatsapp?: string } };
   badRequest: (message: string) => unknown;
@@ -663,5 +668,93 @@ export default {
     });
 
     ctx.body = { data: { fullName: name, whatsapp: number || null } };
+  },
+
+  /**
+   * The seller's own showroom application: read it, or make one.
+   *
+   * The upgrade path, and it is needed whether or not packages ever ship. A
+   * private account could not become a showroom at all — the only way to apply
+   * was to tick the box at signup — so the first dealers, who will almost
+   * certainly arrive as private sellers and list one car to try the site, would
+   * have had to make a second account and orphan the first one's listings.
+   *
+   * One application per seller, and an approved one is not re-openable from
+   * here: a seller who could re-apply could reset a declined decision by
+   * repeating it, and a moderator would have no record they had been turned
+   * down. Changing an approved showroom's details is an admin job for the same
+   * reason the badge is — it is a claim about a business, and the whole worth
+   * of it is that the business did not write it.
+   */
+  async showroom(ctx: ShowroomCtx) {
+    const strapi = (global as unknown as { strapi: Core.Strapi }).strapi;
+    const userId = ctx.state?.user?.id;
+    if (!userId) {
+      return ctx.unauthorized('You must be signed in.');
+    }
+
+    const existing = (
+      await strapi.documents('api::showroom.showroom').findMany({
+        filters: { owner: { id: userId } } as never,
+        limit: 1,
+      })
+    )?.[0] as Record<string, unknown> | undefined;
+
+    if (ctx.request?.method === 'GET') {
+      /*
+       * Their own record, so the state and the moderator's note travel — those
+       * are `private` to the PUBLIC api, not to the person they are about. A
+       * decision with no reason attached is the dead end this whole flow exists
+       * to avoid.
+       */
+      ctx.body = {
+        data: existing
+          ? {
+              name: existing.name,
+              state: existing.state,
+              reviewNote: existing.reviewNote ?? null,
+              slug: existing.slug,
+            }
+          : null,
+      };
+      return;
+    }
+
+    if (existing) {
+      return ctx.badRequest(
+        existing.state === 'declined'
+          ? 'This account has already applied and was not approved. Contact us.'
+          : 'This account has already applied.',
+      );
+    }
+
+    const body = ctx.request?.body ?? {};
+    const name = typeof body.businessName === 'string' ? body.businessName.trim() : '';
+    const cr = typeof body.crNumber === 'string' ? body.crNumber.trim() : '';
+
+    if (name.length < 2 || name.length > 80) {
+      return ctx.badRequest('Enter the showroom name.');
+    }
+    if (cr.length < 4 || cr.length > 20) {
+      return ctx.badRequest('Enter your commercial registration number.');
+    }
+
+    const user = (await strapi
+      .plugin('users-permissions')
+      .service('user')
+      .fetch(userId)) as { whatsapp?: string } | null;
+
+    await strapi.documents('api::showroom.showroom').create({
+      data: {
+        name,
+        slug: `${slugifyName(name)}-${userId}`,
+        crNumber: cr,
+        whatsapp: user?.whatsapp ?? null,
+        state: 'pending',
+        owner: userId,
+      } as never,
+    });
+
+    ctx.body = { data: { name, state: 'pending' } };
   },
 };

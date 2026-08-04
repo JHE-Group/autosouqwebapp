@@ -2,6 +2,7 @@
 import { useTranslations } from "next-intl";
 import React, { useState } from "react";
 import { Link } from "@/i18n/navigation";
+import ShowroomApplication from "./ShowroomApplication";
 
 /**
  * The seller's own details.
@@ -29,7 +30,7 @@ import { Link } from "@/i18n/navigation";
  * edit that would silently do nothing — which is the mistake this whole file is
  * a correction of.
  */
-export default function MyProfile({ session = null }) {
+export default function MyProfile({ session = null, showroom = null }) {
   const t = useTranslations("dashboard.profile");
   const [fullName, setFullName] = useState(session?.fullName ?? "");
   const [whatsapp, setWhatsapp] = useState(session?.whatsapp ?? "");
@@ -160,6 +161,11 @@ export default function MyProfile({ session = null }) {
                       {t("changePassword")}
                     </Link>
                   </div>
+
+                  {/* The upgrade path. Until this existed an account's type was
+                      fixed at signup, so a dealer who started as a private
+                      seller had to abandon the account and its listings. */}
+                  <ShowroomApplication showroom={showroom} />
                 </div>
               </div>
             </main>
