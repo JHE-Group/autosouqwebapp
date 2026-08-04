@@ -168,11 +168,40 @@ export default async function sitemap() {
       lastModified,
     }));
 
+  /**
+   * Showroom pages, but only for showrooms that currently have a car live.
+   *
+   * Derived from the listings already fetched above rather than from a second
+   * request to /api/showrooms, which makes the gate automatic: a showroom is in
+   * the sitemap exactly when it has stock a buyer can look at. An approved
+   * showroom with nothing listed is a page with a name, a badge and an empty
+   * grid — thin content we would be asking Google to index, and the same
+   * judgement `facetClearsGate` makes for the facet pages.
+   *
+   * It also means a showroom drops out on its own when its last car sells or is
+   * taken down, with no separate bookkeeping to forget.
+   */
+  const showroomRoutes = [
+    ...new Set(
+      listings
+        .map((car) => car?.showroom?.slug)
+        .filter((slug) => typeof slug === "string" && slug.length > 0),
+    ),
+  ].map((slug) => ({
+    path: `/showrooms/${slug}`,
+    changeFrequency: "weekly",
+    // Below a listing (0.8) and above the static pages. A dealer's page is a
+    // real destination, but the cars are what a buyer came for.
+    priority: 0.6,
+    lastModified,
+  }));
+
   const entries = [
     ...staticRoutes,
     ...guideRoutes,
     ...blogRoutes,
     ...listingRoutes,
+    ...showroomRoutes,
   ];
 
   /**

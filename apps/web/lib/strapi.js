@@ -467,6 +467,88 @@ export async function getListing(idOrSlug, locale = DEFAULT_LOCALE) {
 }
 
 /**
+ * One approved showroom by slug, with the cars it has listed.
+ *
+ * Read through the LIST endpoint with a slug filter rather than
+ * `/api/showrooms/{slug}`, because Strapi 5's findOne resolves a documentId and
+ * nothing else — a slug there returns null whatever the record's state, which
+ * is a 404 for the wrong reason.
+ *
+ * The list endpoint is the safer of the two anyway. Its controller CLAMPS
+ * `filters[state]` to `approved` rather than defaulting it, so a pending or
+ * declined application cannot be reached from here even by naming its slug
+ * exactly — and pending applications are a record of who applied and was turned
+ * down, which is not ours to publish.
+ *
+ * `null` for both "no such showroom" and "the CMS did not answer". The page
+ * turns that into a 404, which is honest in the first case and wrong in the
+ * second — but the alternative is rendering a showroom page with no showroom on
+ * it, and a transient 404 is the lesser of those on a page nothing links to
+ * except a badge that came from the same CMS.
+ */
+export async function getShowroom(slug, locale = DEFAULT_LOCALE) {
+  if (!slug) return null;
+  try {
+    const json = await strapiFetch(
+      `/api/showrooms?filters[slug][$eq]=${encodeURIComponent(slug)}` +
+        `&populate[logo]=true&populate[city]=true&pagination[pageSize]=1`,
+    );
+    const row = json.data?.[0];
+    if (!row) return null;
+
+    return {
+      // Same locale rule as every other CMS string — see pick() above.
+      name: pick(locale, row.nameAr, row.name),
+      // The Latin name too: an Arabic page still wants it for the document
+      // title and for a buyer searching the business by its registered name.
+      nameLatin: row.name ?? null,
+      slug: row.slug ?? null,
+      about: row.about ?? null,
+      area: row.area ?? null,
+      city: row.city ? pick(locale, row.city.nameAr, row.city.name) : null,
+      citySlug: row.city?.slug ?? null,
+      whatsapp: row.whatsapp ?? null,
+      logo: absoluteUrl(row.logo?.url) ?? null,
+      // Not `createdAt` — that is when the application was made. `publishedAt`
+      // is the closest thing the record has to "since when has this been a
+      // showroom on the site", and it is the only one worth showing a buyer.
+      since: row.publishedAt ?? null,
+    };
+  } catch (err) {
+    console.warn(`[strapi] showroom "${slug}" unavailable. ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * The cars a showroom currently has live.
+ *
+ * Filtered on the relation's slug, so it asks the same question the URL does.
+ * The listings endpoint only ever returns published rows to an anonymous
+ * caller, so a draft awaiting moderation does not appear here — which is the
+ * behaviour a showroom would want anyway.
+ *
+ * `[]` on failure, like every other listing read: a showroom page with an empty
+ * car list still tells a buyer who the business is and how to reach them.
+ */
+export async function getShowroomListings(slug, locale = DEFAULT_LOCALE) {
+  if (!slug) return [];
+  try {
+    const json = await strapiFetch(
+      `/api/listings?${LISTING_POPULATE}` +
+        `&filters[showroom][slug][$eq]=${encodeURIComponent(slug)}` +
+        `&sort=createdAt:desc&pagination[pageSize]=${LISTINGS_PAGE_SIZE}`,
+    );
+    return (json.data ?? []).map((row) => toCar(row, locale));
+  } catch (err) {
+    console.warn(
+      `[strapi] listings for showroom "${slug}" unavailable. ${err.message}`,
+    );
+    return [];
+  }
+}
+
+/**
  * The make/model vocabulary, for the sell form's suggestions.
  *
  * Ordered by `id`, which is CREATION order — not the band-prevalence order the

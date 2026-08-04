@@ -287,7 +287,22 @@ export default function TrustBlock({ carItem, locale = DEFAULT_LOCALE }) {
             glyph={<GlobeGlyph />}
             caption={t("showroomNote")}
           >
-            {carItem.showroom.name}
+            {/*
+              Linked when we have a slug, plain text when we do not.
+
+              The badge used to be a dead end: it named a business and gave the
+              buyer no way to see what else that business has, which is most of
+              what a trust signal is worth. /showrooms/{slug} resolves only for
+              an APPROVED showroom, and only an approved one can reach a listing
+              in the first place — so a slug here is never a broken link.
+            */}
+            {carItem.showroom.slug ? (
+              <Link href={`/showrooms/${carItem.showroom.slug}`}>
+                {carItem.showroom.name}
+              </Link>
+            ) : (
+              carItem.showroom.name
+            )}
           </TrustRow>
         )}
       </ul>

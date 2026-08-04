@@ -923,5 +923,16 @@
     "businessNamePlaceholder": "Al Khuwair Motors",
     "crNumber": "Commercial registration number *",
     "crNumberHint": "Your السجل التجاري number. We check it against the public registry before the showroom badge appears on your listings — until then your cars are listed like anyone else's. Do not upload the document here; we will ask for it on WhatsApp."
+  },
+  "showroomPage": {
+    "metaTitle": "{name} — used cars in Oman",
+    "metaDescription": "Cars for sale by {name}, a verified showroom on Autosouq.om. Prices in Omani rial, contact the showroom directly.",
+    "metaDescriptionCity": "Cars for sale by {name}, a verified showroom in {city} on Autosouq.om. Prices in Omani rial, contact the showroom directly.",
+    "verified": "Verified showroom",
+    "carsTitle": "{count, plural, =0 {Cars for sale} one {# car for sale} other {# cars for sale}}",
+    "noCars": "This showroom has no cars listed right now.",
+    "notFound": {
+      "title": "Showroom not found"
+    }
   }
 }
