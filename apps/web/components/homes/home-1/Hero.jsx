@@ -2,6 +2,7 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { slides } from "@/data/heroSlides";
+import ShopByBudget from "./ShopByBudget";
 
 /**
  * The homepage hero.
@@ -10,7 +11,7 @@ import { slides } from "@/data/heroSlides";
  * Autosouq — the product name is the display line, the OMR band sits in the
  * one headline, then one lede, facts, and CTAs over a full-bleed photo.
  */
-export default async function Hero() {
+export default async function Hero({ listings = [], locale }) {
   const t = await getTranslations("brand");
   const slide = slides[0];
 
@@ -70,6 +71,19 @@ export default async function Hero() {
               {t("sellYourCar")}
             </Link>
           </div>
+
+          {/*
+            A priced way in, on the first screen.
+            
+            The hero's only buyer action was "browse cars", which drops someone
+            on the whole catalogue — and the mechanism a price-banded
+            marketplace actually narrows by, the four budget rungs, sat 2.25
+            screens down as its own section. These are the same component and
+            the same working links, in `bare` mode; the counts come from real
+            CMS inventory and say «لا توجد الآن» at zero rather than inventing
+            stock.
+          */}
+          <ShopByBudget listings={listings} locale={locale} bare />
         </div>
       </div>
     </section>

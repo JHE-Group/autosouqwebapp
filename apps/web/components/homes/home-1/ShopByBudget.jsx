@@ -44,16 +44,23 @@ import { CANONICAL_LISTINGS_PATH } from "@/lib/seo";
  * a OMR 1,000–6,000 marketplace — not a fact about today's stock. Telling a
  * buyer with OMR 1,200 that we do not serve them would be false.
  */
-export default async function ShopByBudget({ listings = [], locale }) {
+/**
+ * `bare` renders the rungs and nothing else — no section, no heading.
+ *
+ * The hero uses it. A price-banded marketplace's main narrowing mechanism is
+ * the band itself, and as a standalone section this sat 2.25 screens down a
+ * phone, so the first screen offered a buyer nothing but "browse everything".
+ * The counts are real CMS inventory and correctly say «لا توجد الآن» at zero,
+ * so lifting them costs no honesty.
+ *
+ * One component, two placements: the bidi handling below is subtle enough
+ * (see the <bdi> note) that a second copy would drift.
+ */
+export default async function ShopByBudget({ listings = [], locale, bare = false }) {
   const t = await getTranslations({ locale, namespace: "budget" });
 
-  return (
-    <section className="hp-section">
-      <div className="container">
-        <h2 className="hp-section-title">{t("title")}</h2>
-        <p className="hp-section-lede">{t("lede")}</p>
-
-        <ul className="hp-budget__list">
+  const rungs = (
+    <ul className={`hp-budget__list${bare ? " hp-budget__list--bare" : ""}`}>
           {BUDGET_BANDS.map((band) => {
             const count = countInBand(listings, band);
             /*
@@ -105,7 +112,17 @@ export default async function ShopByBudget({ listings = [], locale }) {
               </li>
             );
           })}
-        </ul>
+    </ul>
+  );
+
+  if (bare) return rungs;
+
+  return (
+    <section className="hp-section">
+      <div className="container">
+        <h2 className="hp-section-title">{t("title")}</h2>
+        <p className="hp-section-lede">{t("lede")}</p>
+        {rungs}
       </div>
     </section>
   );

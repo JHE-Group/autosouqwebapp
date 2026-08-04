@@ -1,5 +1,6 @@
 import { formatPrice, formatKm } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
+import ListingCard from "@/components/carsListings/ListingCard";
 import { Link } from "@/i18n/navigation";
 import ListingSignals from "@/components/common/ListingSignals";
 import PlaceholderPhotoTag from "@/components/common/PlaceholderPhotoTag";
@@ -113,114 +114,27 @@ export default async function Cars({
         ) : (
           <div className="hp-cars__grid">
             {shown.map((car) => (
-              // Not `.hv-one`: that hover state exists to reveal the compare
-              // and favourite icons, and with those gone it only dropped a 60%
-              // black wash over the photograph — on top of the "No photos yet"
-              // tag, which sits below it in the stacking order.
-              <article key={car.id} className="box-car-list hp-card">
-                <div className="image-group relative">
-                  <div className="top flex-two">
-                    <ul className="d-flex gap-8">
-                      {car?.featured && (
-                        <li className="flag-tag success">{tCard("featured")}</li>
-                      )}
-                      {/* Only when there is a number to show. The template
-                          rendered the camera icon with an empty count for
-                          every listing that had no gallery. */}
-                      {car?.images?.length > 0 && (
-                        <li className="flag-tag style-1">
-                          <PhotoCountIcon />
-                          {car.images.length}
-                        </li>
-                      )}
-                    </ul>
-                    <div className="year flag-tag">{car.year}</div>
-                  </div>
-                  <div className="img-style">
-                    {/* Guard on `imgSrc`: a listing with no photographs now
-                        carries null rather than a stand-in, and an <Image> with
-                        no src renders a zero-width box that paints the alt text
-                        where the photo should be. ListingCard had this branch
-                        already; this one did not. */}
-                    {car.imgSrc ? (
-                      <Image
-                        alt={car.images?.[0]?.alt || car.title || ""}
-                        src={car.imgSrc}
-                        width={450}
-                        height={338}
-                        sizes="(max-width: 639px) 100vw, (max-width: 991px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="asq-card__img asq-card__img--none" aria-hidden="true" />
-                    )}
-                  </div>
-                  <PlaceholderPhotoTag car={car} locale={locale} />
-                </div>
-
-                {/* Order: identity -> price -> disclosures -> wear -> place ->
-                    contact. Price sits directly under the title because price
-                    is the entry criterion on a price-banded site. */}
-                <div className="content">
-                  <h3 className="link-style-1 hp-card__title">
-                    <Link href={listingPath(car)}>
-                      {car.title}
-                    </Link>
-                  </h3>
-                  {/*
-                  Same treatment as the browse card's price.
-                    
-                  Measured on the same car: 20px/500 in terracotta here
-                  against 23px/700 in ink on /used-cars. Two cards for one
-                  marketplace disagreeing about how to write the one number a
-                  buyer came to read — and terracotta is the accent this
-                  codebase reserves for ACTIONS, so a price wearing it reads
-                  as something to tap.
-                    
-                  The real fix is one card component; this is the divergence
-                  that actually shows, fixed without a refactor.
-                  */}
-                  <div className="money asq-price-strong">
-                    {formatPrice(car.price, car.currency, locale)}
-                  </div>
-                  <ListingSignals car={car} locale={locale} className="mt-2" />
-                  <div className="icon-box flex flex-wrap mt-2">
-                    <div className="icons flex-three">
-                      <i className="icon-autodeal-km1" />
-                      <span>
-                        {Number.isFinite(car.km)
-                          ? formatKm(car.km, locale)
-                          : tCard("kmUnstated")}
-                      </span>
-                    </div>
-                    {car.transmission && (
-                      <div className="icons flex-three">
-                        <i className="icon-autodeal-automatic" />
-                        <span>{car.transmission}</span>
-                      </div>
-                    )}
-                    {car.location && (
-                      <div className="icons flex-three">
-                        <i className="icon-autodeal-city" aria-hidden="true" />
-                        <span>{car.location}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <WhatsAppButton car={car} locale={locale} />
-                  </div>
-                  {/* The author row was bound to authorName / authorImage,
-                      null on every record by deliberate policy, so it rendered
-                      an empty box on every card. */}
-                  <div className="days-box flex justify-space align-center">
-                    <Link
-                      href={listingPath(car)}
-                      className="view-car"
-                    >
-                      {tCard("view")}
-                    </Link>
-                  </div>
-                </div>
-              </article>
+              /*
+                One card component, not two.
+                
+                This was 104 lines of bespoke markup that rendered the same car
+                differently from the browse grid — its own price treatment, its
+                own signals row, its own photo handling. ListingCard is the one
+                the browse page uses and the one that gets fixed when a card bug
+                is found, so the home row now uses it too and the two cannot
+                drift again.
+                
+                `sizes` is narrower than the browse default because this row is
+                at most three across on a desktop and one on a phone; the browse
+                grid goes four.
+              */
+              <ListingCard
+                key={car.id}
+                car={car}
+                variant="grid"
+                locale={locale}
+                sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+              />
             ))}
           </div>
         )}

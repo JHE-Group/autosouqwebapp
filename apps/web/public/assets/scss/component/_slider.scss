@@ -2382,3 +2382,72 @@ a.hp-budget__rung:hover .hp-budget__count {
   background: $bg-color4;
   cursor: default;
 }
+
+/*
+ * The budget rungs when they sit inside the hero.
+ *
+ * Wrapping chips rather than the section's stacked rows: they have to fit under
+ * two CTAs on a 390px phone without pushing them off the first screen. The
+ * links, counts and bidi handling are the section's own — only the box changes.
+ */
+.hp-budget__list--bare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 18px;
+  padding: 0;
+  list-style: none;
+
+  .hp-budget__item {
+    margin: 0;
+  }
+
+  .hp-budget__rung {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    /* 40px keeps the tap target usable without the 48px a full-width row
+       needs — these are secondary to the two CTAs above them. */
+    min-block-size: 40px;
+    padding: 8px 12px;
+    border: 1px solid rgba($brand-cream, 0.45);
+    border-radius: 999px;
+    /*
+     * The section variant fills these white, which is right on the white page
+     * and catastrophic here: cream text on that white measured 1.26:1.
+     * Measured, not eyeballed — it looked merely "light" in a screenshot.
+     * Transparent over the indigo hero puts cream back on its intended ground
+     * at 11.19:1.
+     */
+    background: transparent;
+    color: $brand-cream;
+    font-family: $font-2;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  /* Both spans inherit — the section variant colours the count separately for
+     a light background, and #5C6368 on indigo is 2.4:1. */
+  .hp-budget__label,
+  .hp-budget__count {
+    color: $brand-cream;
+  }
+
+  .hp-budget__rung:hover,
+  .hp-budget__rung:focus-visible {
+    border-color: $brand-cream;
+    background-color: rgba($brand-cream, 0.12);
+  }
+
+  /* A band with nothing in it is still shown — the range is a fact about the
+     marketplace, not about today's stock — but it is not a link and must not
+     look like one. */
+  .hp-budget__rung--empty {
+    opacity: 0.55;
+  }
+
+  .hp-budget__count {
+    font-size: 12px;
+    opacity: 0.8;
+  }
+}

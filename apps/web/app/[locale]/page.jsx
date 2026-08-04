@@ -9,6 +9,8 @@ import TrustPromises from "@/components/homes/home-1/TrustPromises";
 import { getBrowseData } from "@/lib/listingSource";
 import { pageMetadata } from "@/lib/seo";
 import { getTranslations } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { pickMessages } from "@/i18n/clientMessages";
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -83,13 +85,37 @@ export default async function Home({ params }) {
         <Header1 />
       </div>
       <main>
-        <Hero />
+        <Hero listings={cms} locale={locale} />
         <TrustPromises />
-        {/* After the trust promise, before the grid: "is there anything at my
-            number?" narrows the hero's claim, and is only worth asking once we
-            have said why to believe the prices. */}
-        <ShopByBudget listings={cms} locale={locale} />
-        <Cars listings={listings} locale={locale} />
+        {/*
+          The budget rungs moved INTO the hero and this section is gone.
+          
+          The note that stood here argued "is there anything at my number?" is
+          only worth asking once we have said why to believe the prices. That
+          holds for the trust promises — but the hero already makes the price
+          claim itself («من 1,000 إلى 6,000 ر.ع»), so a priced way in belongs
+          with the claim rather than two sections below it. As a standalone
+          section it put the marketplace's main narrowing mechanism 2.25
+          screens down a phone, behind 785px of promises.
+          
+          Not duplicated: ShopByBudget renders once, in `bare` mode, inside the
+          hero panel.
+        */}
+        {/*
+          `browse` reaches the browser only for this row.
+          
+          Cars now renders ListingCard, which is a Client Component reading
+          `browse.card`. The root layout deliberately ships only `errorPage` —
+          a namespace sent to a page that does not read it is bytes a buyer on
+          metered data pays for — so without this the card would print raw key
+          paths, which is exactly the defect the sell form shipped.
+          
+          Scoped to the section rather than added to the layout, so no other
+          page on the site pays for it.
+        */}
+        <NextIntlClientProvider messages={await pickMessages("browse")}>
+          <Cars listings={listings} locale={locale} />
+        </NextIntlClientProvider>
         <Guides />
         <Banner />
       </main>
