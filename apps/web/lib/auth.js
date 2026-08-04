@@ -93,12 +93,37 @@ function extractRefreshCookie(res) {
   return pairs.length ? pairs.join("; ") : null;
 }
 
-async function cmsPost(path, body, { cookie } = {}) {
+/**
+ * The seller's own address, for the CMS's rate limiter.
+ *
+ * Every call to the CMS is proxied through these route handlers, so without
+ * this the CMS sees Vercel's egress address for every seller on the site — and
+ * its limiter keys on `ctx.ip`. /seller/register allows 10 per 15 minutes, so
+ * that was 10 registrations per 15 minutes for the ENTIRE SITE, with the
+ * eleventh real seller refused and no way for them to know why.
+ *
+ * Honest about what this is: a header the CMS chooses to believe. It is not
+ * proof of origin, and anyone posting to the CMS directly can set it to
+ * anything. That is a real limit and it is written down in the middleware too.
+ * It is still the right trade — the limiter's job is to stop one client
+ * hammering an endpoint, and before this it could not distinguish clients at
+ * all. Binding it properly needs a shared secret between the two apps, which
+ * is a deployment change rather than a code one.
+ */
+function clientIp(request) {
+  const forwarded = request?.headers?.get?.("x-forwarded-for");
+  // Left-most entry is the original client; the rest are proxies.
+  const first = forwarded ? forwarded.split(",")[0].trim() : "";
+  return first || request?.headers?.get?.("x-real-ip") || "";
+}
+
+async function cmsPost(path, body, { cookie, clientAddress } = {}) {
   try {
     const res = await fetch(`${STRAPI_URL}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(clientAddress ? { "X-Autosouq-Client-IP": clientAddress } : {}),
         ...(cookie ? { Cookie: cookie } : {}),
       },
       body: JSON.stringify(body ?? {}),
@@ -145,13 +170,14 @@ async function cmsPost(path, body, { cookie } = {}) {
  * `fullName` is required by the CMS User type; `whatsapp` is optional at signup
  * because a seller supplies a number on the listing itself.
  */
-export async function registerSeller({ email, password, fullName, whatsapp }) {
+export async function registerSeller({ email, password, fullName, whatsapp, request }) {
   const created = await cmsPost("/api/seller/register", {
     email,
     password,
     fullName,
     ...(whatsapp ? { whatsapp } : {}),
-  });
+  
+  }, { clientAddress: clientIp(request) });
 
   if (!created.ok) return created;
 
@@ -204,11 +230,12 @@ export async function registerSeller({ email, password, fullName, whatsapp }) {
  * `identifier` and `password` and nothing else. Registration was the only half
  * that had to become ours.
  */
-export async function loginSeller({ email, password }) {
+export async function loginSeller({ email, password, request }) {
   const result = await cmsPost("/api/auth/local", {
     identifier: email,
     password,
-  });
+  
+  }, { clientAddress: clientIp(request) });
 
   if (!result.ok) {
     // Strapi says "Invalid identifier or password", which is the right amount

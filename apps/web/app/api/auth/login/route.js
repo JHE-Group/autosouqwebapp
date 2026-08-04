@@ -27,7 +27,7 @@ export async function POST(request) {
     );
   }
 
-  const result = await loginSeller({ email, password });
+  const result = await loginSeller({ email, password, request });
 
   if (!result.ok || !result.refreshCookie) {
     /**

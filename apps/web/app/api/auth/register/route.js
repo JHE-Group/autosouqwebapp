@@ -26,7 +26,15 @@ export async function POST(request) {
 
   const { email, password, fullName, whatsapp } = body ?? {};
 
-  const result = await registerSeller({ email, password, fullName, whatsapp });
+  const result = await registerSeller({
+    email,
+    password,
+    fullName,
+    whatsapp,
+    // Carried through so the CMS's rate limiter can key on the seller's own
+    // address rather than on Vercel's — see clientIp in lib/auth.js.
+    request,
+  });
 
   if (!result.ok || !result.refreshCookie) {
     // The CMS owns these messages — it is the thing that knows the email is
