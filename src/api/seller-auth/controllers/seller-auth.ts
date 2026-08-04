@@ -98,7 +98,9 @@ type ProfileCtx = ListingsCtx & {
 
 type StatusCtx = ListingsCtx & {
   params?: { id?: string };
-  request?: { body?: { listingStatus?: string; takeDown?: boolean } };
+  request?: {
+    body?: { listingStatus?: string; takeDown?: boolean; confirmAvailable?: boolean };
+  };
   notFound: (message: string) => unknown;
   badRequest: (message: string) => unknown;
 };
@@ -121,6 +123,8 @@ const SELLER_LISTING_FIELDS = [
   // only from the admin.
   'moderationState',
   'moderationNote',
+  // Drives the "is this still for sale?" prompt on the seller's dashboard.
+  'availabilityConfirmedAt',
   'slug',
   'price',
   'currency',
@@ -291,14 +295,26 @@ export default {
 
     const live = await strapi.documents('api::listing.listing').findMany({
       filters: { seller: { id: userId } } as never,
-      fields: ['id'] as never,
+      /*
+       * publishedAt too, not just the id.
+       *
+       * The rows above are DRAFT versions and their own publishedAt is null by
+       * construction — the note above says so — so the draft cannot report when
+       * the car went live. The dashboard needs that date to know how long a
+       * listing has sat unconfirmed. See apps/web/lib/listingFreshness.js.
+       */
+      fields: ['id', 'publishedAt'] as never,
       status: 'published',
       limit: 100,
     });
 
-    const liveIds = new Set(
-      (live ?? []).map((row: Record<string, unknown>) => row.documentId),
+    const livePublishedAt = new Map(
+      (live ?? []).map((row: Record<string, unknown>) => [
+        row.documentId,
+        row.publishedAt,
+      ]),
     );
+    const liveIds = new Set(livePublishedAt.keys());
 
     ctx.body = {
       data: (rows ?? []).map((row: Record<string, unknown>) => ({
@@ -328,6 +344,8 @@ export default {
          * Published still wins: a live listing is live whatever the moderation
          * field says, because what a buyer can see is the fact that matters.
          */
+        // The published version's date, not the draft's null.
+        publishedAt: livePublishedAt.get(row.documentId) ?? null,
         state: liveIds.has(row.documentId)
           ? 'live'
           : row.moderationState === 'declined'
@@ -372,9 +390,9 @@ export default {
       return ctx.badRequest('Which listing?');
     }
 
-    const { listingStatus, takeDown } = ctx.request?.body ?? {};
+    const { listingStatus, takeDown, confirmAvailable } = ctx.request?.body ?? {};
 
-    if (!takeDown && !SELLER_MAY_SET_STATUS.has(String(listingStatus))) {
+    if (!takeDown && !confirmAvailable && !SELLER_MAY_SET_STATUS.has(String(listingStatus))) {
       return ctx.badRequest('Not a status you can set.');
     }
 
@@ -394,6 +412,39 @@ export default {
       // notFound rather than forbidden: a 403 confirms the id exists, which
       // turns document ids into an inventory oracle for anyone with an account.
       return ctx.notFound('Listing not found.');
+    }
+
+    if (confirmAvailable) {
+      /*
+       * "Yes, it is still for sale."
+       *
+       * Stamped server-side from the clock, never from the request — a seller
+       * who could send their own timestamp could keep a car that sold months
+       * ago looking freshly confirmed, which is the exact decay this prompt
+       * exists to stop.
+       *
+       * Written to both versions so the moderator's view and the buyer's agree
+       * about when the seller last vouched for the car. It changes nothing a
+       * buyer reads, so it needs no review.
+       */
+      const now = new Date().toISOString();
+      const stamp = { availabilityConfirmedAt: now } as never;
+      await strapi.documents('api::listing.listing').update({
+        documentId,
+        status: 'draft',
+        data: stamp,
+      });
+      try {
+        await strapi.documents('api::listing.listing').update({
+          documentId,
+          status: 'published',
+          data: stamp,
+        });
+      } catch {
+        // Not published; the draft stamp is enough.
+      }
+      ctx.body = { data: { documentId, availabilityConfirmedAt: now } };
+      return;
     }
 
     if (takeDown) {

@@ -45,6 +45,9 @@ const SELLER_MAY_NOT_SET = [
   // reason it was turned down.
   'moderationState',
   'moderationNote',
+  // Set only by the confirm-available endpoint, which stamps it server-side.
+  // A seller who could write it directly could keep a sold car looking fresh.
+  'availabilityConfirmedAt',
 ] as const;
 
 function stripPrivilegedFields(data: Record<string, unknown>) {

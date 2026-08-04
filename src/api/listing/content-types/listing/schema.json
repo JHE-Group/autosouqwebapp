@@ -71,6 +71,9 @@
       "enum": ["pending", "approved", "declined"],
       "default": "pending"
     },
+    "availabilityConfirmedAt": {
+      "type": "datetime"
+    },
     "moderationNote": {
       "type": "text"
     },
