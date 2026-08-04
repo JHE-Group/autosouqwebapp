@@ -1,5 +1,5 @@
 import { DEFAULT_LOCALE } from "@/lib/locale";
-import { formatPrice } from "@/lib/format";
+import { foldDigits, formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 // WhatsApp click-to-chat helpers for Omani numbers.
 // Spec: https://www.appsflyer.com/blog/deep-linking/whatsapp-deep-link/
@@ -20,8 +20,11 @@ const OMAN_CC = "968";
 export function normalizeOmaniMsisdn(raw) {
   if (!raw) return null;
 
+  // Fold BEFORE stripping. JavaScript's \d is [0-9], so /\D/ treats ٠-٩ as
+  // punctuation and deletes the whole number — while type="tel" keeps the
+  // characters on screen, so the seller sees a correct number rejected.
   // wa.me takes digits only — no +, spaces, dashes or brackets.
-  let d = String(raw).replace(/\D/g, "");
+  let d = foldDigits(raw).replace(/\D/g, "");
 
   if (d.startsWith("00")) d = d.slice(2); // 00968… → 968…
   if (d.length === 9 && d.startsWith("0")) d = d.slice(1); // 091234567 → 91234567

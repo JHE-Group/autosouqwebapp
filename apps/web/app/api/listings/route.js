@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { foldDigits } from "@/lib/format";
 import { slugifyTitle } from "@/lib/slugifyTitle";
 import { getSession, getToken } from "@/lib/auth";
 
@@ -184,7 +185,11 @@ async function resolveRelations(form) {
 }
 
 function toInt(value) {
-  const n = Number(value);
+  // Fold first. A client that skipped the form — or an older cached bundle —
+  // can still send ٢٧٠٠, and Number("٢٧٠٠") is NaN, which would reject a
+  // perfectly good listing at the last step with a message about the price
+  // being missing.
+  const n = Number(foldDigits(value));
   return Number.isFinite(n) ? Math.trunc(n) : null;
 }
 

@@ -12,7 +12,7 @@ import React, {
 } from "react";
 import { Link } from "@/i18n/navigation";
 import { featureOptions } from "@/data/filterOptions";
-import { formatPrice } from "@/lib/format";
+import { foldDigits, formatPrice } from "@/lib/format";
 import { normalizeOmaniMsisdn } from "@/lib/whatsapp";
 import { IMPORT_ORIGIN, SOLD_AS_IS, SOLD_AS_IS_STYLE } from "@/lib/listingLabels";
 
@@ -998,14 +998,13 @@ function StepCar({ form, set, derivedTitle, makes = [] }) {
         <Field label={t("year")} id="listing_year">
           <input
             id="listing_year"
-            type="number"
+            type="text"
             inputMode="numeric"
+            pattern="[0-9٠-٩۰-۹]*"
             className="form-control"
-            min={1980}
-            max={new Date().getFullYear() + 1}
             placeholder={t("yearPlaceholder")}
             value={form.year}
-            onChange={(e) => set("year", e.target.value)}
+            onChange={(e) => set("year", foldDigits(e.target.value))}
           />
         </Field>
         <Field
@@ -1015,14 +1014,13 @@ function StepCar({ form, set, derivedTitle, makes = [] }) {
         >
           <input
             id="listing_km"
-            type="number"
+            type="text"
             inputMode="numeric"
+            pattern="[0-9٠-٩۰-۹]*"
             className="form-control"
-            min={0}
-            step={1000}
             placeholder={t("kmPlaceholder")}
             value={form.km}
-            onChange={(e) => set("km", e.target.value)}
+            onChange={(e) => set("km", foldDigits(e.target.value))}
           />
         </Field>
       </div>
@@ -1209,18 +1207,16 @@ function StepPrice({ form, set, priceCheck }) {
       <Field label={t("label", { currency: CURRENCY })} id="listing_price">
         <input
           id="listing_price"
-          type="number"
+          type="text"
           inputMode="numeric"
+          pattern="[0-9٠-٩۰-۹]*"
           className="form-control"
-          min={BAND.ASIS_MIN}
-          max={BAND.MAX}
-          step={10}
           placeholder={t("placeholder", {
             min: BAND.ASIS_MIN.toLocaleString("en-US"),
             max: BAND.MAX.toLocaleString("en-US"),
           })}
           value={form.price}
-          onChange={(e) => set("price", e.target.value)}
+          onChange={(e) => set("price", foldDigits(e.target.value))}
           aria-invalid={priceCheck.state === "invalid"}
           aria-describedby="price-feedback"
         />
@@ -1681,15 +1677,13 @@ function StepReview({
               <Field label={t("engineSize")} id="listing_engine">
                 <input
                   id="listing_engine"
-                  type="number"
+                  type="text"
                   inputMode="decimal"
-                  step="0.1"
-                  min={0.6}
-                  max={8}
+                  pattern="[0-9٠-٩۰-۹.,]*"
                   className="form-control"
                   placeholder={t("enginePlaceholder")}
                   value={form.engineSize}
-                  onChange={(e) => set("engineSize", e.target.value)}
+                  onChange={(e) => set("engineSize", foldDigits(e.target.value))}
                 />
               </Field>
               <Select

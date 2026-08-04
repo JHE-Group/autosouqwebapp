@@ -36,3 +36,28 @@ export function formatPrice(value, currency = DEFAULT_CURRENCY, locale = "en") {
     CURRENCY_LABEL[currency]?.[locale === "ar" ? "ar" : "en"] ?? currency;
   return `${amount.toLocaleString("en-US")} ${label}`;
 }
+
+/**
+ * Arabic-Indic (٠-٩) and Extended Arabic-Indic / Persian (۰-۹) digits folded to
+ * ASCII.
+ *
+ * JavaScript's `\d` is `[0-9]` and nothing else, so `replace(/\D/g, "")` — the
+ * standard way to clean a phone number — deletes an Arabic seller's digits
+ * entirely rather than keeping them. And the HTML value-sanitisation algorithm
+ * for `<input type="number">` rejects them outright: the character never
+ * reaches React, the box stays empty, and nothing is shown to explain why.
+ *
+ * On a site whose default locale is Arabic and whose stated primary device is a
+ * budget Android phone, that is the seller typing ٢٧٠٠ into the price and the
+ * form neither accepting it nor complaining.
+ *
+ * Kept here rather than inside any one caller because it has to be applied in
+ * three places that do not import each other: the form inputs, the WhatsApp
+ * normaliser, and the server-side parse. Any one of them missing it is a
+ * silent failure.
+ */
+export function foldDigits(value) {
+  return String(value ?? "")
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u06f0-\u06f9]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+}
