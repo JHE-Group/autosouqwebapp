@@ -500,7 +500,15 @@
       "whatsappHint": "It is how nearly every buyer will contact you, so check it twice.",
       "otherPhone": "Other phone (optional)",
       "invalid": "That is not an Omani mobile number. WhatsApp needs a number starting 9 or 7, eight digits — a landline will not work.",
-      "willMessage": "Buyers will message +{msisdn}."
+      "willMessage": "Buyers will message +{msisdn}.",
+      "accountTitle": "Your account",
+      "accountWhy": "So you can come back and change the price, mark it sold, or take it down. We ask now rather than before you started.",
+      "accountName": "Your name *",
+      "accountNamePlaceholder": "Salim Al Balushi",
+      "accountEmail": "Email *",
+      "accountPassword": "Password *",
+      "accountPasswordHint": "At least 8 characters. This is how you sign back in — there is no reset email yet, so keep it somewhere safe.",
+      "accountTaken": "That email already has an account. Sign in first, then come back — your car is saved on this phone."
     },
     "review": {
       "heading": "What buyers will see",

@@ -28,21 +28,25 @@ export default async function Page({ params }) {
   const { locale } = await params;
 
   /**
-   * An account is required to list a car.
+   * No sign-in gate. The account is created at Publish instead.
    *
-   * Checked on the server, before the form renders. Hiding the form in the
-   * client would be decoration — /api/listings answers 401 without a session
-   * regardless, and the CMS refuses an unauthenticated create beneath that —
-   * but a seller should find that out before filling in six steps, not after.
+   * This page used to redirect anyone without a session to /sign-in, and the
+   * comment here argued a seller should learn about the account before filling
+   * six sections rather than after. That is a fair argument about WHEN to ask
+   * — and the answer it reached was wrong for this product.
    *
-   * `next` carries them back here once they are signed in, so the account is a
-   * detour rather than a dead end. lib/safeNext.js is what stops that parameter
-   * being turned into an off-site redirect.
+   * NICHE.md names listing supply as the binding constraint at launch. Asking a
+   * stranger to create an account before they have seen the form is asking for
+   * commitment before they have any reason to give it, and the people it turns
+   * away are the ones the site most needs. So the form is open, and the account
+   * is the last step rather than the first — by which point they have written
+   * out their car and have a reason to finish.
+   *
+   * The API layers behind this are unchanged: /api/listings still answers 401
+   * without a session and the CMS still refuses an unauthenticated create.
+   * Nothing here is load-bearing for security. It is only the moment we ask.
    */
   const session = await getSession();
-  if (!session) {
-    redirect({ href: "/sign-in?next=/add-listing", locale });
-  }
 
   const crumb = await getTranslations({ locale, namespace: "breadcrumb" });
 
@@ -89,7 +93,11 @@ export default async function Page({ params }) {
           {/* The id scopes the localStorage draft. Without it a shared phone
               offers one seller the other's half-written car — see
               lib/listingDraft.js. It is an integer, never rendered. */}
-          <AddListing makes={makes} sellerId={session.id} />
+          <AddListing
+            makes={makes}
+            sellerId={session?.id}
+            signedIn={Boolean(session)}
+          />
         </div>
       </section>
       <SiteFooter locale={locale} />

@@ -251,10 +251,68 @@ function dataUrlToFile(dataUrl, index) {
  * draft. A submission lands in the review queue by construction rather than by
  * this function remembering to ask for it.
  */
-async function submitViaApi(form, { locale, title, images = [] } = {}) {
+/**
+ * Create the account the listing will belong to, when there is not one yet.
+ *
+ * Two requests rather than one endpoint that does both, and the ordering is
+ * deliberate: the account first, the car second. If the car failed after a
+ * combined create we would have to unpick a half-made listing; this way a
+ * failure leaves an account that works, the seller signed in, and a form still
+ * holding everything they typed — they press Publish again.
+ *
+ * The WhatsApp number comes from the listing form, because they have already
+ * given it and asking twice reads as not having been listening.
+ */
+async function ensureAccount(form) {
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: String(form.accountEmail ?? "").trim(),
+      password: String(form.accountPassword ?? ""),
+      fullName: String(form.accountName ?? "").trim(),
+      whatsapp: String(form.whatsapp ?? "").trim(),
+    }),
+  });
+  const data = await res.json().catch(() => null);
+  if (data?.ok) return { ok: true };
+
+  /*
+   * An address that already has an account is the one failure with a specific
+   * answer — they have been here before and should sign in rather than be told
+   * something generic about their car.
+   */
+  return {
+    ok: false,
+    code: data?.code === "email_taken" ? "email_taken" : (data?.code ?? "register_failed"),
+    error: data?.error,
+  };
+}
+
+async function submitViaApi(form, { locale, title, images = [], signedIn = true } = {}) {
   try {
+    if (!signedIn) {
+      const account = await ensureAccount(form);
+      if (!account.ok) {
+        return { ok: false, reason: "rejected", code: account.code, error: account.error };
+      }
+    }
+
     const body = new FormData();
-    body.append("payload", JSON.stringify({ ...form, title }));
+    /*
+     * The account fields never go to the listing endpoint.
+     *
+     * `...form` would carry accountPassword straight into the POST body, where
+     * it has no business at all: it would sit in request logs, in Strapi's
+     * error output if the create failed, and in any proxy in between. The
+     * listing route ignores the field, which is exactly what makes it easy to
+     * miss — nothing breaks, the credential is just somewhere it should not be.
+     *
+     * Caught by scripts/check-submitted-fields.mjs flagging three fields that
+     * reach no column, which is the same assertion from the other direction.
+     */
+    const { accountName, accountEmail, accountPassword, ...carOnly } = form;
+    body.append("payload", JSON.stringify({ ...carOnly, title }));
 
     // Shrink to fit before sending, not after being rejected.
     const fitted = await fitPhotoBudget(images);
@@ -303,8 +361,9 @@ export function canSubmitListing() {
  *   ok:false + reason:"not-configured" means nothing was sent and the caller
  *   must tell the seller so, rather than clearing the form.
  */
-export function submitListing(form, { locale = "ar", title, images = [] } = {}) {
-  if (SUBMIT_MODE === "api") return submitViaApi(form, { locale, title, images });
+export function submitListing(form, { locale = "ar", title, images = [], signedIn = true } = {}) {
+  if (SUBMIT_MODE === "api")
+    return submitViaApi(form, { locale, title, images, signedIn });
   // The WhatsApp path never carried photos — it asks the seller to attach them
   // in the chat — so `images` is deliberately not threaded into it.
   return submitViaWhatsApp(form, { locale, title });

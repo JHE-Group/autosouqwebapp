@@ -152,6 +152,12 @@ const STEPS = [
 ];
 
 const EMPTY_FORM = {
+  // Only used when nobody is signed in. Never written to the draft — see the
+  // autosave effect, which strips them: a password must not sit in
+  // localStorage on a shared phone.
+  accountName: "",
+  accountEmail: "",
+  accountPassword: "",
   make: "",
   model: "",
   year: "",
@@ -212,7 +218,7 @@ const isDirty = (form) =>
       : form[key] !== EMPTY_FORM[key],
   );
 
-export default function AddListing({ makes = [], sellerId }) {
+export default function AddListing({ makes = [], sellerId, signedIn = true }) {
   const locale = useLocale();
   const tCommon = useTranslations("common");
   const t = useTranslations("addListing");
@@ -289,7 +295,18 @@ export default function AddListing({ makes = [], sellerId }) {
     const timer = window.setTimeout(() => {
       try {
         // Photos are deliberately not in the draft — see the SUBMIT GAP note.
-        window.localStorage.setItem(draftKey, JSON.stringify({ form }));
+        /*
+         * The account fields never reach the draft.
+         *
+         * A password in localStorage on a phone that gets passed around is a
+         * credential left lying about, and the draft survives sign-out by
+         * design. The rest of the form is worth keeping; these three are not.
+         */
+        const { accountPassword, accountEmail, accountName, ...keepable } = form;
+        window.localStorage.setItem(
+          draftKey,
+          JSON.stringify({ form: keepable }),
+        );
       } catch {
         // Quota or private mode. The form still works; only the draft is lost.
       }
@@ -364,8 +381,23 @@ export default function AddListing({ makes = [], sellerId }) {
     if (!priceOk) list.push({ step: 2, key: "price" });
     if (!form.city) list.push({ step: 4, key: "city" });
     if (!msisdn) list.push({ step: 4, key: "whatsapp" });
+    /*
+     * The account, asked for at the end rather than the door.
+     *
+     * A stranger who has not seen the form has no reason to make an account;
+     * one who has just written out their car does. So these sit in the same
+     * section as the WhatsApp number — how a buyer reaches them, and how they
+     * get back to this listing — and the publish gate covers them because
+     * section 4 is already required.
+     */
+    if (!signedIn) {
+      if (!form.accountName.trim()) list.push({ step: 4, key: "accountName" });
+      if (!form.accountEmail.trim()) list.push({ step: 4, key: "accountEmail" });
+      if (form.accountPassword.length < 8)
+        list.push({ step: 4, key: "accountPassword" });
+    }
     return list;
-  }, [form, priceOk, msisdn]);
+  }, [form, priceOk, msisdn, signedIn]);
 
   const canPublish = missing.length === 0;
 
@@ -393,6 +425,11 @@ export default function AddListing({ makes = [], sellerId }) {
      * seller types. The CMS has just rejected the price, so `form.price` is
      * what it rejected — no need to parse a number back out of English prose.
      */
+    if (code === "email_taken") {
+      // They have been here before. Telling them their car failed would be both
+      // wrong and unhelpful; the car is fine, the address is spoken for.
+      return t("contact.accountTaken");
+    }
     if (code === "price_above_band") {
       return t("priceCheck.aboveBand", {
         max: money(BAND.MAX),
@@ -426,6 +463,9 @@ export default function AddListing({ makes = [], sellerId }) {
       locale,
       title: derivedTitle,
       images,
+      // When false, submitListing creates the account first and files the car
+      // with the session it just established.
+      signedIn,
     });
 
     setSubmitting(false);
@@ -680,7 +720,12 @@ export default function AddListing({ makes = [], sellerId }) {
                             />
                           ) : null}
                           {index === 4 ? (
-                            <StepContact form={form} set={set} msisdn={msisdn} />
+                            <StepContact
+                              form={form}
+                              set={set}
+                              msisdn={msisdn}
+                              signedIn={signedIn}
+                            />
                           ) : null}
                           {index === 5 ? (
                             <StepReview
@@ -1464,7 +1509,7 @@ function StepPhotos({ images, setImages, addFiles, isDragging, setIsDragging, on
 
 /* ------------------------------------------------------------- step 5 -- */
 
-function StepContact({ form, set, msisdn }) {
+function StepContact({ form, set, msisdn, signedIn = true }) {
   const t = useTranslations("addListing.contact");
 
   return (
@@ -1568,6 +1613,70 @@ function StepContact({ form, set, msisdn }) {
           ) : null}
         </div>
       </div>
+
+      {!signedIn && (
+        <>
+          {/*
+            The account, asked for here rather than at the door.
+
+            This page used to send anyone without one to /sign-in before they
+            had seen the form. NICHE.md names listing supply as the binding
+            constraint, and asking a stranger to commit before they have a
+            reason to is how you lose the sellers you most need. By this point
+            they have written out their car.
+
+            It sits with the WhatsApp number because it is the same idea: how a
+            buyer reaches them, and how they get back to this listing.
+          */}
+          <h3 className="mt-4">{t("accountTitle")}</h3>
+          <p className="tfcl-hint">{t("accountWhy")}</p>
+
+          <div className="form-group">
+            <label htmlFor="listing_account_name">{t("accountName")}</label>
+            <input
+              id="listing_account_name"
+              type="text"
+              className="form-control"
+              autoComplete="name"
+              value={form.accountName}
+              onChange={(e) => set("accountName", e.target.value)}
+              placeholder={t("accountNamePlaceholder")}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="listing_account_email">{t("accountEmail")}</label>
+            <input
+              id="listing_account_email"
+              type="email"
+              /* Always Latin, so it stays LTR on the Arabic page. */
+              dir="ltr"
+              className="form-control"
+              autoComplete="email"
+              value={form.accountEmail}
+              onChange={(e) => set("accountEmail", e.target.value)}
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="listing_account_password">
+              {t("accountPassword")}
+            </label>
+            <input
+              id="listing_account_password"
+              type="password"
+              dir="ltr"
+              className="form-control"
+              autoComplete="new-password"
+              minLength={8}
+              value={form.accountPassword}
+              onChange={(e) => set("accountPassword", e.target.value)}
+            />
+            <p className="tfcl-hint">{t("accountPasswordHint")}</p>
+          </div>
+        </>
+      )}
     </>
   );
 }

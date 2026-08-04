@@ -59,6 +59,23 @@ const DELIBERATE = {
   // Answered to decide whether the *other* fault fields are shown; the prose
   // it produces is what matters, and buildDescription already writes it.
   noKnownFaults: "folded into the description as prose",
+
+  /*
+   * The account, which is not part of the car.
+   *
+   * These three appear in the listing form because the sign-in gate moved to
+   * the END of it — a stranger fills in their car and creates an account at
+   * Publish, rather than being asked to commit before they have seen anything.
+   * They are POSTed to /api/auth/register, and lib/submitListing files the car
+   * with the session that creates.
+   *
+   * A password reaching the listing payload would be a defect, not a feature,
+   * so this exemption is narrow and named rather than a pattern match on
+   * "account*".
+   */
+  accountName: "sent to /api/auth/register, not to the listing",
+  accountEmail: "sent to /api/auth/register, not to the listing",
+  accountPassword: "sent to /api/auth/register, and never stored anywhere else",
 };
 
 const stranded = [...collected].filter(
