@@ -153,18 +153,42 @@ export default function useCarFilters(
   ]);
 
   useEffect(() => {
+    /*
+     * Sold cars sink, in every sort order.
+     *
+     * They were arriving at positions 2, 3 and 4 of the default grid — the
+     * second, third and fourth cars a buyer sees — with a struck-through price
+     * and no way to act on them, because the source order is newest-first and
+     * a sold car is often a recently-touched one. On a catalogue this small
+     * that is most of the first screen spent on cars nobody can buy.
+     *
+     * Sunk rather than removed. A sold listing is genuine evidence that cars
+     * move here, which is worth something on a new marketplace, and hiding
+     * them would also make the result count disagree with the grid. They just
+     * do not get the top of the page.
+     *
+     * `Array.prototype.sort` is stable in every engine we target, so within
+     * each partition the chosen order — newest-first, or by price — is
+     * preserved exactly.
+     */
+    const soldLast = (rows) =>
+      [...rows].sort(
+        (a, b) =>
+          Number(a.listingStatus === "sold") - Number(b.listingStatus === "sold"),
+      );
+
     if (sortingOption === "Price Ascending") {
       dispatch({
         type: "SET_SORTED",
-        payload: [...filtered].sort((a, b) => a.price - b.price),
+        payload: soldLast([...filtered].sort((a, b) => a.price - b.price)),
       });
     } else if (sortingOption === "Price Descending") {
       dispatch({
         type: "SET_SORTED",
-        payload: [...filtered].sort((a, b) => b.price - a.price),
+        payload: soldLast([...filtered].sort((a, b) => b.price - a.price)),
       });
     } else {
-      dispatch({ type: "SET_SORTED", payload: filtered });
+      dispatch({ type: "SET_SORTED", payload: soldLast(filtered) });
     }
     dispatch({ type: "SET_CURRENT_PAGE", payload: 1 });
   }, [filtered, sortingOption]);

@@ -66,7 +66,24 @@ export default async function Cars({
    * demo catalogue is wanted, that gate is what turns it on.
    */
   const source = listings ?? [];
-  const shown = source.slice(0, limit);
+
+  /*
+   * Available cars first, and sold ones only as backfill.
+   *
+   * This section is headed «سيارات معروضة الآن» — "cars available now" — and
+   * it was showing three sold cars out of six, struck-through and with no
+   * WhatsApp button. The heading was simply not true, on the home page, above
+   * the fold, which is the worst place on the site to be caught overstating
+   * something when the whole proposition is trustworthiness.
+   *
+   * Sold cars are not dropped outright: with production inventory at zero and
+   * a catalogue this small, six available cars may not exist, and an empty row
+   * says less than a short one. They fill from the back only if there is room,
+   * and the sold pill on the card keeps them honest wherever they land.
+   */
+  const available = source.filter((car) => car?.listingStatus !== "sold");
+  const soldOnes = source.filter((car) => car?.listingStatus === "sold");
+  const shown = [...available, ...soldOnes].slice(0, limit);
 
   return (
     <section className={parentClass}>

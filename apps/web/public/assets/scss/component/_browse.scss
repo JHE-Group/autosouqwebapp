@@ -1,0 +1,93 @@
+@use '../abstracts/' as *;
+
+/* ---------------------------------------------------------------------------
+ * The browse hero, on a phone.
+ *
+ * /used-cars is the page that decides whether a buyer stays, and on a 390×844
+ * phone it opened with 1,247px before the first car — roughly 1.5 screens of
+ * scrolling past copy, on the one page whose job is showing inventory. Measured
+ * budget before: 104 header, 667 hero, 345 filter card, 112 toolbar.
+ *
+ * The band is also stated three times above the fold — in the h1 («بأقل من
+ * 6,000 ر.ع»), in the lead, and again in the cream note. Saying it once is not
+ * less honest; it is the same claim, made once, where someone will read it.
+ *
+ * Desktop is untouched: at 1440 the hero is a legitimate landing statement with
+ * room to spare. This is a phone problem, so it gets a phone fix.
+ * ------------------------------------------------------------------------ */
+
+@media only screen and (max-width: 767px) {
+  /* The padding itself is set in responsive.scss, which owns this rule and
+     forwards after this file — a copy here would lose on source order at equal
+     specificity, which is exactly what it did on the first attempt. */
+
+  /* The element's own classes already say `fs-30 lh-38`; the theme's 50px/55px
+     rule overrides them at this width. Honour what the markup asks for. */
+  .tf-banner.style-2 .content .heading h1 {
+    font-size: 30px;
+    line-height: 38px;
+    margin-block-end: 10px;
+  }
+
+  /*
+   * The third statement of the price band goes.
+   *
+   * The lead paragraph directly above already gives the range in a full
+   * sentence, so the cream note repeats it verbatim to a reader who has not
+   * scrolled anywhere yet. It stays on desktop, where it costs nothing, and on
+   * the empty-results panel, where it is the explanation rather than a repeat.
+   */
+  .tf-banner.style-2 .content .heading .asq-band-note {
+    display: none;
+  }
+}
+
+/* The Arabic heading override from _arabic.scss sets 36px at this width, which
+   is the right size for the taller Arabic line box; keep the two in step so a
+   later edit to one does not silently un-fix the other. */
+
+@media only screen and (max-width: 767px) {
+  /*
+   * The hero's four stacked selects go, and the offcanvas sheet takes over.
+   *
+   * On a phone FlatFilter3 renders as a 303px white card of four full-width
+   * selects and a search button, sitting between the hero and the cars. It is
+   * the second-largest block on the page and it duplicates a control that is
+   * already better: the results toolbar's «الفلاتر» button opens a sheet with
+   * labels above every field, a mileage and price range, and a sticky "show N
+   * cars" CTA. Two filter UIs, one of them worse, and the worse one is the one
+   * standing between the buyer and the inventory.
+   *
+   * Not `visibility` or a height collapse — `display: none` so it costs no
+   * layout at all. The sheet is reachable at every width from the toolbar, so
+   * nothing becomes unfilterable.
+   */
+  .flat-filter-search {
+    display: none;
+  }
+
+  /*
+   * The results heading keeps its semantics and loses its padding.
+   *
+   * On the hub it reads «تصفّح السيارات» directly under an h1 that already
+   * says «سيارات مستعملة في عُمان بأقل من 6,000 ر.ع», so it is a restatement
+   * wearing 60px of margin. It stays in the document — it is the h2 that gives
+   * the results section its name, and hiding it would cost that for a screen
+   * reader and for search — but it stops reserving a screenful.
+   */
+  .tf-section .heading-section {
+    margin-block-end: 8px;
+
+    > h2 {
+      font-size: 18px;
+      line-height: 1.4;
+      margin-block-end: 0;
+    }
+  }
+
+  /* The toolbar carried 18px of top margin plus its own padding, on top of the
+     heading's. One gap between the heading and the controls is enough. */
+  .asq-toolbar.mt-18 {
+    margin-block-start: 8px;
+  }
+}

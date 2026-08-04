@@ -1542,6 +1542,19 @@
   aspect-ratio: 4 / 3;
 }
 
+/* No photograph, so no photograph-shaped hole. See .asq-card__img--none. */
+.asq-card--grid .asq-card__media--none,
+.asq-card--list .asq-card__media--none {
+  aspect-ratio: auto;
+  min-block-size: 0;
+}
+
+.asq-card--list .asq-card__media--none {
+  /* The list card gives the photo a fixed 260px column; without a photo the
+     band should not be a 260px-wide slab of indigo down the side. */
+  inline-size: 132px;
+}
+
 .asq-card--list .asq-card__media {
   inline-size: 260px;
   align-self: stretch;
@@ -1564,8 +1577,36 @@
   transform: scale(1.05);
 }
 
+/*
+ * The no-photo band.
+ *
+ * Deliberately NOT the 4:3 slot a photograph gets. That reserved 273px of flat
+ * grey on a 390px phone — 45% of the card — on every card in the grid, and at
+ * launch that is every card there is. 132px of indigo with the brand mark in
+ * cream says "no photo yet" without pretending a photograph is loading, and
+ * takes ~140px off each card: on a twelve-car page that is ~1,700px of scroll
+ * a buyer no longer makes.
+ *
+ * `position: absolute` is deliberately not used — the parent sizes to this.
+ */
 .asq-card__img--none {
-  background-color: $bg-color2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 132px;
+  inline-size: 100%;
+  /* Overrides the 4:3 the media wrapper sets for real photographs. */
+  aspect-ratio: auto;
+  background-color: $brand-indigo;
+}
+
+.asq-card__nomark {
+  inline-size: 40px;
+  block-size: 40px;
+  /* Cream on indigo is 11.19:1. It is decorative here — the card's title and
+     price carry the meaning — so it is aria-hidden and purely a texture that
+     stops the band reading as a failed image. */
+  opacity: 0.85;
 }
 
 .asq-card__badges {

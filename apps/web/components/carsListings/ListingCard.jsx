@@ -119,7 +119,12 @@ export default function ListingCard({
     <article
       className={`asq-card asq-card--${variant}${sold ? " asq-card--sold" : ""} ${className}`.trim()}
     >
-      <div className="asq-card__media">
+      {/* The modifier, not :has(). The 4:3 slot lives on this wrapper, so the
+          no-photo band cannot shrink the card from the inside — and an explicit
+          class asks nothing of the browser. */}
+      <div
+        className={`asq-card__media${car.imgSrc ? "" : " asq-card__media--none"}`}
+      >
         {car.imgSrc ? (
           <Link
             href={href}
@@ -139,7 +144,35 @@ export default function ListingCard({
             />
           </Link>
         ) : (
-          <div className="asq-card__img asq-card__img--none" aria-hidden="true" />
+          /*
+           * No photo: a short branded band, not a tall empty rectangle.
+           *
+           * This reserved the same 4:3 slot as a real photograph and filled it
+           * with flat grey — 273px, 45% of the card, on EVERY card, because
+           * production inventory is zero and most sellers have not uploaded
+           * anything yet. A page of grey rectangles does not read as honest,
+           * it reads as broken, which is an expensive thing to look like on a
+           * site whose whole pitch is being the trustworthy end of the market.
+           *
+           * It is also a link now. The photo branch has always been one, so
+           * the largest target on the card was dead precisely when there was
+           * nothing else to look at.
+           */
+          <Link
+            href={href}
+            className="asq-card__img asq-card__img--none"
+            aria-hidden="true"
+            tabIndex={-1}
+          >
+            <Image
+              className="asq-card__nomark"
+              src="/assets/images/brand/icon-cream.svg"
+              alt=""
+              width={40}
+              height={40}
+              unoptimized
+            />
+          </Link>
         )}
 
         <div className="asq-card__badges">

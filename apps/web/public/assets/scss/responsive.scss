@@ -618,7 +618,13 @@
   }
 
   .tf-banner.style-2 .content {
-    padding: 80px 0px 130px 0px;
+    /*
+     * Was 80px top / 130px bottom — 210px of empty indigo above the fold on
+     * the one page whose job is showing cars. /used-cars opened with 1,247px
+     * before the first card on a 390x844 phone, about 1.5 screens of scrolling
+     * past copy. Only BrowsePage uses this banner, so the change is contained.
+     */
+    padding: 28px 0px 24px 0px;
   }
 
   .box-car-list.style-2 {
