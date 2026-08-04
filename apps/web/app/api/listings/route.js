@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { slugifyTitle } from "@/lib/slugifyTitle";
 import { getSession, getToken } from "@/lib/auth";
 
 /**
@@ -111,7 +112,9 @@ function pickTaxonomy(rows, value) {
   ];
   for (const field of candidates) {
     const hit = rows.find((r) => normalizeForMatch(field(r)) === wanted);
-    if (hit) return hit.documentId ?? null;
+    // The whole row, not just the documentId: the caller needs `slug` too, and
+    // taxonomy slugs are Latin whatever language the seller typed.
+    if (hit) return hit ?? null;
   }
   return null;
 }
@@ -126,6 +129,8 @@ async function resolveRelations(form) {
   if (!wanted.length) return {};
 
   const relations = {};
+  // Latin slugs for the matched rows, used to compose the public URL.
+  const slugs = {};
 
   for (const [field, collection, value] of wanted) {
     try {
@@ -158,7 +163,8 @@ async function resolveRelations(form) {
       const hit = pickTaxonomy(rows, value);
 
       if (hit) {
-        relations[field] = hit;
+        relations[field] = hit.documentId ?? null;
+        if (hit.slug) slugs[field] = String(hit.slug);
       } else {
         // Not an error: a seller may name a make we do not carry yet. Worth a
         // line, because a run of these is the signal to widen the vocabulary.
@@ -174,7 +180,7 @@ async function resolveRelations(form) {
     }
   }
 
-  return relations;
+  return { relations, slugs };
 }
 
 function toInt(value) {
@@ -182,35 +188,6 @@ function toInt(value) {
   return Number.isFinite(n) ? Math.trunc(n) : null;
 }
 
-/**
- * Mint the slug ourselves, because Strapi will not.
- *
- * `slug` is a `uid` with `targetField: "title"`, which reads as "Strapi fills
- * this in". It does — in the **admin panel**, where the generation is a
- * client-side convenience. Over the content API the field simply arrives null,
- * `required: true` notwithstanding: verified by submitting a listing and
- * reading the row back, which came out `slug=<NULL>` with a perfectly good
- * title beside it.
- *
- * That is a silent break rather than a loud one. The listing saves, the seller
- * is told it worked, and the damage only appears when a human publishes it and
- * the car's page is at `/car/` with nothing after the slash.
- *
- * Non-Latin titles collapse to empty here — a seller may well type an Arabic
- * make — so there is a fallback rather than an empty string, which would fail
- * the same way.
- */
-function slugify(title) {
-  const base = title
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-
-  return base || "listing";
-}
 
 /** A short, non-guessable suffix for the collision retry. */
 function slugSuffix() {
@@ -399,7 +376,7 @@ export async function POST(request) {
 
   // Resolved before the create, because the relations decide both the public
   // URL and facet membership — see resolveRelations.
-  const relations = await resolveRelations(form);
+  const { relations, slugs } = await resolveRelations(form);
 
   const payload = {
     title,
@@ -469,7 +446,18 @@ export async function POST(request) {
      * reviewer can shorten it in the admin before publishing — they are opening
      * every draft anyway.
      */
-    const slug = `${slugify(title)}-${slugSuffix()}`;
+    /*
+     * Prefer the resolved taxonomy over the typed title. Both are correct for a
+     * seller filing in English; only this one is correct for a seller filing in
+     * Arabic, whose title contains no Latin characters at all. It also gives
+     * both languages the same URL for the same car, which is what hreflang
+     * wants.
+     */
+    const fromTaxonomy =
+      slugs.make && slugs.model
+        ? [slugs.make, slugs.model, year].filter(Boolean).join("-")
+        : null;
+    const slug = `${fromTaxonomy ?? slugifyTitle(title)}-${slugSuffix()}`;
     let res = await post(slug);
 
     /**

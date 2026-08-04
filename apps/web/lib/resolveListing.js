@@ -61,14 +61,29 @@ export async function resolveListing(slug, locale) {
   const raw = String(slug ?? "").trim();
   if (!raw) return null;
 
+  /**
+   * A leading number *might* be a demo car's id. It might equally be a CMS slug
+   * that happens to start with digits.
+   *
+   * This used to `return` from inside this branch, so a miss here was final and
+   * the slug matching below never ran. That made the branch a trap rather than
+   * a shortcut: any listing whose slug began with a digit resolved to nothing.
+   * The reachable case is Arabic — slugify keeps only [a-z0-9], so a title of
+   * "تويوتا كورولا 2015" leaves "2015" and nothing else — on the default
+   * locale. api/listings now composes such slugs from the Latin taxonomy
+   * instead, and guards the fallback, but this is the layer that has to be
+   * right for rows already in the database, and for any future path that mints
+   * a slug without asking either of them.
+   *
+   * So: try it, and fall through on a miss.
+   */
   const numeric = raw.match(/^(\d+)(?:-|$)/);
   if (numeric) {
     const id = numeric[1];
-    return (
+    const byId =
       (await getListing(id, locale)) ??
-      asDemoListing(allCars.find((car) => String(car.id) === id)) ??
-      null
-    );
+      asDemoListing(allCars.find((car) => String(car.id) === id));
+    if (byId) return byId;
   }
 
   const listings = await getListings(locale);
