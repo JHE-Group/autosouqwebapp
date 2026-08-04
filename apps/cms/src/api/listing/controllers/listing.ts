@@ -41,6 +41,41 @@ function stripPrivilegedFields(data: Record<string, unknown>) {
   for (const field of SELLER_MAY_NOT_SET) delete data[field];
 }
 
+/**
+ * A slug the front end can resolve, or nothing.
+ *
+ * `slug` is deliberately NOT in SELLER_MAY_NOT_SET: apps/web mints it from the
+ * resolved taxonomy so an Arabic-filed car gets a Latin URL, and stripping it
+ * here would hand slug generation back to Strapi's uid, which derives from the
+ * title — and "تويوتا كورولا 2015" reduces to the year, which 404s.
+ *
+ * But a seller holds a JWT and this API is on the public internet, so what
+ * arrives is not necessarily what our form sent. Two shapes break things:
+ *
+ *   · a leading digit — lib/resolveListing reads /^(\d+)(?:-|$)/ as a numeric
+ *     listing id, misses, and the car 404s on its own URL
+ *   · anything outside [a-z0-9-] — the value becomes a path segment
+ *
+ * A bad slug is dropped, not rejected. The listing is still a real car from a
+ * real seller, and Strapi's uid will derive something usable from the title;
+ * refusing the whole submission over a field the seller never saw would be the
+ * worse failure. Collisions are handled by the unique index in
+ * database/migrations, because shape and uniqueness are different problems.
+ */
+const SLUG_SHAPE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+
+function dropUnusableSlug(data: Record<string, unknown>) {
+  const slug = data.slug;
+  if (slug === undefined || slug === null) return;
+  const value = String(slug);
+  if (!SLUG_SHAPE.test(value) || value.length > 120) {
+    strapi.log.warn(
+      `listing create: dropped unusable slug ${JSON.stringify(value)}`
+    );
+    delete data.slug;
+  }
+}
+
 /** The stored document, narrowed to the part ownership checks care about. */
 type OwnedListing = { seller?: { id?: number } | null } | null;
 
@@ -152,6 +187,7 @@ export default factories.createCoreController('api::listing.listing', ({ strapi 
 
     const data = (ctx.request.body?.data ?? {}) as Record<string, unknown>;
     stripPrivilegedFields(data);
+    dropUnusableSlug(data);
     ctx.request.body.data = data;
 
     // Strapi 5 honours `?status=published` on the content API, so without this
