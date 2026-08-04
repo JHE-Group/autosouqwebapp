@@ -385,6 +385,38 @@ export default function AddListing({ makes = [], sellerId }) {
    * every successful submission would have reported failure. Both paths still
    * return the same shape; only the awaiting is new.
    */
+  /** Translated text for a code we know, or null to fall back to the server. */
+  const messageForCode = (code) => {
+    if (!code) return null;
+    /*
+     * Reuses priceCheck.*, the same sentences the field itself shows while the
+     * seller types. The CMS has just rejected the price, so `form.price` is
+     * what it rejected — no need to parse a number back out of English prose.
+     */
+    if (code === "price_above_band") {
+      return t("priceCheck.aboveBand", {
+        max: money(BAND.MAX),
+        value: money(Number(form.price)),
+      });
+    }
+    if (code === "price_below_band") {
+      return t("priceCheck.belowBand", {
+        min: money(BAND.ASIS_MIN),
+        value: money(Number(form.price)),
+      });
+    }
+    const known = new Set([
+      "too_many_photos",
+      "photo_type",
+      "photo_too_large",
+      "missing_car",
+      "missing_fields",
+      "upload_failed",
+      "unavailable",
+    ]);
+    return known.has(code) ? t(`submitError.${code}`) : null;
+  };
+
   const handlePublish = async () => {
     if (!canPublish || submitting) return;
     setSubmitting(true);
@@ -410,7 +442,21 @@ export default function AddListing({ makes = [], sellerId }) {
     // names the limit. Showing it beats a generic failure the seller cannot act
     // on. `signed-out` is called out separately because retyping the form is
     // not the fix for it.
-    setSubmitError(result.error ?? null);
+    /*
+     * The code first, the server's sentence only as a fallback.
+     *
+     * /api/listings used to answer with English prose and nothing else, and
+     * this rendered it verbatim — so an Arabic seller filled an Arabic form and
+     * was refused in English. Every response it generates now carries a machine
+     * code, and the two CMS rejections worth translating (the price band, which
+     * is the one a seller actually meets) are recognised and re-said here with
+     * the same numbers the client-side check already uses.
+     *
+     * An unrecognised code still shows the server's words rather than a generic
+     * failure: "Could not save your listing" in English beats "something went
+     * wrong" in any language.
+     */
+    setSubmitError(messageForCode(result.code) ?? result.error ?? null);
     setSubmitState(
       result.reason === "not-configured"
         ? "not-configured"

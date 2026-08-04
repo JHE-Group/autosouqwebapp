@@ -284,7 +284,7 @@ async function submitViaApi(form, { locale, title, images = [] } = {}) {
     }
 
     if (!res.ok || !data?.ok) {
-      return { ok: false, reason: "rejected", error: data?.error };
+      return { ok: false, reason: "rejected", code: data?.code, error: data?.error };
     }
 
     return { ok: true, mode: "api", status: data.status ?? "pending-review" };

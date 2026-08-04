@@ -32,8 +32,12 @@ function applyBand(data: Record<string, unknown>, currentPrice?: number) {
 
   if (price > BAND.MAX) {
     throw new ValidationError(
+      // No "See NICHE.md" — this string reaches a seller, and pointing a
+      // customer at an internal document tells them nothing and reads as a
+      // system talking to itself. The phrase "above the band" is load-bearing:
+      // apps/web matches on it to answer in the seller's own language.
       `Autosouq lists cars up to OMR ${BAND.MAX.toLocaleString()} only — ` +
-        `OMR ${price.toLocaleString()} is above the band. See NICHE.md.`,
+        `OMR ${price.toLocaleString()} is above the band.`,
     );
   }
 

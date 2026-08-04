@@ -616,7 +616,16 @@
     "metaDescription": "Tell us about your car. We check every listing before it goes live.",
     "submitSignedOut": "We could not confirm your session. Your answers are saved on this phone, but the photos are not — so sign in again in a new tab and come back to this one, rather than leaving this page.",
     "submitting": "Submitting…",
-    "submitTooLarge": "Those photos were too large to send together. Remove one or two of the biggest and try again — the rest of your listing is still here."
+    "submitTooLarge": "Those photos were too large to send together. Remove one or two of the biggest and try again — the rest of your listing is still here.",
+    "submitError": {
+      "too_many_photos": "That is more photos than we can take. Remove a few and try again.",
+      "photo_type": "Photos have to be images — JPEG, PNG, WebP or HEIC.",
+      "photo_too_large": "One of your photos is too large. Try a smaller one.",
+      "missing_car": "Add the make, model and year of the car.",
+      "missing_fields": "The price, year, kilometres and a WhatsApp number are all needed.",
+      "upload_failed": "Your photos did not upload. Nothing has been sent — try again.",
+      "unavailable": "We could not reach the server. Nothing has been sent — try again in a moment."
+    }
   },
   "blog": {
     "brand": "Autosouq.om",

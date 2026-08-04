@@ -223,6 +223,22 @@ function normalizedVin(value) {
   return raw.length === 17 ? raw : null;
 }
 
+/**
+ * Recognise the one CMS rejection worth translating.
+ *
+ * The price band is the business's whole identity, so it is also the rejection
+ * a seller meets most and the only one where the numbers are the message. The
+ * client already holds BAND and renders this itself for client-side
+ * validation — matching here lets it use the same Arabic sentence rather than
+ * printing Strapi's English underneath an Arabic form.
+ */
+function bandRejection(body) {
+  const message = String(body?.error?.message ?? "");
+  if (/above the band/i.test(message)) return "price_above_band";
+  if (/below the .* floor/i.test(message)) return "price_below_band";
+  return null;
+}
+
 /** Present only when there is a value — Strapi rejects null on some columns. */
 function optional(key, value) {
   return value === null || value === undefined || value === "" ? {} : { [key]: value };
@@ -311,6 +327,7 @@ async function uploadPhotos(files, token) {
     const payload = await res.json().catch(() => null);
     return {
       ok: false,
+      code: "upload_failed",
       error: payload?.error?.message ?? "Your photos could not be uploaded.",
     };
   }
@@ -373,7 +390,7 @@ export async function POST(request) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json(
-      { ok: false, error: "Please sign in to list a car." },
+      { ok: false, code: "signed_out", error: "Please sign in to list a car." },
       { status: 401 },
     );
   }
@@ -393,12 +410,12 @@ export async function POST(request) {
     form = JSON.parse(data.get("payload") ?? "{}");
     photos = data.getAll("photos").filter((f) => typeof f?.arrayBuffer === "function");
   } catch {
-    return NextResponse.json({ ok: false, error: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ ok: false, code: "invalid_request", error: "Invalid request." }, { status: 400 });
   }
 
   if (photos.length > MAX_PHOTOS) {
     return NextResponse.json(
-      { ok: false, error: `Please attach no more than ${MAX_PHOTOS} photos.` },
+      { ok: false, code: "too_many_photos", error: `Please attach no more than ${MAX_PHOTOS} photos.` },
       { status: 400 },
     );
   }
@@ -408,13 +425,13 @@ export async function POST(request) {
       // Named rather than generic: a seller who just tried to attach a PDF of
       // the mulkiya needs to know it is the file type, not the file.
       return NextResponse.json(
-        { ok: false, error: "Photos must be images — JPEG, PNG, WebP or HEIC." },
+        { ok: false, code: "photo_type", error: "Photos must be images — JPEG, PNG, WebP or HEIC." },
         { status: 400 },
       );
     }
     if (photo.size > MAX_PHOTO_BYTES) {
       return NextResponse.json(
-        { ok: false, error: "One of your photos is too large. Please use photos under 6 MB." },
+        { ok: false, code: "photo_too_large", error: "One of your photos is too large. Please use photos under 6 MB." },
         { status: 400 },
       );
     }
@@ -438,13 +455,13 @@ export async function POST(request) {
   // other to have done it.
   if (!title) {
     return NextResponse.json(
-      { ok: false, error: "Add the make, model and year of the car." },
+      { ok: false, code: "missing_car", error: "Add the make, model and year of the car." },
       { status: 400 },
     );
   }
   if (price === null || year === null || mileage === null || !whatsapp) {
     return NextResponse.json(
-      { ok: false, error: "Price, year, kilometres and a WhatsApp number are all required." },
+      { ok: false, code: "missing_fields", error: "Price, year, kilometres and a WhatsApp number are all required." },
       { status: 400 },
     );
   }
@@ -492,7 +509,7 @@ export async function POST(request) {
     // which means the session was revoked between the two calls or the CMS went
     // down in between. Either way, do not report success.
     return NextResponse.json(
-      { ok: false, error: "Your session has expired. Please sign in again." },
+      { ok: false, code: "signed_out", error: "Your session has expired. Please sign in again." },
       { status: 401 },
     );
   }
@@ -500,7 +517,7 @@ export async function POST(request) {
   // Photos first: see uploadPhotos for why the failure order matters.
   const uploaded = await uploadPhotos(photos, token);
   if (!uploaded.ok) {
-    return NextResponse.json({ ok: false, error: uploaded.error }, { status: 400 });
+    return NextResponse.json({ ok: false, code: uploaded.code ?? "upload_failed", error: uploaded.error }, { status: 400 });
   }
 
   const post = (slug) =>
@@ -600,7 +617,18 @@ export async function POST(request) {
        * would leave them retrying a car this site does not list.
        */
       return NextResponse.json(
-        { ok: false, error: body?.error?.message ?? "Could not save your listing." },
+        {
+          ok: false,
+          /*
+           * The CMS's own words, and worth keeping: the price-band rejection
+           * names the limit, which is the one message a seller can act on. But
+           * it arrives in English on a site whose default locale is Arabic, so
+           * it is labelled too — the client prefers its own translation when it
+           * recognises the code and falls back to this when it does not.
+           */
+          code: bandRejection(body) ?? "cms_rejected",
+          error: body?.error?.message ?? "Could not save your listing.",
+        },
         { status: res.status === 401 ? 401 : 400 },
       );
     }
@@ -613,7 +641,7 @@ export async function POST(request) {
     });
   } catch {
     return NextResponse.json(
-      { ok: false, error: "We could not reach the server. Please try again in a moment." },
+      { ok: false, code: "unavailable", error: "We could not reach the server. Please try again in a moment." },
       { status: 503 },
     );
   }
