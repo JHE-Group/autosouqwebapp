@@ -17,7 +17,7 @@ import { useTranslations } from "next-intl";
  *
  * Still never demo inventory. The default is `[]`, not a sample.
  */
-export default function MyListings({ listings = [] }) {
+export default function MyListings({ listings = [], loaded = true }) {
   const t = useTranslations("dashboard");
   const myListings = listings;
 
@@ -42,7 +42,7 @@ export default function MyListings({ listings = [] }) {
                 <div className="tfcl-dashboard-middle mt-2">
                   <div className="row">
                     <div className="tfcl-dashboard-middle-left col-md-12">
-                      <ListingsTable listings={myListings} />
+                      <ListingsTable loaded={loaded} listings={myListings} />
                     </div>
                   </div>
                 </div>

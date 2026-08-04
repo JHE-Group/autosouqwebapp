@@ -289,9 +289,21 @@ export async function getToken() {
  * Returns `[]` rather than throwing. A dashboard that renders empty during a
  * CMS outage is a bad afternoon; one that 500s is a support call.
  */
+/**
+ * Returns `{ ok, listings }`, not a bare array.
+ *
+ * It used to return `[]` for three different things: this seller has no cars,
+ * the CMS answered with an error, and the fetch threw. The dashboard cannot
+ * tell those apart from an array, so it rendered the same empty state for all
+ * three — "No listings yet. Add your first car." — to a seller who might have
+ * three cars listed and be looking at a Strapi outage.
+ *
+ * That is the worst thing this page can say. It reads as "your listings are
+ * gone", and the button under it invites them to file a duplicate.
+ */
 export async function getMyListings() {
   const token = await getToken();
-  if (!token) return [];
+  if (!token) return { ok: false, listings: [] };
 
   try {
     const res = await fetch(`${STRAPI_URL}/api/seller/listings`, {
@@ -300,7 +312,7 @@ export async function getMyListings() {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) return { ok: false, listings: [] };
 
     const body = await res.json().catch(() => null);
     const rows = Array.isArray(body?.data) ? body.data : [];
@@ -319,18 +331,31 @@ export async function getMyListings() {
      * seller's question is whether the car is still available, not whether the
      * document is published.
      */
-    return rows.map((row) => ({
-      ...row,
-      km: typeof row.mileage === "number" ? row.mileage : undefined,
-      status:
-        row.state === "live"
-          ? row.listingStatus === "sold"
-            ? "Sold"
-            : "Live"
-          : "Pending",
-    }));
+    return {
+      ok: true,
+      listings: rows.map((row) => ({
+        ...row,
+        /*
+         * `id` is the slug, matching what toCar() does for public listings.
+         *
+         * The raw CMS row carries Strapi's numeric id, and lib/seo's
+         * listingSlug treats a numeric id as a demo car's — so "View listing"
+         * pointed at /car/123-2015, which resolveListing reads as listing
+         * #123, does not find, and 404s. The seller's own dashboard linked
+         * every one of their cars to a dead URL.
+         */
+        id: row.slug ?? row.id,
+        km: typeof row.mileage === "number" ? row.mileage : undefined,
+        status:
+          row.state === "live"
+            ? row.listingStatus === "sold"
+              ? "Sold"
+              : "Live"
+            : "Pending",
+      })),
+    };
   } catch {
-    return [];
+    return { ok: false, listings: [] };
   }
 }
 

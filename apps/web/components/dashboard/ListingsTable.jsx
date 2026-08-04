@@ -28,7 +28,7 @@ import EmptyState from "./EmptyState";
  * never have matched anything, and a filter that cannot filter is the same
  * broken promise as a link that goes nowhere.
  */
-export default function ListingsTable({ listings = [], title }) {
+export default function ListingsTable({ listings = [], title, loaded = true }) {
   const tCommon = useTranslations("common");
   const t = useTranslations("dashboard.listings");
   const locale = useLocale();
@@ -67,6 +67,25 @@ export default function ListingsTable({ listings = [], title }) {
         .some((value) => String(value).toLowerCase().includes(needle));
     });
   }, [listings, query, status]);
+
+  /*
+   * An empty list and a failed load are different facts and used to render the
+   * same screen. getMyListings returned [] for "no cars", for a CMS error and
+   * for a thrown fetch alike, so during a Strapi outage a seller with three
+   * listings was told "No listings yet" over a button inviting them to add
+   * their first — which reads as their cars having been deleted, and invites a
+   * duplicate.
+   */
+  if (!loaded) {
+    return (
+      <div className="tfcl-dashboard-listing">
+        {title ? <h5 className="title-dashboard-table">{title}</h5> : null}
+        <p className="tfcl-amber" role="alert">
+          {t("loadFailed")}
+        </p>
+      </div>
+    );
+  }
 
   if (listings.length === 0) {
     return (
@@ -220,10 +239,19 @@ export default function ListingsTable({ listings = [], title }) {
                         {t("edit")}
                       </button>
                     </div>
+                    {/* A pending listing has no public page — it is a draft,
+                        by design, until a moderator publishes it. Linking to
+                        one sent the seller to a 404 on their own car. */}
                     <div className="inner-controller">
-                      <button type="button" className="btn-action" disabled>
-                        {t("markSold")}
-                      </button>
+                      {statusKey(elm) === "pending" ? (
+                        <span className="btn-action-note">
+                          {t("notPublicYet")}
+                        </span>
+                      ) : (
+                        <Link href={listingPath(elm)} className="btn-action">
+                          {t("viewListing")}
+                        </Link>
+                      )}
                     </div>
                     <p className="btn-action-note">
                       {t("actionsDisabled")}
