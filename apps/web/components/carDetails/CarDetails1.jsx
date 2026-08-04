@@ -1,6 +1,7 @@
 import React from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import StickyContactBar from "./StickyContactBar";
+import MapFacade from "./MapFacade";
 import Slider1 from "./sliders/Slider1";
 import Description from "./detailComponents/Description";
 import Overview from "./detailComponents/Overview";
@@ -193,13 +194,16 @@ export default async function CarDetails1({ carItem, recommended = [] }) {
                       second Google Maps iframe of the same coordinates a
                       screen further up — two map bundles on a metered budget
                       Android connection, for one location. */}
+                  {/*
+                    A facade, not the embed. `loading="lazy"` did not defer it:
+                    measured 469 KB of Google against 172 KB for the whole rest
+                    of the site, with zero scroll. See MapFacade.
+                  */}
                   {hasCoords && (
-                    <iframe
-                      className="map-content"
-                      title={t("map")}
-                      src={`https://www.google.com/maps?q=${carItem.latitude},${carItem.longitude}&z=14&output=embed`}
-                      allowFullScreen=""
-                      loading="lazy"
+                    <MapFacade
+                      latitude={carItem.latitude}
+                      longitude={carItem.longitude}
+                      address={carItem.address}
                     />
                   )}
                 </div>

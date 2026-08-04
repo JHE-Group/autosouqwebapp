@@ -7,7 +7,8 @@ import {
   WHATSAPP_BUTTON_STYLE,
 } from "@/lib/whatsapp";
 
-function WhatsAppGlyph({ size = 20 }) {
+// Exported so NoPhotoFrame can use the same mark rather than copying the path.
+export function WhatsAppGlyph({ size = 20 }) {
   // Non-directional icon — must NOT be mirrored in RTL.
   return (
     <svg

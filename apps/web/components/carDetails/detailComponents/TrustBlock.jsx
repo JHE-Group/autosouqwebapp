@@ -311,7 +311,21 @@ export default function TrustBlock({ carItem, locale = DEFAULT_LOCALE }) {
       <div style={{ marginTop: 20 }}>
         {canContact ? (
           <>
-            <div className="d-flex gap-2">
+            {/*
+              Desktop only. StickyContactBar is `d-lg-none`, so below 992px it
+              is already carrying the price, a WhatsApp button and a call
+              button — and it is `position: fixed` at the bottom, which put its
+              top edge at y=728 while this pair sits at y=714. Measured on a
+              390x844 phone: 71% of this button was under the bar on first
+              paint, before any scroll. A 14px sliver of green above a second,
+              identical green button is not a choice a buyer should have to
+              parse.
+
+              The disclosure sentence below stays visible on mobile: it belongs
+              next to the price, and the sticky bar deliberately has no room
+              for it.
+            */}
+            <div className="d-flex gap-2 d-none d-lg-flex">
               <WhatsAppButton car={carItem} locale={locale} />
               {telHref && (
                 <a

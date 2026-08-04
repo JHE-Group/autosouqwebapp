@@ -208,7 +208,12 @@
       "location": "Where the car is",
       "locationUnknown": "The seller has not said where the car is.",
       "map": "Map of the car's location",
-      "recommended": "Other cars on Autosouq"
+      "recommended": "Other cars on Autosouq",
+      "showMap": "Show the map",
+      "openInMaps": "Open in Google Maps",
+      "noPhotosYet": "The seller has not added photos of this car yet.",
+      "askForPhotos": "Ask the seller for photos",
+      "askForPhotosMessage": "Hello, I saw your car on Autosouq. Could you send me some photos of it?"
     },
     "spec": {
       "km": "Kilometres",

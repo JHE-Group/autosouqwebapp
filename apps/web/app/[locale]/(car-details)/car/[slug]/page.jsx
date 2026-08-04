@@ -88,8 +88,21 @@ export default async function page({ params }) {
 
   const crumb = await getTranslations({ locale, namespace: "breadcrumb" });
   const listings = await getListings(locale);
+  /*
+   * Other cars a buyer could actually message.
+   *
+   * This took the first four rows of the CMS with no status filter, so three
+   * of the four recommendations under a listing were cars marked sold — grey
+   * badge, struck price, no WhatsApp button. "Other cars for sale" that are
+   * not for sale, at the bottom of the page a buyer reached by caring about
+   * one car.
+   *
+   * Sold cars are still honest inventory context on the results grid, where
+   * the count and the filters explain them. As a recommendation they are only
+   * a dead end.
+   */
   const recommended = (listings.length ? listings : allCars)
-    .filter((elm) => elm.id !== carItem.id)
+    .filter((elm) => elm.id !== carItem.id && elm.listingStatus !== "sold")
     .slice(0, 4);
   const path = listingPath(carItem, locale);
   // No `Car`/`Offer` block for a stand-in. The page is already noindex, but

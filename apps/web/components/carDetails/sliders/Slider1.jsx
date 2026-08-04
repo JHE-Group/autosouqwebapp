@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { A11y, EffectFade, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import NoPhotoFrame from "../NoPhotoFrame";
 /*
  * `swiper/css` is the core sheet and it was never imported anywhere.
  *
@@ -82,7 +83,14 @@ export default function Slider1({ carItem, locale = DEFAULT_LOCALE }) {
     };
   }, []);
 
-  if (!images.length) return null;
+  /*
+   * No photographs is a state, not an absence.
+   *
+   * This returned null, so the page had no image element at all and the
+   * desktop gallery column collapsed to nothing. See NoPhotoFrame — at launch
+   * this is the state most listings are in.
+   */
+  if (!images.length) return <NoPhotoFrame car={carItem} />;
 
   return (
     <div className="mb-40">
