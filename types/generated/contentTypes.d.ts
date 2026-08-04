@@ -657,6 +657,7 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
   };
   attributes: {
     address: Schema.Attribute.String;
+    availabilityConfirmedAt: Schema.Attribute.DateTime;
     bodyType: Schema.Attribute.Relation<
       'manyToOne',
       'api::body-type.body-type'
@@ -731,6 +732,11 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
         number
       >;
     model: Schema.Attribute.Relation<'manyToOne', 'api::model.model'>;
+    moderationNote: Schema.Attribute.Text;
+    moderationState: Schema.Attribute.Enumeration<
+      ['pending', 'approved', 'declined']
+    > &
+      Schema.Attribute.DefaultTo<'pending'>;
     phone: Schema.Attribute.String;
     price: Schema.Attribute.Decimal &
       Schema.Attribute.Required &
@@ -755,6 +761,7 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     > &
       Schema.Attribute.Private;
+    showroom: Schema.Attribute.Relation<'manyToOne', 'api::showroom.showroom'>;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
     soldAsIs: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     title: Schema.Attribute.String & Schema.Attribute.Required;
@@ -768,6 +775,10 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     verified: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     videoUrl: Schema.Attribute.String;
+    vin: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 17;
+      }>;
     whatsapp: Schema.Attribute.String & Schema.Attribute.Required;
     year: Schema.Attribute.Integer &
       Schema.Attribute.Required &
@@ -841,6 +852,69 @@ export interface ApiModelModel extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiShowroomShowroom extends Struct.CollectionTypeSchema {
+  collectionName: 'showrooms';
+  info: {
+    description: 'A car showroom (\u0645\u0639\u0631\u0636). Separate from the user record so the business can be public without any of the account being public.';
+    displayName: 'Showroom';
+    pluralName: 'showrooms';
+    singularName: 'showroom';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    about: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 600;
+      }>;
+    area: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 60;
+      }>;
+    city: Schema.Attribute.Relation<'oneToOne', 'api::city.city'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    crNumber: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 20;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::showroom.showroom'
+    > &
+      Schema.Attribute.Private;
+    logo: Schema.Attribute.Media<'images'>;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    nameAr: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    owner: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    reviewNote: Schema.Attribute.Text & Schema.Attribute.Private;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    state: Schema.Attribute.Enumeration<['pending', 'approved', 'declined']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'pending'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    whatsapp: Schema.Attribute.String;
   };
 }
 
@@ -1405,6 +1479,7 @@ declare module '@strapi/strapi' {
       'api::listing.listing': ApiListingListing;
       'api::make.make': ApiMakeMake;
       'api::model.model': ApiModelModel;
+      'api::showroom.showroom': ApiShowroomShowroom;
       'api::transmission.transmission': ApiTransmissionTransmission;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
