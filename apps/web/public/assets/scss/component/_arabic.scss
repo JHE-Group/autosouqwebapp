@@ -55,3 +55,69 @@ html[lang="ar"] {
     font-family: var(--font-inter), sans-serif;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Specificity repairs.
+ *
+ * The block above sets sensible Arabic leading on every heading, but it is
+ * written as `html[lang="ar"] h1` — specificity (0,1,1). Any theme rule with
+ * two or more classes outranks it and silently wins, and the result is not a
+ * subtle spacing difference: Arabic descenders and diacritics physically
+ * collide with the line below.
+ *
+ * These are the pairs where that actually happens, found by rendering every
+ * heading on the /ar tree at both viewports rather than by reading the CSS.
+ * ------------------------------------------------------------------------ */
+
+html[lang="ar"] {
+  /*
+   * The page-banner h1 — /used-cars, /about-us and every facet.
+   *
+   * The theme sets font-size 70px / line-height 70px, a ratio of exactly 1.00,
+   * which is survivable in Latin and not in Arabic: the ي of «في» crashed
+   * through the damma of «عُمان» on the line below, and the ة of «مستعملة»
+   * descended into «بأقل». On the site's most important landing page.
+   */
+  .tf-banner .content .heading h1 {
+    line-height: 1.35;
+  }
+
+  /*
+   * Prose links.
+   *
+   * The site-wide rule uses `text-underline-offset: 0.18em`, calibrated for
+   * Latin, where the measured descent below the baseline is about 0.01em. In
+   * Cairo the same measurement for Arabic runs to 0.32em and beyond, so the
+   * underline was drawn THROUGH the letters — the bowl of ع, both ق, the tail
+   * of ى — on every guide, blog post, FAQ answer and the car detail trust
+   * panel. `text-decoration-skip-ink` does not rescue it, because the line is
+   * inside the glyph rather than crossing a stem.
+   *
+   * 0.34em clears the common case. The deepest words (خليجي, ~0.43em) still
+   * touch; fixing those too means abandoning text-decoration for a bottom
+   * border, which is a bigger change than the defect currently warrants.
+   */
+  /* The exclusion list is spelled out rather than reusing
+     $prose-link-exclusions: that variable lives in style.scss, which app.scss
+     forwards AFTER this file, so it is not in scope here. Keep the two in
+     step — if a button class is added there, add it here. */
+  p a:not(:where([class*="btn"], [class*="button"], .tfcl-linkish, .sc-button)),
+  li a:not(:where([class*="btn"], [class*="button"], .tfcl-linkish, .sc-button)) {
+    text-underline-offset: 0.34em;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  html[lang="ar"] {
+    /*
+     * 50px/55px on a 390px phone gave three lines and 165px of heading, with
+     * the ي of «في» hanging into the line below. 36px/1.45 is two lines and
+     * 104px, collision-free — and 60px of a small screen handed back to the
+     * cars.
+     */
+    .tf-banner .content .heading h1 {
+      font-size: 36px;
+      line-height: 1.45;
+    }
+  }
+}

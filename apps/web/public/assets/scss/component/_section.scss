@@ -4795,7 +4795,11 @@
       i {
         color: $color-9-text;
         font-size: $fs-md;
-        margin-right: $space-2;
+        /* Logical. As `margin-right` this pushed the gap onto the icon's OUTER
+           edge in RTL — against the container — leaving zero space between the
+           tick and the word, so the green badge sat on top of the first letter
+           of every feature: the م of مكيف, the ز of زجاج كهربائي. */
+        margin-inline-end: $space-2;
       }
     }
   }

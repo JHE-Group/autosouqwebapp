@@ -3,7 +3,11 @@
   background-color: #fff;
   border: 1px solid #e5e5ea !important;
   border-radius: 14px;
+  /* Room at the END edge for the caret. Without it the arrow and the label
+     share the same 24px, which in RTL means the arrow is drawn on top of the
+     first Arabic letter. */
   padding: 14px 17px;
+  padding-inline-end: 42px;
   box-sizing: border-box;
   clear: both;
   cursor: pointer;
@@ -36,7 +40,11 @@
   margin-top: -4px;
   pointer-events: none;
   position: absolute;
-  right: 24px;
+  /* Logical, not `right: 24px`. The physical property put the caret 24px in
+     from the START edge under dir=rtl — i.e. through the first letter of
+     «كل الماركات», «كل الموديلات» and every other Arabic select label, with no
+     caret at all where one was expected. Arabic is the default locale here. */
+  inset-inline-end: 20px;
   top: 50%;
   -webkit-transform-origin: 66% 66%;
   -ms-transform-origin: 66% 66%;
