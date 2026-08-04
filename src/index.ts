@@ -181,6 +181,15 @@ const AUTHENTICATED_ACTIONS = [
    * the whole user object including `role`.
    */
   "api::seller-auth.seller-auth.updateProfile",
+  /*
+   * Reading and making the seller's own showroom application.
+   *
+   * The upgrade path for an account that started private. Granting it exposes
+   * nothing: the handler finds the record by owner from the token, refuses a
+   * second application, and cannot approve one — `state` is only ever written
+   * as `pending` here, and moving it is an admin action.
+   */
+  "api::seller-auth.seller-auth.showroom",
   /**
    * Photo upload for a listing's gallery.
    *

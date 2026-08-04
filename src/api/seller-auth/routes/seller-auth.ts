@@ -106,5 +106,23 @@ export default {
           middlewares: [],
         },
       },
+      {
+        method: 'GET',
+        path: '/seller/showroom',
+        handler: 'seller-auth.showroom',
+        config: { policies: [], middlewares: [] },
+      },
+      {
+        method: 'POST',
+        path: '/seller/showroom',
+        handler: 'seller-auth.showroom',
+        config: {
+          // One handler, both verbs: reading your own application and making
+          // one share every guard that matters — the id comes from the token,
+          // and the record is found by owner and never by anything sent.
+          policies: [],
+          middlewares: [],
+        },
+      },
   ],
 };
