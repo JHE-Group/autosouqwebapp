@@ -330,7 +330,7 @@ export async function getToken() {
  */
 export async function getMyListings() {
   const token = await getToken();
-  if (!token) return { ok: false, listings: [] };
+  if (!token) return { ok: false, listings: [], now: Date.now() };
 
   try {
     const res = await fetch(`${STRAPI_URL}/api/seller/listings`, {
@@ -339,7 +339,7 @@ export async function getMyListings() {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
 
-    if (!res.ok) return { ok: false, listings: [] };
+    if (!res.ok) return { ok: false, listings: [], now: Date.now() };
 
     const body = await res.json().catch(() => null);
     const rows = Array.isArray(body?.data) ? body.data : [];
@@ -360,6 +360,17 @@ export async function getMyListings() {
      */
     return {
       ok: true,
+      /*
+       * The clock is read here, not in the page.
+       *
+       * lib/listingFreshness compares a listing's date against "now" to decide
+       * whether to ask the seller if it is still for sale, and the page is a
+       * server component — calling Date.now() in its render body is an impure
+       * call during render, which React's rules forbid and the linter catches.
+       * This function is already doing I/O and is not a render, so the reading
+       * belongs here and travels with the rows it describes.
+       */
+      now: Date.now(),
       listings: rows.map((row) => ({
         ...row,
         /*
@@ -384,7 +395,7 @@ export async function getMyListings() {
       })),
     };
   } catch {
-    return { ok: false, listings: [] };
+    return { ok: false, listings: [], now: Date.now() };
   }
 }
 

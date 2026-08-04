@@ -657,6 +657,7 @@ export interface ApiListingListing extends Struct.CollectionTypeSchema {
   };
   attributes: {
     address: Schema.Attribute.String;
+    availabilityConfirmedAt: Schema.Attribute.DateTime;
     bodyType: Schema.Attribute.Relation<
       'manyToOne',
       'api::body-type.body-type'

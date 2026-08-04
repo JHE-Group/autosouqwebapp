@@ -49,9 +49,9 @@ export async function PUT(request, { params }) {
     );
   }
 
-  const { listingStatus, takeDown } = body ?? {};
+  const { listingStatus, takeDown, confirmAvailable } = body ?? {};
 
-  if (!takeDown && !ALLOWED.has(String(listingStatus))) {
+  if (!takeDown && !confirmAvailable && !ALLOWED.has(String(listingStatus))) {
     return NextResponse.json(
       { ok: false, code: "bad_status", error: "Not a status you can set." },
       { status: 400 },
@@ -76,7 +76,13 @@ export async function PUT(request, { params }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(takeDown ? { takeDown: true } : { listingStatus }),
+        body: JSON.stringify(
+          confirmAvailable
+            ? { confirmAvailable: true }
+            : takeDown
+              ? { takeDown: true }
+              : { listingStatus },
+        ),
         cache: "no-store",
         signal: AbortSignal.timeout(TIMEOUT_MS),
       },
@@ -109,5 +115,10 @@ export async function PUT(request, { params }) {
     );
   }
 
-  return NextResponse.json({ ok: true, listingStatus, takenDown: !!takeDown });
+  return NextResponse.json({
+    ok: true,
+    listingStatus,
+    takenDown: !!takeDown,
+    confirmed: !!confirmAvailable,
+  });
 }

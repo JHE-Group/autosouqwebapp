@@ -316,7 +316,9 @@
       "save": "Save",
       "cancel": "Cancel",
       "repriceNote": "You can change the price. Photos and the description are edited by us for now — get in touch.",
-      "repriceLiveNote": "You can change the price. Buyers keep seeing the current one until we have checked the new one."
+      "repriceLiveNote": "You can change the price. Buyers keep seeing the current one until we have checked the new one.",
+      "stillAvailable": "This car has been live for {days} days without an update. Is it still for sale? A listing nobody has confirmed is the fastest way for buyers to stop trusting the rest.",
+      "stillAvailableYes": "Yes, still for sale"
     },
     "reviews": {
       "emptyTitle": "No reviews yet",

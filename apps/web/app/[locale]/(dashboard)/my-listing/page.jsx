@@ -18,6 +18,6 @@ export const metadata = {
  * components/dashboard/DashboardShell.jsx.
  */
 export default async function Page() {
-  const { ok, listings } = await getMyListings();
-  return <MyListings listings={listings} loaded={ok} />;
+  const { ok, listings, now } = await getMyListings();
+  return <MyListings listings={listings} loaded={ok} now={now} />;
 }

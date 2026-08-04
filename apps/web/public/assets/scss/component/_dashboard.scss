@@ -208,6 +208,31 @@
  * padding, same radius, same inverse focus ring.
  */
 /*
+ * "Is this still for sale?" — a question, not a status.
+ *
+ * Sits above the row's actions and is deliberately quieter than the declined
+ * pill: nothing is wrong with this listing, we are only asking. Indigo tint on
+ * white rather than terracotta, so a seller scanning a page of cars can tell at
+ * a glance which rows need a decision and which need attention.
+ */
+.tfcl-still-available {
+  border: 1px solid rgba(38, 34, 98, 0.18);
+  background: rgba(38, 34, 98, 0.05);
+  border-radius: $radius-card;
+  padding: 12px;
+  margin-block-end: 12px;
+  /* Prose, not a label: full measure rather than a table cell's width. */
+  max-inline-size: 46ch;
+}
+
+.tfcl-still-available p {
+  font-family: $font-2;
+  font-size: 14px;
+  line-height: 22px;
+  color: $color-2;
+}
+
+/*
  * The inline reprice control. Sits in the actions cell, which on a phone is a
  * stacked column — so the input takes the full width and the two buttons sit
  * beside each other rather than the three fighting for one line.

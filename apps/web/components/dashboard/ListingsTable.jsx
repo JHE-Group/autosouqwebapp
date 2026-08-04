@@ -7,6 +7,10 @@ import Image from "next/image";
 import { foldDigits, formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
 import {
+  daysSinceVouched,
+  needsAvailabilityCheck,
+} from "@/lib/listingFreshness";
+import {
   SOLD_AS_IS,
   importOriginLabel,
 } from "@/lib/listingLabels";
@@ -28,7 +32,12 @@ import EmptyState from "./EmptyState";
  * never have matched anything, and a filter that cannot filter is the same
  * broken promise as a link that goes nowhere.
  */
-export default function ListingsTable({ listings = [], title, loaded = true }) {
+export default function ListingsTable({
+  listings = [],
+  title,
+  loaded = true,
+  now,
+}) {
   const tCommon = useTranslations("common");
   const t = useTranslations("dashboard.listings");
   const locale = useLocale();
@@ -55,6 +64,21 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
    * beside this says out loud, because a seller who thinks they have just cut
    * their price and has not is worse off than one who knows they are waiting.
    */
+  /**
+   * "Yes, still for sale."
+   *
+   * Nothing expires a listing here — no expiry column, no scheduled job, no way
+   * to reach a seller who has stopped visiting — so a car that sold privately
+   * stays live and available forever. This is the cheapest thing that arrests
+   * that: ask, on the dashboard, once a car has sat for a month.
+   *
+   * The date is stamped server-side, never sent from here; a seller who could
+   * send their own timestamp could keep a sold car looking freshly confirmed,
+   * which is precisely the decay being prevented.
+   */
+  const confirmAvailable = (listing) =>
+    setStatus(listing, { confirmAvailable: true });
+
   const savePrice = async (listing) => {
     const documentId = listing?.documentId;
     if (!documentId || busy) return;
@@ -399,6 +423,26 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
                         </Link>
                       )}
                     </div>
+                    {needsAvailabilityCheck(elm, now) ? (
+                      /* Above the declined note and the actions, because it is
+                         a question rather than a status — the seller has to
+                         answer it before the row means anything. */
+                      <div className="tfcl-still-available" role="status">
+                        <p className="mb-2">
+                          {t("stillAvailable", {
+                            days: daysSinceVouched(elm, now) ?? 0,
+                          })}
+                        </p>
+                        <button
+                          type="button"
+                          className="btn-action"
+                          onClick={() => confirmAvailable(elm)}
+                          disabled={busy === elm.documentId}
+                        >
+                          {t("stillAvailableYes")}
+                        </button>
+                      </div>
+                    ) : null}
                     {statusKey(elm) === "declined" ? (
                       /* The reason, where the seller is already looking at the
                          car it belongs to. A decision with no explanation is
