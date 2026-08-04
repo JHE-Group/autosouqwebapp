@@ -299,12 +299,18 @@
       "viewListing": "View listing",
       "edit": "Edit",
       "markSold": "Mark sold",
-      "actionsDisabled": "Editing and marking sold are not switched on yet.",
       "noSpec": "No specification given",
       "noMatch": "None of your listings match that. Clear the search or choose “{status}”.",
       "photoAlt": "listing photo",
       "loadFailed": "We could not load your listings just now. That is us, not you — nothing has been deleted. Please refresh in a moment.",
-      "notPublicYet": "Not public yet — we are still checking it."
+      "notPublicYet": "Not public yet — we are still checking it.",
+      "takeDown": "Take it down",
+      "editDisabled": "Editing the price or photos is not switched on yet — those go back through review. Marking sold and taking a car down happen straight away.",
+      "actionError": {
+        "notFound": "That listing is not yours, or no longer exists.",
+        "unavailable": "We could not reach the server. Nothing has changed — try again in a moment.",
+        "failed": "That did not work. The listing is unchanged."
+      }
     },
     "reviews": {
       "emptyTitle": "No reviews yet",

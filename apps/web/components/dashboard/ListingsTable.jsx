@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import React, { useMemo, useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { listingPath } from "@/lib/seo";
@@ -32,8 +32,44 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
   const tCommon = useTranslations("common");
   const t = useTranslations("dashboard.listings");
   const locale = useLocale();
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState(ALL_STATUSES);
+  const [status, setStatusFilter] = useState(ALL_STATUSES);
+  const [busy, setBusy] = useState(null);
+  const [actionError, setActionError] = useState(null);
+
+  /**
+   * Mark sold / reserved, or take the car down.
+   *
+   * `router.refresh()` rather than local state: the rows are fetched on the
+   * server by the page, so re-reading them is the only way this table and the
+   * public site agree afterwards. Optimistically flipping a row here would show
+   * the seller "Sold" while the live listing still said available, which is
+   * precisely the lie this whole endpoint exists to prevent.
+   */
+  const setStatus = async (listing, change) => {
+    const documentId = listing?.documentId;
+    if (!documentId || busy) return;
+    setBusy(documentId);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/listings/${documentId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(change),
+      });
+      const data = await res.json().catch(() => null);
+      if (!data?.ok) {
+        setActionError(data?.code ?? "failed");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setActionError("unavailable");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   /**
    * Keys, not labels.
@@ -151,7 +187,7 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
             id="status_filter"
             className="form-control"
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            onChange={(event) => setStatusFilter(event.target.value)}
           >
             {statuses.map((key) => (
               <option key={key} value={key}>
@@ -228,17 +264,41 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
                       </Link>
                     </div>
                     {/*
-                      No edit / mark-sold / delete endpoint exists. These were
-                      <a href="#"> — links that look live and do nothing, which
-                      on a trust-led site is worse than an absence. Disabled
-                      controls with a stated reason at least tell the seller
-                      where they stand.
+                      Edit stays disabled: changing price, description or photos
+                      re-enters review and there is no editor for it yet. Mark
+                      sold and Take down are live — they only ever reduce what a
+                      listing claims, which is why they are allowed to skip
+                      review. See app/api/listings/[id]/status.
                     */}
                     <div className="inner-controller">
                       <button type="button" className="btn-action" disabled>
                         {t("edit")}
                       </button>
                     </div>
+                    {statusKey(elm) !== "sold" ? (
+                      <div className="inner-controller">
+                        <button
+                          type="button"
+                          className="btn-action"
+                          onClick={() => setStatus(elm, { listingStatus: "sold" })}
+                          disabled={busy === elm.documentId}
+                        >
+                          {t("markSold")}
+                        </button>
+                      </div>
+                    ) : null}
+                    {statusKey(elm) === "live" ? (
+                      <div className="inner-controller">
+                        <button
+                          type="button"
+                          className="btn-action"
+                          onClick={() => setStatus(elm, { takeDown: true })}
+                          disabled={busy === elm.documentId}
+                        >
+                          {t("takeDown")}
+                        </button>
+                      </div>
+                    ) : null}
                     {/* A pending listing has no public page — it is a draft,
                         by design, until a moderator publishes it. Linking to
                         one sent the seller to a 404 on their own car. */}
@@ -253,14 +313,19 @@ export default function ListingsTable({ listings = [], title, loaded = true }) {
                         </Link>
                       )}
                     </div>
-                    <p className="btn-action-note">
-                      {t("actionsDisabled")}
-                    </p>
+                    <p className="btn-action-note">{t("editDisabled")}</p>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {actionError ? (
+            <p className="tfcl-amber" role="alert">
+              {t(
+                `actionError.${actionError === "not_found" ? "notFound" : actionError === "unavailable" ? "unavailable" : "failed"}`,
+              )}
+            </p>
+          ) : null}
           {filtered.length === 0 ? (
             <p className="tfcl-table-noresult" role="status">
               {t("noMatch", { status: t("allStatuses") })}
