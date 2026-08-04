@@ -120,6 +120,24 @@ async function patchPublished(
   });
 }
 
+/**
+ * A slug base for a showroom name, in the shape the front end can route on.
+ *
+ * Latin-only for the same reason listing slugs are: an Arabic business name
+ * reduces to nothing under [a-z0-9], and a slug that collapses is a page that
+ * cannot be reached. The user id is appended by the caller, which also makes
+ * two showrooms of the same name distinct without a collision check.
+ */
+function slugifyName(name: string): string {
+  const base = String(name)
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+  return base || 'showroom';
+}
+
 type ProfileCtx = ListingsCtx & {
   request?: { body?: { fullName?: string; whatsapp?: string } };
   badRequest: (message: string) => unknown;
@@ -192,6 +210,29 @@ export default {
       // the primary identifier instead.
       const whatsapp = normalizeMsisdn(body.whatsapp);
 
+      /*
+       * A showroom application, if they made one.
+       *
+       * Validated here so a malformed one refuses the whole registration rather
+       * than creating an account with a silently dropped application — a seller
+       * who typed their business details and then found no trace of them would
+       * reasonably conclude the site had lost them.
+       *
+       * `crNumber` is the commercial registration (السجل التجاري). The DOCUMENT
+       * is deliberately not collected: Strapi serves uploaded media from public
+       * URLs — verified, a direct request returns 200 — so storing a business
+       * licence here would publish it. The number is enough to check against
+       * Oman's public registry, and it is a `private` field that never leaves
+       * the CMS. Anything further is asked for over WhatsApp during approval.
+       */
+      const wantsShowroom = body.accountType === 'showroom';
+      const businessName = wantsShowroom
+        ? requireString(body.businessName, 'Showroom name', 2, 80)
+        : null;
+      const crNumber = wantsShowroom
+        ? requireString(body.crNumber, 'Commercial registration number', 4, 20)
+        : null;
+
       /**
        * Username is derived from the email, never asked for.
        *
@@ -250,6 +291,35 @@ export default {
         blocked: false,
         role: role.id,
       });
+
+      /*
+       * The application, as `pending` and nothing else.
+       *
+       * No badge, no public record, no slug anyone can reach — the controller
+       * clamps public reads to `approved`, so this is invisible until a human
+       * moves it. It is also not fatal: an account that exists without its
+       * application is recoverable by a moderator, whereas an application
+       * without an account is orphaned. So the user is created first and a
+       * failure here is logged rather than thrown.
+       */
+      if (wantsShowroom && businessName && crNumber) {
+        try {
+          await strapi.documents('api::showroom.showroom').create({
+            data: {
+              name: businessName,
+              slug: `${slugifyName(businessName)}-${user.id}`,
+              crNumber,
+              whatsapp: whatsapp ?? null,
+              state: 'pending',
+              owner: user.id,
+            } as never,
+          });
+        } catch (err) {
+          strapi.log.error(
+            `Autosouq: showroom application for user ${user.id} failed — ${err}`,
+          );
+        }
+      }
 
       /**
        * `issue()` must be awaited, even though it reads as synchronous.

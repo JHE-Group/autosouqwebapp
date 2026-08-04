@@ -45,6 +45,11 @@ const SELLER_MAY_NOT_SET = [
   // reason it was turned down.
   'moderationState',
   'moderationNote',
+  // The showroom badge. Attached from the seller's own approved showroom after
+  // the create — a badge a seller can set on themselves is worth nothing, and
+  // the guides tell buyers a dealer and a private seller differ on price,
+  // paperwork and recourse.
+  'showroom',
   // Set only by the confirm-available endpoint, which stamps it server-side.
   // A seller who could write it directly could keep a sold car looking fresh.
   'availabilityConfirmedAt',
@@ -227,10 +232,31 @@ export default factories.createCoreController('api::listing.listing', ({ strapi 
     const documentId = (response as { data?: { documentId?: string } })?.data?.documentId;
     if (documentId) {
       try {
+        /*
+         * The showroom badge comes from the seller's own record, never from
+         * what they sent.
+         *
+         * Only an APPROVED showroom attaches. A pending application is a
+         * request, not a fact, and a declined one must leave no trace on a
+         * car — both resolve to no badge, so the listing reads as a private
+         * sale, which is the honest default. The badge's whole worth to a
+         * buyer is that it cannot be self-applied.
+         */
+        const showroom = (
+          await strapi.documents('api::showroom.showroom').findMany({
+            filters: { owner: { id: user.id }, state: 'approved' } as never,
+            fields: ['id'] as never,
+            limit: 1,
+          })
+        )?.[0] as { documentId?: string } | undefined;
+
         await strapi.documents('api::listing.listing').update({
           documentId,
           status: 'draft',
-          data: { seller: user.id } as never,
+          data: {
+            seller: user.id,
+            ...(showroom?.documentId ? { showroom: showroom.documentId } : {}),
+          } as never,
         });
       } catch (err) {
         // An unowned draft is worse than no draft: nothing in the admin would

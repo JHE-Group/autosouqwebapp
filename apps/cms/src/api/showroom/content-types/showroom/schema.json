@@ -1,0 +1,72 @@
+{
+  "kind": "collectionType",
+  "collectionName": "showrooms",
+  "info": {
+    "singularName": "showroom",
+    "pluralName": "showrooms",
+    "displayName": "Showroom",
+    "description": "A car showroom (معرض). Separate from the user record so the business can be public without any of the account being public."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "nameAr": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "area": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "city": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::city.city"
+    },
+    "about": {
+      "type": "text",
+      "maxLength": 600
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "whatsapp": {
+      "type": "string"
+    },
+    "state": {
+      "type": "enumeration",
+      "enum": ["pending", "approved", "declined"],
+      "default": "pending",
+      "required": true
+    },
+    "reviewNote": {
+      "type": "text",
+      "private": true
+    },
+    "crNumber": {
+      "type": "string",
+      "private": true,
+      "maxLength": 20
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user",
+      "private": true
+    }
+  }
+}
