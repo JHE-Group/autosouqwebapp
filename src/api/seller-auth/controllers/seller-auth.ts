@@ -475,6 +475,30 @@ export default {
           : row.moderationState === 'declined'
             ? 'declined'
             : 'pending',
+        /*
+         * The reason, but only to the seller whose car it is, and only once a
+         * decision has actually gone against them.
+         *
+         * A decline with no reason attached is the thing that makes someone
+         * give up on a marketplace rather than fix their listing — the same
+         * argument the showroom application flow already makes. The field
+         * existed and nothing ever showed it, so "declined" arrived as a dead
+         * end.
+         *
+         * Withheld while pending on purpose: a moderator's working note on a
+         * car still under review is not a message to the seller, and half a
+         * thought read as a verdict is worse than silence.
+         *
+         * This is safe to return HERE and nowhere else. `moderationNote` is
+         * `private: true` as of this change, so the public content API strips
+         * it; the document service does not sanitize, which is what lets this
+         * controller read it — and this controller has already scoped the query
+         * to the seller's own listings by the id on their token.
+         */
+        moderationNote:
+          !liveIds.has(row.documentId) && row.moderationState === 'declined'
+            ? (row.moderationNote ?? null)
+            : null,
       })),
     };
   },
