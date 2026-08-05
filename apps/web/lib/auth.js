@@ -491,6 +491,22 @@ export async function getMyListings() {
             : row.state === "declined"
               ? "Declined"
               : "Pending",
+        /*
+         * The moderator's reason, carried through to the table that was
+         * already built to show it.
+         *
+         * ListingsTable has rendered `elm.moderationNote || declinedNoReason`
+         * since the declined state existed — it simply never received one,
+         * because the CMS did not return the field and nothing wrote it. So
+         * every declined car fell through to "no reason given", which is the
+         * dead end the branch exists to avoid.
+         *
+         * Only ever populated for a declined listing, and only for the seller
+         * who owns it: the CMS scopes it by the id on their token and withholds
+         * it while a car is still pending, since a half-formed working note
+         * read as a verdict is worse than silence.
+         */
+        moderationNote: row.moderationNote ?? null,
       })),
     };
   } catch {

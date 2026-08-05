@@ -37,7 +37,9 @@
     },
     "currency": {
       "type": "enumeration",
-      "enum": ["OMR"],
+      "enum": [
+        "OMR"
+      ],
       "default": "OMR"
     },
     "year": {
@@ -68,14 +70,20 @@
     },
     "moderationState": {
       "type": "enumeration",
-      "enum": ["pending", "approved", "declined"],
-      "default": "pending"
+      "enum": [
+        "pending",
+        "approved",
+        "declined"
+      ],
+      "default": "pending",
+      "private": true
     },
     "availabilityConfirmedAt": {
       "type": "datetime"
     },
     "moderationNote": {
-      "type": "text"
+      "type": "text",
+      "private": true
     },
     "soldAsIs": {
       "type": "boolean",
@@ -83,12 +91,21 @@
     },
     "listingStatus": {
       "type": "enumeration",
-      "enum": ["available", "reserved", "sold"],
+      "enum": [
+        "available",
+        "reserved",
+        "sold"
+      ],
       "default": "available"
     },
     "importOrigin": {
       "type": "enumeration",
-      "enum": ["gcc", "us-import", "japan-import", "other"]
+      "enum": [
+        "gcc",
+        "us-import",
+        "japan-import",
+        "other"
+      ]
     },
     "cylinders": {
       "type": "integer",
@@ -112,7 +129,12 @@
     },
     "driveType": {
       "type": "enumeration",
-      "enum": ["fwd", "rwd", "awd", "four_wd"]
+      "enum": [
+        "fwd",
+        "rwd",
+        "awd",
+        "four_wd"
+      ]
     },
     "address": {
       "type": "string"
@@ -134,7 +156,9 @@
       "type": "media",
       "multiple": true,
       "required": false,
-      "allowedTypes": ["images"]
+      "allowedTypes": [
+        "images"
+      ]
     },
     "make": {
       "type": "relation",
