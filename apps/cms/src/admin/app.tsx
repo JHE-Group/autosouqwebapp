@@ -43,7 +43,52 @@ import type { StrapiApp } from "@strapi/strapi/admin";
  */
 export default {
   register(app: StrapiApp) {
-    app.widgets.register([
+    /*
+     * A reducer, not an array — because this also REMOVES a widget.
+     *
+     * Strapi's own "Key statistics" tile calls
+     * /content-manager/homepage/count-documents, which sums every content type
+     * the admin can read. On this project that is ~159 "published" documents,
+     * of which 145 are reference taxonomy — 69 car models, 24 cities, 23 makes,
+     * 12 features — and 14 are actual cars. On production, where inventory is
+     * genuinely zero, it would still report over a hundred.
+     *
+     * A number that says "159 published" to someone with no cars for sale is
+     * not merely unhelpful, it is the opposite of the truth, on the one screen
+     * that is supposed to tell them how the business is doing. Leaving it
+     * beside an honest tile would just make the honest one look wrong.
+     *
+     * The same objection applies to the content-manager plugin's `chart-entries`
+     * donut, which renders "190 entries" here for the same reason — it counts
+     * every content type, so a marketplace with 13 live cars gets a big green
+     * ring reading 190. Both go.
+     *
+     * `last-edited-entries` and `last-published-entries` stay: they list actual
+     * rows with their real status, so they are useful rather than misleading.
+     *
+     * Ordering makes this possible. StrapiApp.register does the built-ins
+     * first, then every plugin's own register, and only then this callback — so
+     * both are present to filter by the time we run. Matched on id AND pluginId
+     * because ids are only unique within a plugin.
+     */
+    /*
+     * `pluginId` matters and is easy to get wrong: the built-in statistics
+     * widget declares `pluginId: 'admin'` even though it ships with the core
+     * admin, so matching it against `undefined` silently keeps it. That is what
+     * happened on the first attempt — the donut disappeared, the grid stayed,
+     * and a boolean check that searched for the wrong display string ("Key
+     * statistics"; it renders as "Project statistics") reported success.
+     */
+    const REMOVE = [
+      { id: "key-statistics", pluginId: "admin" },
+      { id: "chart-entries", pluginId: "content-manager" },
+    ];
+
+    app.widgets.register((existing) => [
+      ...existing.filter(
+        (w) =>
+          !REMOVE.some((r) => r.id === w.id && r.pluginId === w.pluginId),
+      ),
       {
         id: "marketplace",
         icon: Car,

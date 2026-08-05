@@ -48,6 +48,8 @@ WITH docs AS (
     max(id)  FILTER (WHERE published_at IS NOT NULL)         AS live_id,
     max(id)  FILTER (WHERE published_at IS NULL)             AS draft_id,
     min(created_at)                                          AS created_at,
+    max(price) FILTER (WHERE published_at IS NULL)           AS draft_price,
+    max(price) FILTER (WHERE published_at IS NOT NULL)       AS live_price,
     max(updated_at) FILTER (WHERE published_at IS NULL)      AS draft_updated_at,
     max(updated_at) FILTER (WHERE published_at IS NOT NULL)  AS live_updated_at
   FROM listings
@@ -68,20 +70,46 @@ photos AS (
   GROUP BY related_id
 )
 SELECT
-  -- The queue. A document with no published row has never been decided on.
-  (SELECT count(*) FROM docs WHERE NOT is_live)                        AS awaiting_first_review,
+  /*
+   * The queue: a document with no published row AND a real seller behind it.
+   *
+   * The seller check is not decoration. Strapi's "never published" predicate
+   * cannot distinguish a car nobody has reviewed from one that was DELIBERATELY
+   * UNPUBLISHED — both simply have no published row. The ten seeded demo cars
+   * were unpublished on production on 2026-08-03, which means without this
+   * clause the first thing the owner sees is ten invented Corollas presented as
+   * sellers waiting on a decision, on a marketplace with no real submissions
+   * yet. Precisely the misleading headline this whole file exists to avoid.
+   *
+   * Seeded listings carry no 'seller' relation and a real submission always
+   * does — the unpublish script itself relies on that distinction.
+   */
+  (SELECT count(*) FROM docs d
+    WHERE NOT d.is_live
+      AND EXISTS (SELECT 1 FROM listings_seller_lnk s WHERE s.listing_id = d.draft_id))
+                                                                       AS awaiting_first_review,
 
   /*
    * The queue nobody is watching: a seller edited a car that is already live.
    * listing.ts forces seller updates onto the draft, so the buyer keeps seeing
-   * the old published version until a human presses Publish again. On the
-   * development database one document carries a draft price of 5,555 against a
-   * published 2,000 — a change the seller believes they made and no buyer can
-   * see.
+   * the old published version until a human presses Publish again.
+   *
+   * Compared by CONTENT, not by timestamp, and that is the whole point. The
+   * obvious test — draft.updated_at > published.updated_at — misses the real
+   * case: the one document in the development database with a genuinely
+   * unreviewed edit carries a draft price of 5,555 against a published 2,000
+   * and its draft timestamp is EARLIER, so a timestamp test reports zero while
+   * a buyer is looking at the wrong price. Publishing rewrites the published
+   * row's timestamp, so the two clocks say nothing reliable about which
+   * content is newer.
+   *
+   * Price only. It is the field that changes most, the field a seller edits
+   * most, and the one where showing a stale value is worst — a buyer who
+   * messages about a price that is no longer real is the exact experience this
+   * marketplace exists to be better than.
    */
   (SELECT count(*) FROM docs
-    WHERE is_live AND draft_updated_at IS NOT NULL
-      AND draft_updated_at > live_updated_at + interval '1 second')     AS edits_awaiting_review,
+    WHERE is_live AND draft_price IS DISTINCT FROM live_price)          AS edits_awaiting_review,
 
   (SELECT count(*) FROM live)                                          AS live_total,
   (SELECT count(*) FROM live WHERE listing_status = 'available')       AS live_available,

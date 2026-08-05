@@ -74,8 +74,31 @@ type Metrics = {
  * combination below is what its URL looks like after you click through by hand.
  */
 const LISTINGS = "/content-manager/collection-types/api::listing.listing";
-const QUEUE_LINK = `${LISTINGS}?page=1&pageSize=50&sort=createdAt:ASC&status=draft`;
-const SHOWROOM_LINK = "/content-manager/collection-types/api::showroom.showroom";
+const SHOWROOMS = "/content-manager/collection-types/api::showroom.showroom";
+
+/*
+ * `__status` is the content manager's own synthetic filter, not a field.
+ *
+ * It is offered on any collection with draftAndPublish, and the server maps
+ * `draft` to `{ status: 'draft', publicationFilter: 'never-published-document' }`
+ * — the same predicate the queue metric computes in SQL, already paginated,
+ * sortable and permission-checked. A plain `?status=draft` (which is what this
+ * shipped with at first) is not a filter the list view understands: it opens
+ * the unfiltered list, which is worse than no link because it looks like it
+ * worked.
+ */
+const QUEUE_LINK =
+  `${LISTINGS}?filters[$and][0][__status][$eq]=draft` +
+  `&page=1&pageSize=50&sort=createdAt:ASC`;
+
+const LIVE_LINK =
+  `${LISTINGS}?filters[$and][0][__status][$eq]=published` +
+  `&filters[$and][1][listingStatus][$eq]=available` +
+  `&page=1&pageSize=50&sort=updatedAt:DESC`;
+
+const SHOWROOM_LINK =
+  `${SHOWROOMS}?filters[$and][0][state][$eq]=pending` +
+  `&page=1&pageSize=50&sort=createdAt:ASC`;
 
 function Row({
   label,
@@ -195,12 +218,17 @@ export function MarketplaceWidget() {
         href={LISTINGS}
         tone={queue.editsAwaitingReview > 0 ? "attention" : "neutral"}
       />
-      <Row
-        label="Showroom applications"
-        value={queue.showroomsPending}
-        href={SHOWROOM_LINK}
-        tone={queue.showroomsPending > 0 ? "attention" : "neutral"}
-      />
+      {/* Only when there is one. It is zero on almost every day, and a
+          permanent zero teaches you to stop reading the column. */}
+      {queue.showroomsPending > 0 ? (
+        <Row
+          label="Showroom applications"
+          hint="A dealer is worth many private sellers"
+          value={queue.showroomsPending}
+          href={SHOWROOM_LINK}
+          tone="attention"
+        />
+      ) : null}
 
       <Box paddingTop={2} paddingBottom={2}>
         <Box height="1px" background="neutral150" />
@@ -210,7 +238,7 @@ export function MarketplaceWidget() {
         label="Live and buyable"
         hint={`of ${inventory.liveAvailable} available — the rest have no photo`}
         value={inventory.liveAvailableWithPhotos}
-        href={LISTINGS}
+        href={LIVE_LINK}
         tone={inventory.liveAvailableWithPhotos > 0 ? "good" : "attention"}
       />
       <Row
@@ -221,22 +249,26 @@ export function MarketplaceWidget() {
             : undefined
         }
         value={inventory.liveAvailableNoPhotos}
-        href={LISTINGS}
+        href={LIVE_LINK}
         tone={inventory.liveAvailableNoPhotos > 0 ? "attention" : "neutral"}
       />
       <Row
         label="Unverified on the card"
         hint={quality.unverified ? 'Buyers are shown "not checked yet"' : undefined}
         value={quality.unverified}
-        href={LISTINGS}
+        href={LIVE_LINK}
         tone={quality.unverified > 0 ? "attention" : "neutral"}
       />
-      <Row
-        label={`Not confirmed in ${quality.staleAfterDays} days`}
-        value={quality.stale}
-        href={LISTINGS}
-        tone={quality.stale > 0 ? "attention" : "neutral"}
-      />
+      {/* Structurally zero for the first 30 days after anything is published,
+          so it appears only once it can be true. */}
+      {quality.stale > 0 ? (
+        <Row
+          label={`Not confirmed in ${quality.staleAfterDays} days`}
+          value={quality.stale}
+          href={LIVE_LINK}
+          tone="attention"
+        />
+      ) : null}
 
       {/* Should be zero forever: a lifecycle hook derives the as-is flag from
           the price on every write, so anything here means someone edited the
